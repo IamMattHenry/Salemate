@@ -1,0 +1,27 @@
+/*
+  color code:
+    626F47
+    A4B465
+    FEFAE0
+    FFCF50
+    000000
+
+  Fonts: HEADER: League Spartan, Body: Lato
+*/
+
+
+@import "tailwindcss";
+
+@theme {
+  --color-whitesm: #fefae0;
+  --color-yellowsm: #ffcf50;
+  --color-yellowf: #ffd578;
+  --color-yellowb: #FFEBAB;
+  --color-peachsm: #fff1cb;
+  --color-redct: #feedc9;
+  --shadow-feat: 0 3px 5px rgba(0, 0, 0, 0.50);
+  --font-league: "Baloo Bhai 2", sans-serif;
+  --font-lato: League Spartan, sans-serif;
+  --font-redacted: Redacted Script, cursive;
+  --font-quicksand: Quicksand, sans-serif;
+}
