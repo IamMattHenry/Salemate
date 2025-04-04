@@ -12,13 +12,13 @@ function NavBar() {
           </h3>
           
           {/* Desktop Navigation */}
-          <ul className="hidden lg:flex text-black font-heading text-lg font-lato space-x-6 font-semibold">
+          <ul className="hidden sm:flex text-black font-heading text-md font-lato space-x-6 font-semibold">
             <li><a href="/contact" className="nav-link py-3 px-5 rounded-3xl text-yellowsm transition ease-in-out hover:bg-yellowsm hover:text-white border-2 border-yellowsm">Contact Us</a></li>
-            <li><a href="#" className="nav-link py-3 px-5 rounded-3xl transition ease-in-out bg-yellowsm text-whitesm hover:bg-white hover:text-yellowsm hover:border-2 border-yellowsm">Get Access</a></li>
+            <li><a href="/signin" className="nav-link py-3 px-5 rounded-3xl transition ease-in-out bg-yellowsm text-whitesm hover:bg-white hover:text-yellowsm hover:border-2 border-yellowsm">Get Access</a></li>
           </ul>
           
           {/* Mobile Toggle Button */}
-          <div className="lg:hidden md:flex flex-col">
+          <div className="sm:hidden flex flex-col">
             <button 
               id="nav-toggle"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

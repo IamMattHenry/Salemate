@@ -4,7 +4,7 @@ function Footer() {
   return (
     <div>
       <div className="w-full text-center">
-        <h3 className="text-white text-xl md:text-3xl md:mt-100">
+        <h3 className="text-white text-xl md:text-3xl md:mt-80">
           <a href="/">
             <span className="font-redacted font-bold">S </span>
             <span className="font-quicksand font-semibold">salemate</span>

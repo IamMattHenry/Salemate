@@ -1,48 +1,29 @@
 import React from "react";
+import { HomePanel } from "../components/HomePanel";
+import { HomeRoutes } from "../components/HomeRoutes";
 
-function Contact() {
+function PrivacyPolicy() {
   return (
     <div>
       <div className="heading-quote min-w-auto md:w-10/12 flex mx-auto md:flex-row my-10 justify-between p-7">
         <div className="flex flex-col lg:flex-col w-[50%] md:w-[40%] flex-start">
           <h1 className="font-lato font-semibold text-2xl md:text-4xl">
-            Contact Us
+            Privacy Policy
             <br />
           </h1>
           <span className="mt-5 font-lato text-lg md:text-lg text-justify">
-            If you have any questions or concerns regarding this Privacy Policy
-            or our data practices, or if you would like to exercise your privacy
-            rights, please reach out to us using the contact information below:
+            desc
           </span>
           <br />
         </div>
         <div className="border w-[40%]">
-          <img alt="contact-image"></img>
+          <img alt="policy-image"></img>
         </div>
       </div>
-      <div className="flex flex-col items-center">
-        <div className="bg-whitesm block mx-auto rounded-3xl md:w-7/12 py-2 mt-20 shadow-md shadow-black/50 z-50 mb-7">
-          <div className="flex items-center justify-evenly md:text-lg">
-            <button className="font-lato font-bold hover:bg-peachsm rounded-2xl transition p-3">
-              Privacy Policy
-            </button>
-            <button className="font-lato font-bold hover:bg-peachsm rounded-2xl transition p-3">
-              Contact Us
-            </button>
-            <button className="font-lato font-bold hover:bg-peachsm rounded-2xl transition p-3">
-              About Us
-            </button>
-            <button className="font-lato font-bold hover:bg-peachsm rounded-2xl transition p-3">
-              Terms and Condition
-            </button>
-            <button className="font-lato font-bold hover:bg-peachsm rounded-2xl transition p-3">
-              Features
-            </button>
-          </div>
-        </div>
-        <div className="bg-whitesm/40 backdrop-invert-0 backdrop-opacity-10 block mx-auto rounded-3xl md:w-10/12 md:p-16 md:h-[1000px]">
-          <div className=" grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white md:h-[900px] flex flex-col items-center shadow-feat rounded-2xl py-10">
+      <HomeRoutes />
+      <HomePanel>
+      <div className=" grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white md:h-[1100px] flex flex-col items-center shadow-feat rounded-2xl py-10 overflow-auto">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="currentColor"
@@ -52,14 +33,14 @@ function Contact() {
                 <path d="M3.5 11.5a3.5 3.5 0 1 1 3.163-5H14L15.5 8 14 9.5l-1-1-1 1-1-1-1 1-1-1-1 1H6.663a3.5 3.5 0 0 1-3.163 2M2.5 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2" />
               </svg>
               <div className="w-[75%] space-y-5">
-                <h3 className="font-lato font-semibold md:text-lg mt-10 border-b-2 border-gray-400 pb-6">
+                <h3 className="font-lato font-semibold md:text-md mt-10 border-b-2 border-gray-400 pb-6">
                   1. Information We Collect
                 </h3>
-                <p className="font-lato text-justify md:text-md">
+                <p className="font-lato text-justify md:text-sm">
                   We may collect the following types of information when you use
                   our Web App:<br></br>
                 </p>
-                <ul className="list-inside list-disc font-lato md:text-md">
+                <ul className="list-inside list-disc font-lato md:text-sm">
                   <li>
                     Personal Information: When you sign up for an account, we
                     may collect personal information such as your name, email
@@ -79,7 +60,7 @@ function Contact() {
                 </ul>
               </div>
             </div>
-            <div className="bg-white md:h-[900px] flex flex-col items-center shadow-feat rounded-2xl py-10 overflow-auto">
+            <div className="bg-white md:h-[1100px] flex flex-col items-center shadow-feat rounded-2xl py-10 overflow-auto">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="currentColor"
@@ -92,14 +73,14 @@ function Contact() {
                 />
               </svg>
               <div className="w-[75%] space-y-5">
-                <h3 className="font-lato font-semibold md:text-lg mt-10 border-b-2 border-gray-400 pb-6">
+                <h3 className="font-lato font-semibold md:text-md mt-10 border-b-2 border-gray-400 pb-6">
                   2. How We Use Your Information
                 </h3>
-                <p className="font-lato text-justify md:text-md">
+                <p className="font-lato text-justify md:text-sm">
                   We use the information we collect for the following purposes:
                   <br></br>
                 </p>
-                <ul className="list-inside list-disc font-lato md:text-md">
+                <ul className="list-inside list-disc font-lato md:text-sm">
                   <li>
                     To provide, maintain, and improve our Web App and services.
                   </li>
@@ -121,7 +102,7 @@ function Contact() {
                 </ul>
               </div>
             </div>
-            <div className="bg-white md:h-[900px] flex flex-col items-center shadow-feat rounded-2xl py-10 overflow-auto">
+            <div className="bg-white md:h-[1100px] flex flex-col items-center shadow-feat rounded-2xl py-10 overflow-auto">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="currentColor"
@@ -131,15 +112,15 @@ function Contact() {
                 <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2" />
               </svg>
               <div className="w-[75%] space-y-5">
-                <h3 className="font-lato font-semibold md:text-lg mt-10 border-b-2 border-gray-400 pb-6">
+                <h3 className="font-lato font-semibold md:text-md mt-10 border-b-2 border-gray-400 pb-6">
                   3. How We Share Your Information
                 </h3>
-                <p className="font-lato text-justify md:text-md">
+                <p className="font-lato text-justify md:text-sm">
                   We do not sell, rent, or trade your personal information.
                   However, we may share your data in the following
                   circumstances:<br></br>
                 </p>
-                <ul className="list-inside list-disc font-lato md:text-md">
+                <ul className="list-inside list-disc font-lato md:text-sm">
                   <li>
                     Service Providers: We may share your information with
                     trusted third-party vendors or service providers who assist
@@ -159,10 +140,9 @@ function Contact() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+      </HomePanel>
     </div>
   );
 }
 
-export default Contact;
+export default PrivacyPolicy;
