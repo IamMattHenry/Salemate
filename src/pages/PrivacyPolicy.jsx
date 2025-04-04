@@ -12,7 +12,7 @@ function PrivacyPolicy() {
             <br />
           </h1>
           <span className="mt-5 font-lato text-lg md:text-lg text-justify">
-            desc
+          Salemate is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and share information when you use our web application
           </span>
           <br />
         </div>
