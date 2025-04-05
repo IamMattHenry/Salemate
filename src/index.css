@@ -25,3 +25,18 @@
   --font-redacted: Redacted Script, cursive;
   --font-quicksand: Quicksand, sans-serif;
 }
+
+.product-scroll::-webkit-scrollbar {
+  width: 6px; 
+}
+
+.product-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.product-scroll::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}

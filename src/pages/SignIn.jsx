@@ -68,12 +68,12 @@ function SignIn() {
                 <a className="self-end text-sm font-lato underline" href="/">Forgot Password?</a>
               </div>
               <div className="text-center">
-                <button className="font-lato font-bold mt-4 bg-black py-3 px-5 rounded-lg text-whitesm" type="submit">
+                <button className="font-lato font-bold mt-4 bg-black py-3 px-5 rounded-lg text-whitesm cursor-pointer" type="submit">
                   Sign In
                 </button>
               </div>
               <div className="w-full text-center">
-                <p className="text-black text-sm font-lato">Don't have an account yet? <a className="text-sm font-lato underline" href="/signup" target="_self">Sign Up</a></p>
+                <p className="text-black text-sm font-lato">Don't have an account yet? <a className="text-sm font-lato underline cursor-pointer" href="/signup" target="_self">Sign Up</a></p>
               </div>
             </div>
           </div>
