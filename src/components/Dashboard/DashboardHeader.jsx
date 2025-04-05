@@ -12,11 +12,11 @@ const DashboardHeader = ({ user }) => {
   const formattedDate = dateToday.toLocaleDateString("en-US", dateFormat);
 
   return (
-    <div className="bg-whitesm/50 w-[calc(100vw-14rem)]">
+    <div className="bg-whitesm/50 w-full pt-2">
       <div className="w-full flex justify-between items-center">
-        <h3 className="font-lato font-bold text-4xl mt-3 ml-3">Dashboard</h3>
-        <div className="flex items-center mr-3 py-1">
-          <h4 className="font-lato border-r-2 py-3 pr-3">{formattedDate}</h4>
+        <h3 className="font-lato font-bold text-4xl py-3 pl-3">Dashboard</h3>
+        <div className="flex items-center pr-3 py-1">
+          <h4 className="font-lato border-r-2 py-1 pr-3">{formattedDate}</h4>
 
           <div className="flex items-center">
             <div className="flex flex-col text-center mx-2 leading-none">

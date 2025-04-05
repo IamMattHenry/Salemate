@@ -4,9 +4,9 @@ import Dashboard from "../pages/Dashboard";
 
 const DashboardLayout = () => {
   return (
-    <main className="grid grid-cols-[200px_1fr] min-h-screen max-w-full bg-repeat bg-fixed bg-gradient-to-b from-whitesm from-15% via-yellowf via-60% to-yellowsm to-90% px-1">
+    <main className="grid grid-cols-[190px_1fr] min-h-screen max-w-full bg-no-repeat bg-fixed bg-gradient-to-b from-whitesm from-15% via-yellowf via-60% to-yellowsm to-90% pb-2 px-1 overflow-y-hidden">
       <DashboardSideNav />
-      <div className="px-2">
+      <div>
         <Dashboard />
       </div>
     </main>

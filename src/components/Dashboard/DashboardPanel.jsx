@@ -12,7 +12,7 @@ const product = {
 
 const DashboardPanel = () => {
   return (
-    <div className="bg-white/50 w-full rounded-xl shadow-feat text-wrap h-[88%] mt-3 grid grid-cols-[60%_1fr]">
+    <div className="bg-white/50 w-full rounded-xl shadow-feat max-h-full grid grid-cols-[60%_1fr]">
       <div className="p-3">
         <h3 className="font-lato font-semibold text-xl">MENU CATEGORIES</h3>
         <div>

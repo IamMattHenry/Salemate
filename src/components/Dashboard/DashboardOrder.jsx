@@ -32,7 +32,7 @@ const DashboardOrder = ({ product }) => {
   };
 
   return (
-    <div className="p-3 bg-white shadow-feat min-h-full">
+    <div className="bg-white shadow-feat px-2 pt-2 h-full rounded-tr-xl rounded-br-xl">
       <div className="flex items-center justify-between">
         <h3 className="font-lato font-semibold text-lg">
           Order {orderNumber}:{" "}
@@ -207,6 +207,7 @@ const DashboardOrder = ({ product }) => {
       <div className="h-[3.3rem] items-center flex justify-end">
         <button className="text-sm font-lato font-bold bg-[#0cd742] rounded-3xl border-[0.5px] border-green-950 py-1 text-white px-3">Checkout</button>
       </div>
+      {/* TO-DO: Add item, Customer Name, Order Receipt */}
     </div>
   );
 };
