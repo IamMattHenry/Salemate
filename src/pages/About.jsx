@@ -7,12 +7,14 @@ const About = () => {
     <div>
       <div className="heading-quote min-w-auto md:w-10/12 flex mx-auto md:flex-row my-10 justify-between p-7">
         <div className="flex flex-col lg:flex-col w-[50%] md:w-[40%] flex-start">
-          <h1 className="font-lato font-semibold text-2xl md:text-4xl">
+          <h1 className="font-league spartan font-semibold text-7xl">
             About Us
             <br />
           </h1>
-          <span className="mt-5 font-lato text-lg md:text-lg text-justify">
-            ABOUT DESCRIPTION
+          <span className="mt-5 font-lato text-xl md:text-2x1 text-justify">
+              We're proud to introduce Salemate <br></br>
+
+              <br></br>Your web-based platform designed to simplify sales operations and make work life easier. Built for efficiency, our tools help you manage sales wisely, easily, and quickly.
           </span>
           <br />
         </div>
@@ -22,7 +24,26 @@ const About = () => {
       </div>
       <div className="flex flex-col items-center">
         <HomeRoutes />
-        <HomePanel>ABOUT: TO-DO</HomePanel>
+        <HomePanel> 
+        <div className="-mt-13  max-w-[1440px] mx-auto md:px-12 h-[1000px] bg-white border border-gray-100 rounded-3xl shadow-lg dark:bg-white-800 dark:border-white-700">
+            <h2 className="text-900 text-5xl pt-15 dark:text-white font-bold font-league spartan text-center">Our Story</h2>
+            <p className="p-7 font-lato text-2xl md:text-3x1 text-center">At Salemate, we don’t just build sales tools we create  solutions that empower businesses to thrive. Born from the frustration of clunky, outdated systems. Salemate was designed to turn sales chaos into clarity, one smart feature at a time.</p>
+            <hr className="h-px my-7 w-200 mx-auto bg-gray-500 border-0 rounded-lg dark:bg-gray-400"></hr> 
+
+              <div className="flex mt-15">
+                <img className="h-100 w-[40rem] rounded-xl" src="\5.jpg" alt="team"></img>
+
+                <div className="px-3 flex flex-col justify-center font-lato">
+                  <h2 className="text-4xl font-bold font-league spartan text-center dark:text-white -mt-3">The Journey to Simplicity</h2>
+                <p className=" text-2xl font-lato text-left dark:text-gray-300 p-7">It all started in our classrooms. Watching fellow entrepreneurship students struggle with clunky spreadsheets, lost sales data, and late-night formula errors, we asked: "Why does sales tracking have to be this hard?"
+                <br></br>
+                <br></br>
+                “After months of testing and feedback, we created Salemate – a simple way to replace spreadsheet headaches. No lost leads, no formula fails. Just more time to grow your business."</p>
+          </div>
+          </div>
+          </div>
+        </HomePanel>
+      
       </div>
     </div>
   );
