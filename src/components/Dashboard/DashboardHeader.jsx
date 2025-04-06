@@ -21,10 +21,13 @@ const DashboardHeader = ({ user }) => {
           <div className="flex items-center">
             <div className="flex flex-col text-center mx-2 leading-none">
               <h3 className="font-semibold font-lato text-xl p-0 mb-[-7px]">
-                { user.userName }
+                {user.userName}
               </h3>
               <span className="font-lato text-gray-400 text-sm">
-                { user.fullName }
+                {user.fullName}
+              </span>
+              <span className="font-lato text-gray-500 text-sm">
+                {user.department}
               </span>
             </div>
             <div>
