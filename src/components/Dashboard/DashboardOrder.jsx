@@ -10,9 +10,9 @@ import {
 import { FaEdit, FaCheckCircle } from "react-icons/fa";
 import { IoCalendar, IoPencil } from "react-icons/io5";
 import { MdCancel } from "react-icons/md";
-import useModal from "../../hooks/UseModal";
-import successModal from "../../hooks/SuccessModal";
-import nameModal from "../../hooks/EnterNameModal"
+import useModal from "../../hooks/Modal/UseModal";
+import successModal from "../../hooks/Modal/SuccessModal";
+import nameModal from "../../hooks/Modal/EnterNameModal"
 import { AnimatePresence, motion } from "motion/react";
 
 const dateToday = new Date();

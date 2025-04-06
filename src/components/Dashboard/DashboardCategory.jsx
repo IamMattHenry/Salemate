@@ -3,7 +3,7 @@ import { GiCakeSlice, GiBowlOfRice, GiFrenchFries, GiCoffeeMug, GiForkKnifeSpoon
 
 const DashboardCategory = () => {
   return (
-    <div className="grid md:grid-cols-[15%_15%_15%_15%_15%] gap-4">
+    <div className="grid md:grid-cols-[15%_15%_15%_15%_15%] gap-4 place-content-center mt-4">
       <div className="flex flex-col items-center bg-white rounded-2xl shadow-feat pt-4 pb-2 w-auto">
         <GiForkKnifeSpoon className="text-3xl" />
         <span className="font-lato font-semibold text-md mt-2 pt-2">All</span>

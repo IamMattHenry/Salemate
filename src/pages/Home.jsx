@@ -1,18 +1,30 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 function Home() {
-    return (
-        <div>
-            <div className="heading-quote min-w-auto md:w-3xl flex justify-center mx-auto flex-col text-center mt-10">
+  const navigate = useNavigate();
+
+  const toSignIn = (e) => {
+      e.preventDefault();
+
+      navigate("/signin");
+  };
+
+  return (
+    <div>
+      <div className="heading-quote min-w-auto md:w-3xl flex justify-center mx-auto flex-col text-center mt-10">
         <h1 className="font-league font-bold text-3xl md:text-5xl text-yellowsm">
-          Your Partner for Efficient<br />
+          Your Partner for Efficient
+          <br />
         </h1>
-        <span className="font-league font-bold text-3xl md:text-5xl">Sales Management</span>
+        <span className="font-league font-bold text-3xl md:text-5xl">
+          Sales Management
+        </span>
         <br />
         <div className="start-btn bg-yellowsm w-48 mx-auto flex flex-row items-center justify-center rounded-4xl hover:scale-105 transition shadow-xl">
           <button
-            className="text-whitesm font-league font-bold text-2xl mt-1 mr-2 drop-shadow-xl py-2"
-            onClick={() => (window.location.href = '/signin')}
+            className="text-whitesm font-league font-bold text-2xl mt-1 mr-2 drop-shadow-xl py-2 cursor-pointer"
+            onClick={toSignIn}
           >
             START NOW
           </button>
@@ -83,7 +95,8 @@ function Home() {
       <div className="first-feature w-min-auto md:w-4xl flex justify-center mx-auto flex-col text-center mt-37.5">
         <div className="bg-whitesm rounded-3xl w-7/12 mx-auto">
           <h1 className="font-league font-bold text-2xl md:text-3xl ">
-            Salemate provides dashboard for<br />
+            Salemate provides dashboard for
+            <br />
           </h1>
         </div>
         <span className="font-lato text-2xl md:text-3xl">
@@ -98,8 +111,8 @@ function Home() {
           />
         </div>
       </div>
-        </div>
-    );
+    </div>
+  );
 }
 
 export default Home;

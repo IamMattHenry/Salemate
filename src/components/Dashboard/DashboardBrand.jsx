@@ -1,14 +1,40 @@
-import React from 'react'
+import React from "react";
 
-const DashboardBrand = () => {
+const DashboardBrand = ({ isMinimized }) => {
   return (
-    <h3 className="text-yellowsm text-lg md:text-2xl mt-3 w-full text-center">
-            <a href="/">
-              <span className="font-redacted font-bold">S </span>
-              <span className="font-quicksand font-bold">salemate</span>
-            </a>
-    </h3>
-  )
-}
+    <div className="w-full mt-5">
+      <h3
+        className={`${
+          isMinimized
+            ? "text-yellowsm text-center flex flex-col items-center"
+            : "text-yellowsm flex justify-center space-x-2 text-center items-center"
+        }`}
+      >
+        <a href="/">
+          <span
+            className={`${
+              isMinimized
+                ? "font-redacted font-bold text-4xl -mb-3 mt-3"
+                : "font-redacted font-bold text-4xl"
+            }`}
+          >
+            S
+          </span>
+        </a>
+        <a href="/">
+          <span
+            className={`${
+              isMinimized
+                ? "font-quicksand font-bold text-sm"
+                : "font-quicksand font-bold text-xl"
+            }`}
+          >
+            salemate
+          </span>
+        </a>
+      </h3>
+    </div>
+  );
+};
 
-export default DashboardBrand
+export default DashboardBrand;
