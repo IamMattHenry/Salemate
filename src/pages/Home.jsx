@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 
 function Home() {
+  
   const navigate = useNavigate();
 
   const toSignIn = (e) => {
@@ -11,7 +12,7 @@ function Home() {
   };
 
   return (
-    <div>
+    <div className="h-[3000px]">
       <div className="heading-quote min-w-auto md:w-3xl flex justify-center mx-auto flex-col text-center mt-10">
         <h1 className="font-league font-bold text-3xl md:text-5xl text-yellowsm">
           Your Partner for Efficient
@@ -92,25 +93,40 @@ function Home() {
           </p>
         </div>
       </div>
-      <div className="first-feature w-min-auto md:w-4xl flex justify-center mx-auto flex-col text-center mt-37.5">
-        <div className="bg-whitesm rounded-3xl w-7/12 mx-auto">
-          <h1 className="font-league font-bold text-2xl md:text-3xl ">
-            Salemate provides dashboard for
-            <br />
-          </h1>
-        </div>
-        <span className="font-lato text-2xl md:text-3xl">
-          transaction and purchasing process
-        </span>
-        <br />
-        <div className="dashboard-img drop-shadow-[0_0_10rem_rgba(255,215,0,0.6)]">
-          <img
-            className="w-[500px] h-[285px]  md:w-[900.5px] md:h-[500px]"
-            src="./4.png"
-            alt="Dashboard"
-          />
-        </div>
+
+      <div className="h-26 bg-[#FFCF50] p-10 w-full mt-20">
+          <div className="flex items-center justify-center space-x-1">
+             <h1 className="font-lato text-5xl font-light">Whatever your role is, </h1>
+             <h1 className="font-lato text-5xl font-bold">we've got you covered</h1> 
+          </div>
       </div>
+
+      <div>
+
+     
+      <div className="flex flex-col items-center bg-yellowsm p-4 rounded-3xl h-110 w-205 mt-12 ml-50">
+          <img src="/land_1.png" alt="contact-image" className="rounded-3xl h-100 w-195" />
+      </div>
+
+      <div className="flex flex-col items-center h-110 w-175 ml-260 border-solid bg-white" >
+        
+          <h1 className="font-bold text-3xl font-lato">
+            <span>
+            Easily manages the purchasing process 
+            </span>
+          </h1>
+          <h1 className="text-center">
+            <span>
+            By just using the dashboard for <br />transactions and purchasing process, <br />
+            you can monitor orders, sales, and <br /> analytics report of your monthly 
+            sale, <br /> and track your customers. 
+            </span>
+          </h1>
+      </div>
+
+      </div>
+
+      
     </div>
   );
 }
