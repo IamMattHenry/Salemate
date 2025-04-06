@@ -1,6 +1,6 @@
 import React from 'react'
-import { HomePanel } from '../components/HomePanel'
-import { HomeRoutes } from '../components/HomeRoutes'
+import { HomePanel } from "../components/Home/HomePanel";
+import { HomeRoutes } from "../components/Home/HomeRoutes";
 
 const TermsAndCond = () => {
   return (
