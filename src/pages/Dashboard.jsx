@@ -5,9 +5,7 @@ import DashboardPanel from "../components/Dashboard/DashboardPanel";
 const Dashboard = () => {
   return (
     <>
-      <DashboardHeader
-        user={{ userName: "Christian", fullName: "Christian Joy Sanchez" }}
-      />
+      <DashboardHeader />
       <DashboardPanel />
     </>
   );

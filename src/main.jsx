@@ -12,6 +12,7 @@ import "./index.css";
 import TermsAndCond from "./pages/TermsAndCond";
 import Features from "./pages/Features";
 import DashboardLayout from "./layouts/DashboardLayout";
+import OrderLayout from "./layouts/OrderLayout";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <Router>
@@ -26,9 +27,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="terms-and-condition" element={<TermsAndCond />} />
         <Route path="features" element={<Features />} />
       </Route>
-      <Route path="/dashboard" element={<DashboardLayout/>}>
-      
-      </Route>
+      <Route path="/dashboard" element={<DashboardLayout/>} />
+      <Route path="/orders" element={<OrderLayout />} />
     </Routes>
   </Router>
 );
