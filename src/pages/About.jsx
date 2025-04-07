@@ -28,8 +28,8 @@ const About = () => {
         <div className="max-w-[1440px] mx-auto md:px-20 h-[1000px] bg-white border border-gray-100 rounded-3xl shadow-lg dark:bg-white-800 dark:border-white-700">
             <h2 className="text-900 text-5xl pt-15 dark:text-white font-bold font-league spartan text-center">Our Story</h2>
             <p className="p-7 font-lato text-2xl tracking-tight text-center">At Salemate, we don’t just build sales tools we create  solutions that empower businesses to thrive. Born from the frustration of clunky, outdated systems. Salemate was designed to turn sales chaos into clarity, one smart feature at a time.</p>
-            <hr className="h-px my-7 w-200 mx-auto bg-gray-500 border-0 rounded-lg dark:bg-gray-400"></hr> 
-
+            <hr className="h-0.5 my-7 w-200 mx-auto bg-gray-400 border-0 rounded-lg"></hr> 
+          
               <div className="flex mt-20">
                   <h2 className="text-4xl font-bold font-league spartan text-center dark:text-white mt-10 ml-">How did Salemate come to be?</h2>
 
