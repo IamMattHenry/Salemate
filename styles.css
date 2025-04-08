@@ -1,4 +1,3 @@
-/* General Reset */
 body {
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -136,7 +135,7 @@ body {
     max-width: 90%;
     box-shadow: 0 30px 30px rgba(0, 0, 0, 0.15);
     border-radius: 20px;
-    margin: 2rem auto; /* ← this centers the container horizontally */
+    margin: 2rem auto;
   }
   
   
