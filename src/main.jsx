@@ -13,6 +13,11 @@ import TermsAndCond from "./pages/TermsAndCond";
 import Features from "./pages/Features";
 import DashboardLayout from "./layouts/DashboardLayout";
 import OrderLayout from "./layouts/OrderLayout";
+import AllTransact from "./components/Orders/OrdersHistory/AllTransact.jsx";
+import CancelledTransact from "./components/Orders/OrdersHistory/CancelledTransact.jsx";
+import CompletedTransact from "./components/Orders/OrdersHistory/CompletedTransact.jsx"
+import PendingTransact from "./components/Orders/OrdersHistory/PendingTransact.jsx";
+import SavedHistory from './components/Orders/OrdersHistory/SavedHistory.jsx'
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <Router>
@@ -27,8 +32,18 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="terms-and-condition" element={<TermsAndCond />} />
         <Route path="features" element={<Features />} />
       </Route>
-      <Route path="/dashboard" element={<DashboardLayout/>} />
-      <Route path="/orders" element={<OrderLayout />} />
+
+      {/* Dashboard route */}
+      <Route path="/dashboard" element={<DashboardLayout />} />
+
+      {/* Orders section route */}
+      <Route path="/orders" element={<OrderLayout />}>
+        <Route path="all-transactions" element={<AllTransact />} />
+        <Route path="cancelled-transactions" element={<CancelledTransact />} />
+        <Route path="completed-transactions" element={<CompletedTransact />} />
+        <Route path="pending-transactions" element={<PendingTransact />} />
+        <Route path="saved-history" element={<SavedHistory />} />
+      </Route>
     </Routes>
   </Router>
 );

@@ -18,7 +18,7 @@ const SideRoutes = ({ isMinimized }) => {
   ];
 
   return (
-    <div className="w-full font-lato font-semibold space-y-1 h-full flex flex-col items-center justify-center">
+    <div className="w-full font-lato font-semibold space-y-3 h-full flex flex-col items-center justify-center">
       <div className="flex flex-col -mt-25 w-full">
         {routes.map((route) => (
           <NavLink
@@ -27,8 +27,8 @@ const SideRoutes = ({ isMinimized }) => {
             className={({ isActive }) =>
               `${
                 isActive
-                  ? "flex items-center space-x-2 shadow-sm mb-1 py-1 px-5 w-full bg-[#ffcf50]/30"
-                  : "flex items-center space-x-3 my-2 px-5 w-full hover:bg-[#ffcf50]/30 transition-all"
+                  ? "flex items-center space-x-2 shadow-sm mb-1 py-2 px-5 w-full bg-[#ffcf50]/30"
+                  : "flex items-center space-x-3 my-2 py-2 px-5 w-full hover:bg-[#ffcf50]/30 transition-all"
               }`
             }
           >
