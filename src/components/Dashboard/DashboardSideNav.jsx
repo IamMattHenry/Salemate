@@ -5,7 +5,7 @@ import DashboardSideToggle from "./DashboardSideToggle"
 
 const DashboardSideNav = ({ toggleSideNav, isMinimized }) => {
   return (
-    <div className={`flex flex-col items-center pt-3 bg-yellowsm/25 overflow-y-hidden}`}>
+    <div className={`flex flex-col items-center pt-3 bg-gradient-to-b from-whitesm from-15% via-yellowf via-60% to-yellowsm to-90% overflow-y-hidden}`}>
         <DashboardSideToggle toggleSideNav={toggleSideNav}/>
         <DashboardBrand isMinimized={isMinimized} />
         <SideRoutes isMinimized={isMinimized} />
