@@ -1,41 +1,69 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import OrderStatusDropdown from "./OrderStatusDropdown";
 
 const OrdersTable = () => {
-  const orders = [
-    {
-      order: "Classic",
-      recipient: "Mary Jane",
-      amount: "P 500",
-      time: "2:30 PM",
-      date: "April 7, 2025",
-      status: "Delivered",
-    },
-    {
-      order: "Spicy Katsu",
-      recipient: "Ian Angelo",
-      amount: "P 350",
-      time: "3:00 PM",
-      date: "April 7, 2025",
-      status: "Preparing",
-    },
-    {
-      order: "Spicy Katsu",
-      recipient: "Ian Angelo",
-      amount: "P 350",
-      time: "3:00 PM",
-      date: "April 7, 2025",
-      status: "Cancelled",
-    },
-    {
-      order: "Spicy Katsu",
-      recipient: "Ian Angelo",
-      amount: "P 350",
-      time: "3:00 PM",
-      date: "April 7, 2025",
-      status: "Preparing",
-    },
-  ];
+  const [orders, setOrders] = useState([]);
+  const location = useLocation(); // to access the current route
+
+  // Simulate fetching data based on route
+  useEffect(() => {
+    const fetchOrders = async () => {
+      let fetchedOrders;
+      switch (location.pathname) {
+        case "/orders/completed-transactions":
+          fetchedOrders = await fetchCompletedOrders();
+          break;
+        case "/orders/pending-transactions":
+          fetchedOrders = await fetchPendingOrders();
+          break;
+        case "/orders/cancelled-transactions":
+          fetchedOrders = await fetchCancelledOrders();
+          break;
+        case "/orders/saved-history":
+          fetchedOrders = await fetchSavedHistory();
+          break;
+        default:
+          fetchedOrders = await fetchAllOrders();
+      }
+      setOrders(fetchedOrders);
+    };
+
+    fetchOrders();
+  }, [location.pathname]);
+
+  const fetchAllOrders = async () => {
+    return [
+      { order: "Classic", recipient: "Mary Jane", amount: "P 500", time: "2:30 PM", date: "April 7, 2025", status: "Delivered" },
+      { order: "Spicy Katsu", recipient: "Ian Angelo", amount: "P 350", time: "3:00 PM", date: "April 7, 2025", status: "Preparing" },
+      { order: "Spicy Katsu", recipient: "Ian Angelo", amount: "P 350", time: "3:00 PM", date: "April 7, 2025", status: "Cancelled" },
+    ];
+  };
+
+  const fetchCompletedOrders = async () => {
+    return [
+      { order: "Classic", recipient: "Mary Jane", amount: "P 500", time: "2:30 PM", date: "April 7, 2025", status: "Delivered" },
+    ];
+  };
+
+  const fetchPendingOrders = async () => {
+    return [
+      { order: "Spicy Katsu", recipient: "Ian Angelo", amount: "P 350", time: "3:00 PM", date: "April 7, 2025", status: "Preparing" },
+    ];
+  };
+
+  const fetchCancelledOrders = async () => {
+    return [
+      { order: "Spicy Katsu", recipient: "Ian Angelo", amount: "P 350", time: "3:00 PM", date: "April 7, 2025", status: "Cancelled" },
+    ];
+  };
+
+  const fetchSavedHistory = async () => {
+    return [
+      { order: "Classic", recipient: "Mary Jane", amount: "P 500", time: "2:30 PM", date: "April 7, 2025", status: "Delivered" },
+      { order: "Spicy Katsu", recipient: "Ian Angelo", amount: "P 350", time: "3:00 PM", date: "April 7, 2025", status: "Cancelled" },
+    ];
+  };
 
   const TableHead = () => (
     <thead className="font-semibold border-b border-b-gray-600/50">
@@ -64,12 +92,9 @@ const OrdersTable = () => {
   };
 
   const TableRow = () => (
-    <tbody className="">
+    <tbody>
       {orders.map((order, index) => (
-        <tr
-          key={index}
-          className="bg-white hover:bg-[#ffcf50]/20 transition-colors border-b-[0.1px] border-b-gray-600/20"
-        >
+        <tr key={index} className="bg-white hover:bg-[#ffcf50]/20 transition-colors border-b-[0.1px] border-b-gray-600/20">
           <td className="p-1.5">{order.order}</td>
           <td className="p-1.5">{order.recipient}</td>
           <td className="p-1.5">{order.amount}</td>
