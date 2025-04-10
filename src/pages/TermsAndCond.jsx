@@ -11,14 +11,14 @@ const TermsAndCond = () => {
                 Terms and Condition
                 <br />
               </h1>
-              <span className="mt-6 font-lato tracking-tight text-[23px] md:text-[23px] -mr-[100px] text-justify">
+              <span className="mt-6 font-lato tracking-tight text-[23px] md:text-[23px] -mr-[80px] text-justify">
               These terms outline the rules for using Salemate’s platform designed to keep things fair, transparent, and safe for everyone. By accessing our services, you agree to these guidelines.
               Please read this carefully. If you have questions, contact us at sampleadmin@gmail.com.
               </span>
               <br />
             </div>
-            <div className="border w-[40%]">
-              <img alt="about-image"></img>
+            <div className="flex w-[50%] -mr-20 -mt-20">
+              <img alt="about-image" src='/terms-0.png'></img>
             </div>
           </div>
           <div className="flex flex-col items-center">
