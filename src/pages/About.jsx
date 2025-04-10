@@ -6,7 +6,7 @@ const About = () => {
   return (
     <div>
       <div className="heading-quote min-w-auto md:w-10/12 flex mx-auto md:flex-row my-10 justify-between p-7">
-        <div className="flex flex-col lg:flex-col w-[50%] md:w-[40%] flex-start">
+        <div className="flex flex-col lg:flex-col w-[50%] md:w-[40%] flex-start mt-10">
           <h1 className="font-league spartan font-semibold text-7xl">
             About Us
             <br />
@@ -18,8 +18,8 @@ const About = () => {
           </span>
           <br />
         </div>
-        <div className="border w-[40%]">
-          <img alt="about-image"></img>
+        <div className="w-[40%]">
+          <img alt="" src="/about-0.png"></img>
         </div>
       </div>
       <div className="flex flex-col items-center">
@@ -164,7 +164,13 @@ const About = () => {
         </HomePanel>
       
       </div>
+        <div>
+
+        </div>
     </div>
+
+
+
   );
 };
 
