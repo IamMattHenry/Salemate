@@ -1,7 +1,7 @@
 import React from 'react'
-import { HomePanel } from "../components/HomePanel";
-import { HomeRoutes } from "../components/HomeRoutes";
-import { BanknoteArrowUp, CircleAlert, CircleUser, Database, HandCoins, MonitorCog } from 'lucide-react';
+import { HomePanel } from "../../components/Home/HomePanel";
+import { HomeRoutes } from "../../components/Home/HomeRoutes";
+import { CircleAlert, CircleUser, Database, HandCoins, MonitorCog } from 'lucide-react';
 
 const TermsAndCond = () => {
   return (
