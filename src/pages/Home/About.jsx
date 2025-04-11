@@ -67,7 +67,7 @@ const About = () => {
 
             <div className="flex flex-col justify-center">
               <h2 className="text-5xl font-bold font-league spartan text-center dark:text-white">The team behind &nbsp;&nbsp;<span className="text-[#ffcf50] text-[60px] font-redacted font-bold">S</span> <span className="text-[#ffcf50] font-quicksand font-semibold">salemate</span></h2>
-              <p className="text-center justify-center text-2xl text-[25px] pt-5 font-lato text-center dark:text-gray-300">Driven by Passion, United by Purpose.</p>
+              <p className="text-center justify-center text-2xl text-[25px] pt-5 font-lato dark:text-gray-300">Driven by Passion, United by Purpose.</p>
             </div>
 
             <div className="flex gap-15">
@@ -150,7 +150,7 @@ const About = () => {
                 </div>
             </div>
 
-            <div className="flex flex justify-center items-center gap-15">
+            <div className="flex justify-center items-center gap-15">
                 <div className="mt-15 relative bg-[#ffcf50] w-[330px] h-110 shadow-[4px_4px_10px_rgba(0,0,0,0.3)]">
                   <img className="w-[330px] h-[320px] object-cover" src="/Kring.jpg" alt="members"/>
                   <h2 className="justify-center mt-5 text-center text-xl font-lato font-bold">Krhyss Kringle Tuba-on</h2>
