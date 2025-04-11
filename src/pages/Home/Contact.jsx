@@ -1,6 +1,6 @@
 import React from "react";
-import { HomePanel } from "../components/Home/HomePanel";
-import { HomeRoutes } from "../components/Home/HomeRoutes";
+import { HomePanel } from "../../components/Home/HomePanel";
+import { HomeRoutes } from "../../components/Home/HomeRoutes";
 
 function Contact() {
   return (

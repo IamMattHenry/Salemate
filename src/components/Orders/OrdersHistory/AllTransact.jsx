@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
-import DashboardHeader from "../../Dashboard/DashboardHeader";
-import OrdersPanel from "../OrdersPanel";
+import OrdersTable from "../OrdersTable"
 
 const AllTransact = () => {
     return (
         <>
-            <DashboardHeader />
-            <OrdersPanel />
+            <OrdersTable />
         </>
     );
 };

@@ -1,12 +1,10 @@
 import React from "react";
-import DashboardHeader from "../../Dashboard/DashboardHeader";
-import OrdersPanel from "../OrdersPanel";
+import OrdersTable from "../OrdersTable";
 
 const CancelledTransact = () => {
   return (
     <>
-      <DashboardHeader />
-      <OrdersPanel />
+      <OrdersTable />
     </>
   );
 };

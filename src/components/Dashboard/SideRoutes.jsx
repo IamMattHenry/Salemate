@@ -19,7 +19,7 @@ const SideRoutes = ({ isMinimized }) => {
 
   return (
     <div className="w-full font-lato font-semibold space-y-3 h-full flex flex-col items-center justify-center">
-      <div className="flex flex-col -mt-25 w-full">
+      <div className="flex flex-col -mt-20 w-full">
         {routes.map((route) => (
           <NavLink
             key={route.path}

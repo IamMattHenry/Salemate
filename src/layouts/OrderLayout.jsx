@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import DashboardSideNav from "../components/Dashboard/DashboardSideNav";
 import { motion } from "framer-motion";
-import Order from "../pages/Orders";
+import Orders from "../pages/Main/Orders"
 
 const OrderLayout = () => {
   const [isMinimized, setSideNav] = useState(true);
 
   const toggleSideNav = () => {
     setSideNav(!isMinimized);
-  }
+  };
 
   return (
     <motion.main
@@ -23,7 +23,7 @@ const OrderLayout = () => {
     >
       <DashboardSideNav toggleSideNav={toggleSideNav} isMinimized={isMinimized} />
       <div className="pb-5">
-        <Order />
+        <Orders />
       </div>
     </motion.main>
   );
