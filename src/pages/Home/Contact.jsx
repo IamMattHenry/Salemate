@@ -18,14 +18,47 @@ function Contact() {
           </span>
           <br />
         </div>
-        <div className="border w-[40%]">
-          <img alt="contact-image"></img>
+        <div className=" mr-100 w-[20%]">
+        <img src="/Cntct_1.png" alt="contact-image" className=" w-full h-auto rounded-lg shadow-md" />
         </div>
       </div>
       <div className="flex flex-col items-center">
         <HomeRoutes />
         <HomePanel>
-          CONTACT: TO-DO
+        <div className="flex justify-between space-x-6">
+        {/* First Div */}
+        <div className="bg-white md:h-[600px] w-[500px] flex flex-col items-center shadow-feat rounded-2xl py-10 overflow-auto"> 
+           <div className="bg-redct h-[120px] w-[120px] rounded-full flex justify-center items-center mt-15">
+              <img src="/Address_1.png" alt="contact-image" className="w-[70px] h-[50px]" />  
+           </div>
+            <h1 className="font-lato font-medium text-xl mt-12">Address</h1> 
+            <div className="h-px bg-black w-100 mt-12"></div>
+            <h1 className="font-lato font-light text-xl mt-12">673 Quirino Hwy, Novaliches, <br /> Quezon City, Metro Manila</h1>
+        </div>
+
+         {/* Second Div */}
+        <div className="bg-white md:h-[600px] w-[500px] flex flex-col items-center shadow-feat rounded-2xl py-10 overflow-auto"> 
+          <div className="bg-redct h-[120px] w-[120px] rounded-full flex justify-center items-center mt-15">
+            <img src="/email_1.png" alt="contact-image" className="w-[70px] h-[50px]" />  
+          </div>
+          <h1 className="font-lato font-medium text-xl mt-12">Email</h1> 
+          <div className="h-px bg-black w-100 mt-12"></div>
+          <h1 className="font-lato font-light text-xl mt-12">sampleadmin@gmail.com</h1>
+        </div>
+
+        {/* Third Div */}
+        <div className="bg-white md:h-[600px] w-[500px] flex flex-col items-center shadow-feat rounded-2xl py-10 overflow-auto"> 
+          <div className="bg-redct h-[120px] w-[120px] rounded-full flex justify-center items-center mt-15">
+            <img src="/phone_1.png" alt="contact-image" className="w-[70px] h-[50px]" />  
+          </div>
+          <h1 className="font-lato font-medium text-xl mt-12">Phone</h1> 
+          <div className="h-px bg-black w-100 mt-12"></div>
+          <h1 className="font-lato font-light text-xl mt-12 text-center"> Landline: 386325253 <br /> Smartphone: 09572365332</h1>
+        </div>
+      </div>
+
+        
+
         </HomePanel>
       </div>
     </div>
