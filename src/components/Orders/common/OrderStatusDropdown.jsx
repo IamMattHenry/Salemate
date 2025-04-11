@@ -1,6 +1,6 @@
 import React from "react";
 import { IoIosArrowDown } from "react-icons/io";
-import useModal from "../../hooks/Modal/UseModal";
+import useModal from "../../../hooks/Modal/UseModal";
 import { AnimatePresence, motion } from "motion/react";
 import { IoMdInformationCircle } from "react-icons/io";
 import { MdCancel } from "react-icons/md";

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import OrderStatusDropdown from "./OrderStatusDropdown";
+import OrderStatusDropdown from "./common/OrderStatusDropdown";
 
 const OrdersTable = () => {
   const [orders, setOrders] = useState([]);

@@ -1,14 +1,16 @@
-import React from "react"; 
-import { NavLink } from "react-router-dom";
-import { LiaFileDownloadSolid } from "react-icons/lia";
-import { IoIosSearch } from "react-icons/io";
+import React from "react";
 import useModal from "../../hooks/Modal/UseModal";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion } from "framer-motion";
 import { FaCheckCircle } from "react-icons/fa";
 import { MdCancel } from "react-icons/md";
+import { LiaFileDownloadSolid } from "react-icons/lia";
+import { IoIosSearch } from "react-icons/io";
+import NavTabs from "../common/NavTabs";
 
 const OrdersNav = () => {
-  const OrderNavLinks = [
+  const { modal, toggleModal } = useModal();
+
+  const orderNavLinks = [
     { path: "/orders/all-transactions", label: "All Transactions" },
     { path: "/orders/completed-transactions", label: "Completed" },
     { path: "/orders/pending-transactions", label: "Pending" },
@@ -16,9 +18,16 @@ const OrdersNav = () => {
     { path: "/orders/saved-history", label: "Saved History" },
   ];
 
-  const { modal, toggleModal } = useModal();
+  const searchProps = {
+    placeholder: "Type name or date (mm/dd/yyyy)",
+    icon: IoIosSearch
+  };
 
-  // Search Function
+  const actionButton = {
+    icon: LiaFileDownloadSolid,
+    onClick: toggleModal
+  };
+
   return (
     <>
       {modal && (
@@ -38,7 +47,7 @@ const OrdersNav = () => {
               transition={{ duration: 0.2 }}
             >
               <div className="w-full rounded-t-3xl flex items-center justify-end text-gray-500 p-3">
-                <div className="cursor-pointer" onClick={toggleModal}> 
+                <div className="cursor-pointer" onClick={toggleModal}>
                   <MdCancel className="size-5"/>
                 </div>
               </div>
@@ -56,49 +65,12 @@ const OrdersNav = () => {
           </motion.div>
         </AnimatePresence>
       )}
-      <div className="w-full grid grid-cols-[60%_1fr] h-auto place-content-center">
-        <div className="font-lato font-bold text-[1.05rem] space-x-2 flex w-[80%] justify-around items-center">
-          {OrderNavLinks.map((orderLinks) => (
-            <NavLink
-              key={orderLinks.path}
-              to={orderLinks.path}
-              className={({ isActive }) =>
-                `
-                  ${isActive
-                    ? 'relative after:content-[""] after:absolute after:bottom-0 after:left-1/4 after:w-1/2 after:h-0.5 after:bg-current'
-                    : 'relative hover:after:content-[""] hover:after:absolute hover:after:bottom-0 hover:after:left-1/4 hover:after:w-1/2 hover:after:h-0.5 hover:after:bg-current transition-all'}
-                `
-              }
-            >
-              <span>{orderLinks.label}</span>
-            </NavLink>
-          ))}
-        </div>
-        {/* Save File Function */}
-        <div>
-          <div className=" flex justify-end w-full">
-            <div className="flex justify-around items-center w-[80%]">
-              <div className="relative w-4/6">
-                <input
-                  type="text"
-                  placeholder="Type name or date (mm/dd/yyyy)"
-                  className="font-lato bg-white border-[1px] border-gray-500 pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-sm placeholder:text-gray-500 w-full"
-                />
-                <IoIosSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs" />
-              </div>
-              <div>
-                <button
-                  type="button"
-                  className="text-gray-600 p-1 border-gray-600 border rounded-4xl cursor-pointer"
-                  onClick={toggleModal}
-                >
-                  <LiaFileDownloadSolid />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      
+      <NavTabs 
+        links={orderNavLinks}
+        searchProps={searchProps}
+        actionButton={actionButton}
+      />
     </>
   );
 };

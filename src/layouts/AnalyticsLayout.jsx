@@ -1,14 +1,14 @@
-import React, { useState } from "react";
-import DashboardSideNav from "../components/Dashboard/DashboardSideNav";
+import React, { useState } from 'react';
+import DashboardSideNav from '../components/Dashboard/DashboardSideNav';
 import { motion } from "framer-motion";
-import Dashboard from "../pages/Main/Dashboard";
+import Analytics from '../pages/Main/Analytics';
 
-const DashboardLayout = () => {
+const AnalyticsLayout = () => {
   const [isMinimized, setSideNav] = useState(true);
-
+  
   const toggleSideNav = () => {
     setSideNav(!isMinimized);
-  }
+  };
 
   return (
     <motion.main
@@ -23,10 +23,10 @@ const DashboardLayout = () => {
     >
       <DashboardSideNav toggleSideNav={toggleSideNav} isMinimized={isMinimized} />
       <div className="pb-5">
-        <Dashboard />
+        <Analytics /> 
       </div>
     </motion.main>
   );
 };
 
-export default DashboardLayout;
+export default AnalyticsLayout;
