@@ -4,7 +4,7 @@ import { NavLink } from "react-router-dom";
 const NavTabs = ({ links, searchProps, actionButton }) => {
   return (
     <div className="w-full grid grid-cols-[60%_1fr] h-auto place-content-center">
-      <div className="font-lato font-bold text-[1.05rem] space-x-2 flex w-[80%] justify-around items-center">
+      <div className="font-lato font-medium text-[1.05rem] space-x-2 flex w-[80%] justify-around items-center">
         {links.map((link) => (
           <NavLink
             key={link.path}
@@ -13,8 +13,8 @@ const NavTabs = ({ links, searchProps, actionButton }) => {
               `
                 ${
                   isActive
-                    ? 'relative after:content-[""] after:absolute after:bottom-0 after:left-1/4 after:w-1/2 after:h-0.5 after:bg-current text-yellowsm transition-all'
-                    : 'relative hover:after:content-[""] hover:after:absolute hover:after:bottom-0 hover:after:left-1/4 hover:after:w-1/2 hover:after:h-0.5 hover:after:bg-current transition-all'
+                    ? 'relative after:content-[""] after:absolute after:bottom-0 after:left-1/4 after:w-1/2 after:h-0.5 after:bg-current text-black transition-all'
+                    : 'relative hover:after:content-[""] hover:after:absolute hover:after:bottom-0 hover:after:left-1/4 hover:after:w-1/2 hover:after:h-0.5 hover:after:bg-current transition-all text-black/60'
                 }
               `
             }
@@ -24,7 +24,6 @@ const NavTabs = ({ links, searchProps, actionButton }) => {
         ))}
       </div>
       
-      {/* Right side with search and action button */}
       <div>
         <div className="flex justify-end w-full">
           <div className="flex justify-around items-center w-[80%]">
