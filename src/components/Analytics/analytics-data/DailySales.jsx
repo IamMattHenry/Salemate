@@ -7,7 +7,7 @@ import { RiCustomerServiceFill } from "react-icons/ri";
 
 
 const DailySales = () => {
-  const sectionHeader = { label: "Test", date: "test" };
+  const sectionHeader = { label: "**Day** Sale Summary", date: "test" };
 
   const salesData = [
     {
@@ -37,7 +37,7 @@ const DailySales = () => {
   ];
 
   return (
-    <section className="bg-white rounded-2xl shadow-feat w-full mx-auto block">
+    <section className="bg-white rounded-2xl shadow-feat w-full mx-auto block my-4 pb-5">
       <AnalyticsDataHeader sectionHeader={sectionHeader} />
       <div className="mt-7 mx-7 w-auto">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 mb-6">
@@ -61,7 +61,7 @@ const DailySales = () => {
           />
         </div>
         <div className="overflow-x-auto rounded-sm shadow font-lato">
-          <table className="min-w-full bg-yellowsm/50 text-center overflow-scroll">
+          <table className="min-w-full bg-yellowsm/30 text-center overflow-scroll">
             <thead>
               <tr className="text-[1rem] leading-normal border-b-[0.5px] border-b-yellowsm/50">
                 <th className="py-3 px-6 text-center">Order ID</th>
@@ -76,7 +76,7 @@ const DailySales = () => {
               {salesData.map((sale, index) => (
                 <tr
                   key={index}
-                  className=" hover:bg-yellowsm/30 text-[1rem] border-b-[0.5px] border-b-yellowsm/50"
+                  className="hover:bg-yellowsm/30 text-[1rem] border-b-[0.5px] border-b-yellowsm/50"
                 >
                   <td className="py-3 px-6 text-center">{sale.id}</td>
                   <td className="py-3 px-6 text-center">{sale.recipient}</td>
@@ -95,7 +95,7 @@ const DailySales = () => {
 };
 
 const Card = ({ icon, label, subLabel, amount }) => (
-  <div className="bg-yellowsm/45 h-35 w-full rounded-sm shadow-feat flex flex-row items-center justify-between font-lato px-5">
+  <div className="bg-yellowsm/30 h-35 w-full rounded-sm shadow-feat flex flex-row items-center justify-between font-lato px-5">
     <div>
       <div className="text-lg font-medium text-left">{label}</div>
       <div className="text-sm text-gray-600 -mt-2 mb-5 text-left">{subLabel}</div>
