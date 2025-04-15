@@ -6,7 +6,7 @@ function Footer() {
       <div className="w-full text-center">
         <div>
           <a href="/">
-          <img className="flex w-[200px] justify-center items-center ml-140" src="/salemate.png" alt="logo"/>
+          <img className="flex w-[200px] justify-center items-center ml-140 pt-20" src="/salemate.png" alt="logo"/>
           </a>
         </div>
         <hr className="h-0.5 my-7 w-300 mx-auto bg-gray-700 border-0 rounded-lg dark:bg-400 opacity-10"></hr>  
