@@ -4,12 +4,11 @@ function Footer() {
   return (
     <div>
       <div className="w-full text-center">
-        <h3 className="text-white text-xl md:text-3xl md:mt-80">
+        <div>
           <a href="/">
-            <span className="font-redacted text-[#ffcf50] text-[40px] font-bold">S </span>
-            <span className="font-quicksand font-semibold">salemate</span>
+          <img className="flex w-[200px] justify-center items-center ml-140" src="/salemate.png" alt="logo"/>
           </a>
-        </h3>
+        </div>
         <hr className="h-0.5 my-7 w-300 mx-auto bg-gray-700 border-0 rounded-lg dark:bg-400 opacity-10"></hr>  
           <div className="flex text-[17px] font- tex-center justify-center gap-40">
             <h2> 
