@@ -244,10 +244,10 @@ import React from "react";
            <h4 className="font-lato font-semibold text-sm">Mode of Payment:</h4>
            <div className="font-semibold font-lato text-[.87rem] flex items-center justify-between">
              <div className="space-x-3">
-               <button className="border rounded-xl py-0.5 px-6 cursor-pointer">
+               <button className="border rounded-xl py-0.5 px-6 cursor-pointer hover:bg-yellowsm/20 transition">
                  Cash
                </button>
-               <button className="border rounded-xl py-0.5 px-5 cursor-pointer">
+               <button className="border rounded-xl py-0.5 px-5 cursor-pointer hover:bg-yellowsm/20 transition">
                  Online
                </button>
              </div>

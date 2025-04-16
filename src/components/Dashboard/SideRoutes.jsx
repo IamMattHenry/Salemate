@@ -1,16 +1,16 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import {
-  BsFillHouseDoorFill,
   BsFillCartFill,
   BsGraphUp,
   BsFillBoxFill,
   BsFillPeopleFill,
 } from "react-icons/bs";
+import { SiDashlane } from "react-icons/si";
 
 const SideRoutes = ({ isMinimized }) => {
   const routes = [
-    { path: "/dashboard", label: "Dashboard", icon: <BsFillHouseDoorFill /> },
+    { path: "/dashboard", label: "Dashboard", icon: <SiDashlane /> },
     { path: "/orders", label: "Orders", icon: <BsFillCartFill /> },
     { path: "/analytics", label: "Analytics", icon: <BsGraphUp /> },
     { path: "/inventory", label: "Inventory", icon: <BsFillBoxFill /> },
