@@ -2,7 +2,7 @@ import React from "react";
 import AnalyticsDataHeader from "../analytics-common/AnalyticsDataHeader";
 import { IoIosFolderOpen } from "react-icons/io";
 
-const SaveHistory = () => {
+const InventorySaveHistory = () => {
   const sectionHeader = { label: "Monthly Saved Document", date: "test" };
 
   const savedData = [
@@ -44,4 +44,4 @@ const SaveHistory = () => {
   );
 };
 
-export default SaveHistory;
+export default InventorySaveHistory;

@@ -27,7 +27,12 @@ import AnalyticsLayout from "./layouts/AnalyticsLayout.jsx";
 import DailySales from "./components/Analytics/analytics-data/DailySales.jsx";
 import ProductSales from "./components/Analytics/analytics-data/ProductSales.jsx";
 import CustomerFrequency from "./components/Analytics/analytics-data/CustomerFrequency.jsx";
-import SaveHistory from "./components/Analytics/analytics-data/SaveHistory.jsx";
+import SaveHistory from "./components/Analytics/analytics-data/InventorySaveHistory.jsx";
+import CustomersLayout from "./layouts/CustomersLayout.jsx";
+import CustomersOverview from "./components/Customers/customers-data/CustomersOverview.jsx";
+import InventoryLayout from "./layouts/InventoryLayout.jsx";
+import InventoryDaily from "./components/Inventory/inventory-data/InventoryDaily.jsx";
+import InventorySaveHistory from "./components/Inventory/inventory-data/SaveHistory.jsx"
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <Router>
@@ -56,13 +61,26 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="saved-history" element={<SavedHistory />} />
       </Route>
 
-      { /* Analytics section route */ }
+      {/* Analytics section route */}
       <Route path="/analytics" element={<AnalyticsLayout />}>
         <Route index element={<Navigate to="daily-sales" replace />} />
         <Route path="daily-sales" element={<DailySales />} />
         <Route path="product-sales" element={<ProductSales />} />
         <Route path="customer-frequency" element={<CustomerFrequency />} />
         <Route path="save-history" element={<SaveHistory />} />
+      </Route>
+
+      {/* Customers section route */}
+      <Route path="/customer" element={<CustomersLayout />}>
+        <Route index element={<Navigate to="overview" replace />} />
+        <Route path="overview" element={<CustomersOverview />} />
+      </Route>
+
+      {/* Inventory section route */}
+      <Route path="/inventory" element={<InventoryLayout />}>
+        <Route index element={<Navigate to="daily-inventory" replace />} />
+        <Route path="daily-inventory" element={<InventoryDaily />} />
+        <Route path="save-inventory" element={<InventorySaveHistory />} />
       </Route>
     </Routes>
   </Router>

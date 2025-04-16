@@ -1,29 +1,42 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 
-const NavTabs = ({ links, searchProps, actionButton }) => {
+const NavTabs = ({ links, searchProps, actionButton, saveButton, className = "" }) => {
   return (
     <div className="w-full grid grid-cols-[60%_1fr] h-auto place-content-center">
-      <div className="font-lato font-medium text-[1.05rem] space-x-2 flex w-[80%] justify-around items-center">
+      <div className="font-lato font-medium text-[1.05rem] flex w-full justify-around items-center">
         {links.map((link) => (
           <NavLink
             key={link.path}
             to={link.path}
             className={({ isActive }) =>
-              `
-                ${
-                  isActive
-                    ? 'relative after:content-[""] after:absolute after:bottom-0 after:left-1/4 after:w-1/2 after:h-0.5 after:bg-current text-black transition-all'
-                    : 'relative hover:after:content-[""] hover:after:absolute hover:after:bottom-0 hover:after:left-1/4 hover:after:w-1/2 hover:after:h-0.5 hover:after:bg-current transition-all text-black/60'
-                }
-              `
+              `text-black transition-all ${className} ${
+                isActive ? "" : "text-black/60 hover:text-black"
+              }`
             }
           >
-            <span>{link.label}</span>
+            {({ isActive }) => (
+              <span
+                className={`
+                  relative inline-block
+                  after:content-[""]
+                  after:absolute
+                  after:bottom-0
+                  after:left-1/4
+                  after:w-1/2
+                  after:h-0.5
+                  after:bg-current
+                  after:transition-opacity
+                  ${isActive ? "after:opacity-100" : "after:opacity-0 hover:after:opacity-100"}
+                `}
+              >
+                {link.label}
+              </span>
+            )}
           </NavLink>
         ))}
       </div>
-      
+
       <div>
         <div className="flex justify-end w-full">
           <div className="flex justify-around items-center w-[80%]">
@@ -37,16 +50,26 @@ const NavTabs = ({ links, searchProps, actionButton }) => {
                 <searchProps.icon className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs" />
               </div>
             )}
+
+            {saveButton && (
+              <button
+                type="button"
+                className="text-gray-600 px-2 py-1 border-gray-600 border rounded-4xl flex items-center gap-1 cursor-pointer"
+                onClick={saveButton.onClick}
+              >
+                <span className="text-sm">{saveButton.label}</span>
+                <saveButton.icon className="text-lg" />
+              </button>
+            )}
+
             {actionButton && (
-              <div>
-                <button
-                  type="button"
-                  className="text-gray-600 p-1 border-gray-600 border rounded-4xl cursor-pointer"
-                  onClick={actionButton.onClick}
-                >
-                  <actionButton.icon />
-                </button>
-              </div>
+              <button
+                type="button"
+                className="text-gray-600 p-1 border-gray-600 border rounded-4xl cursor-pointer"
+                onClick={actionButton.onClick}
+              >
+                <actionButton.icon />
+              </button>
             )}
           </div>
         </div>
