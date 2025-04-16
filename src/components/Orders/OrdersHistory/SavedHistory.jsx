@@ -1,5 +1,4 @@
 import React from "react";
-import OrdersTable from "../OrdersTable";
 import { IoIosFolderOpen } from "react-icons/io";
 
 const SavedHistory = () => {
