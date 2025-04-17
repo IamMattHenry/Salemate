@@ -3,8 +3,8 @@ import { NavLink } from "react-router-dom";
 
 const NavTabs = ({ links, searchProps, actionButton, saveButton, className = "" }) => {
   return (
-    <div className="w-full grid grid-cols-[50%_1fr] h-auto place-content-center">
-      <div className="font-lato font-medium text-[1.05rem] flex w-[60%] justify-around items-center">
+    <div className="w-full grid grid-cols-[60%_1fr] h-auto place-content-center">
+      <div className="font-lato font-medium text-[1.05rem] justify-around items-center">
         {links.map((link) => (
           <NavLink
             key={link.path}
@@ -20,7 +20,7 @@ const NavTabs = ({ links, searchProps, actionButton, saveButton, className = "" 
                 className={`
                   relative inline-block
                   text-[22px]
-                  ml-7
+                  ml-9
                   after:content-[""]
                   after:absolute
                   after:bottom-0
@@ -47,7 +47,7 @@ const NavTabs = ({ links, searchProps, actionButton, saveButton, className = "" 
                 <input
                   type="text"
                   placeholder={searchProps.placeholder}
-                  className="font-lato bg-white border-[1px] border-gray-500 h-9 pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-sm placeholder:text-gray-500 w-full"
+                  className="font-lato bg-white border-[1px] border-gray-500 h-9 pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-sm placeholder:text-gray-500 w-"
                 />
                 <searchProps.icon className="absolute right-3 top-1/2 text-[15px] transform -translate-y-1/2 text-dark-500 text-xs" />
               </div>
