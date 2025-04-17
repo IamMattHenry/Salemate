@@ -27,8 +27,9 @@ const InventoryNav = () => {
 
   const saveButton = {
     icon: IoMdAddCircleOutline,
-    label: "Add Item ayusin ninyo nalang to sa InventoryNav.jsx, style nasa NavTabs.jsx",
+    label: "Add Item",
   }; {/* Add ninyo yung function dito palabas ng modal ng Add Item */}
+      {/* Add Item ayusin ninyo nalang to sa InventoryNav.jsx, style nasa NavTabs.jsx*/}
 
   return (
     <>
@@ -59,8 +60,8 @@ const InventoryNav = () => {
                 <h3 className="font-bold text-2xl pt-1">
                   Order History Saved!
                 </h3>
-                <span className="text-[.8rem]">
-                  Your order history has been saved!
+                <span className="text-[.8rem] text-center justify-center">
+                Inventory document has been saved!<br/> Click save history to see the document.
                 </span>
                 <button
                   className="bg-[#0cd742] text-white text-center py-1 mt-3 px-8.5 rounded-2xl text-[0.77rem] cursor-pointer hover:bg-black/70"

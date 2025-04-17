@@ -5,25 +5,28 @@ import { HomeRoutes } from "../../components/Home/HomeRoutes";
 function PrivacyPolicy() {
   return (
     <div>
-      <div className="heading-quote min-w-auto md:w-10/12 flex mx-auto md:flex-row my-10 justify-between p-7">
+      <div className="min-w-auto md:w-10/12 flex mx-auto md:flex-row justify-between items-center px-12 my-25">
         <div className="flex flex-col lg:flex-col w-[50%] md:w-[40%] flex-start">
-          <h1 className="font-lato font-semibold text-2xl md:text-4xl">
+          <h1 className="font-lato font-semibold text-2xl md:text-7xl">
             Privacy Policy
             <br />
           </h1>
-          <span className="mt-5 font-lato text-lg md:text-lg text-justify">
-          Salemate is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and share information when you use our web application
+          <span className="mt-5 font-lato text-[23px] text-justify">
+            Salemate is committed to protecting your privacy. This Privacy
+            Policy explains how we collect, use, and share information when you
+            use our web application
           </span>
           <br />
         </div>
-        <div className="border w-[40%]">
-          <img alt="policy-image"></img>
+        <div className="w-[50%] flex justify-end">
+          <img src="./public/PrivacyPic.png" alt="policy-image"></img>
         </div>
       </div>
       <HomeRoutes />
       <HomePanel>
-      <div className=" grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white md:h-[1100px] flex flex-col items-center shadow-feat rounded-2xl py-10 overflow-auto">
+        <div className="w-full">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+            <div className="bg-white flex flex-col items-center shadow-feat rounded-2xl py-10 overflow-auto">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="currentColor"
@@ -60,7 +63,7 @@ function PrivacyPolicy() {
                 </ul>
               </div>
             </div>
-            <div className="bg-white md:h-[1100px] flex flex-col items-center shadow-feat rounded-2xl py-10 overflow-auto">
+            <div className="bg-white flex flex-col items-center shadow-feat rounded-2xl py-10 overflow-auto">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="currentColor"
@@ -102,11 +105,11 @@ function PrivacyPolicy() {
                 </ul>
               </div>
             </div>
-            <div className="bg-white md:h-[1100px] flex flex-col items-center shadow-feat rounded-2xl py-10 overflow-auto">
+            <div className="bg-white flex flex-col items-center shadow-feat rounded-2xl py-10 overflow-auto">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="currentColor"
-                class="bi bi-info-circle-fill bg-redct md:p-5 rounded-[50%] h-[75px] md:h-[75px] w-[75px] md:w-[75px] inset-ring inset-ring-black/25"
+                className="bi bi-info-circle-fill bg-redct md:p-5 rounded-[50%] h-[75px] md:h-[75px] w-[75px] md:w-[75px] inset-ring inset-ring-black/25"
                 viewBox="0 0 16 16"
               >
                 <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2" />
@@ -140,6 +143,7 @@ function PrivacyPolicy() {
               </div>
             </div>
           </div>
+        </div>
       </HomePanel>
     </div>
   );

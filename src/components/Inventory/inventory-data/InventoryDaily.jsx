@@ -174,23 +174,24 @@ const InventoryDaily = () => {
         </div>
 
         <div className="grid grid-cols-2 pb-10 pt-10 p-5">
-          <div className="flex">
+          <div className="flex pt-2">
             <h2 className="font-lato font-medium ml-3 pt-1">Clerk Name: </h2>
             <input type="" className="bg-gray-50 ml- border border-dark-50 text-[11px] text-gray-900 rounded-lg w-60 h-7 ml-1 -pt-4" placeholder="   Type name "/>
-            <button type="button" className="bg-white border border-gray-300 font-medium font-lato text-[15px] w-20 border border-gray-300 hover:bg-gray-100 rounded-xl ml-3 shadow-[0_5px_5px_rgba(0,0,0,0.3)]">Submit</button>
+            <div className="-mt-0.5">
+            <button type="button" className="bg-white border border-gray-300 font-medium font-lato text-[15px] w-20 h-8 border border-gray-300 hover:bg-gray-100 rounded-2xl ml-3 shadow-[0_5px_5px_rgba(0,0,0,0.3)]">Submit</button>
+            </div>
           </div>
 
-          <div className="flex ml-40 pt-2">
-              <span className="bg-[#0CD742] rounded-full w-5 h-5 shadow-[inset_0_5px_5px_rgba(0,0,0,0.2)]">   </span>
+          <div className="flex ml-45 pt-2">
+              <span className="bg-[#0CD742] border border-[#067a25] rounded-full w-4 h-4 shadow-[inset_0_5px_5px_rgba(0,0,0,0.2)]">   </span>
               <h2 className="font-lato italic opacity-[60%] leading-[1] pt-1 ml-1">High on<br/> Stocks</h2>
 
-              <span className="bg-[#FFCF50] rounded-full w-5 h-5 ml-10 shadow-[inset_0_5px_5px_rgba(0,0,0,0.2)]">   </span>
+              <span className="bg-[#FFCF50] border border-[#B3861A] rounded-full w-4 h-4 ml-10 shadow-[inset_0_5px_5px_rgba(0,0,0,0.2)]">   </span>
               <h2 className="font-lato italic opacity-[60%] leading-[1] pt-1 ml-1">Moderate Stock<br/> Level</h2>
 
-              <span className="bg-[#FF3434] rounded-full w-5 h-5 ml-10 shadow-[inset_0_5px_5px_rgba(0,0,0,0.2)]">   </span>
+              <span className="bg-[#FF3434] border border-[#B82323] rounded-full w-4 h-4 ml-10 shadow-[inset_0_5px_5px_rgba(0,0,0,0.2)]">   </span>
               <h2 className="font-lato italic opacity-[60%] leading-[1] pt-1 ml-1">Low on<br/> Stocks</h2>
           </div>
-
         </div>
 
 

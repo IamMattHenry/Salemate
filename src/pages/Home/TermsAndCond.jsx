@@ -5,19 +5,19 @@ import { CircleAlert, CircleUser, Database, HandCoins, MonitorCog } from 'lucide
 
 const TermsAndCond = () => {
   return (
-    <div><div className="heading-quote min-w-auto md:w-10/12 flex mx-auto md:flex-row my-10 justify-between p-7">
+    <div><div className="min-w-auto md:w-10/12 flex mx-auto md:flex-row my-12 justify-between items-center px-12">
             <div className="flex flex-col lg:flex-col w-[50%] md:w-[40%] flex-start">
-              <h1 className="font-league spartan font-semibold text-7xl">
+              <h1 className="font-lato font-semibold text-7xl">
                 Terms and Condition
                 <br />
               </h1>
-              <span className="mt-6 font-lato tracking-tight text-[23px] md:text-[23px] -mr-[80px] text-justify">
-              These terms outline the rules for using Salemate’s platform designed to keep things fair, transparent, and safe for everyone. By accessing our services, you agree to these guidelines.
+              <span className="mt-6 font-lato tracking-tight text-[23px] md:text-[23px] text-justify">
+              These terms outline the rules for using Salemate's platform designed to keep things fair, transparent, and safe for everyone. By accessing our services, you agree to these guidelines.
               Please read this carefully. If you have questions, contact us at sampleadmin@gmail.com.
               </span>
               <br />
             </div>
-            <div className="flex w-[50%] -mr-20 -mt-20">
+            <div className="flex w-[50%] justify-end">
               <img alt="about-image" src='/terms-0.png'></img>
             </div>
           </div>
@@ -35,7 +35,7 @@ const TermsAndCond = () => {
               <div className='flex flex-col'>
               <hr className="h-0.5 -ml-2 w-90 mx-auto bg-gray-400 border-0 rounded-lg"></hr>
               </div>
-          <ul className="list-disc pl-5 -ml-3 pt-2 text-[18px] text-justify font-lato dark:text-gray-300 -mr-5">
+          <ul className="list-disc pl-5 -ml-3 pt-2 text-[18px] text-justify font-lato -mr-5">
             <li>You must provide accurate info when signing up.</li>
             <li>Keep your login details secure you’re responsible for all activity under your account.</li>
           </ul>
@@ -50,7 +50,7 @@ const TermsAndCond = () => {
           <div className='flex flex-col'>
           <hr className="h-0.5 -ml-7 mt-1 w-90 mx-auto bg-gray-400 border-0 rounded-lg"></hr>
           </div>
-          <ul className="list-disc pl-5 pt-2 -ml-8 text-[18px] text-justify font-lato dark:text-gray-300 -mr-5">
+          <ul className="list-disc pl-5 pt-2 -ml-8 text-[18px] text-justify font-lato -mr-5">
           <li>Salemate is for legitimate business use only.</li>
           <li>Don’t misuse the platform (e.g., spam, illegal activities, or harming the system).</li>
           </ul>
@@ -65,7 +65,7 @@ const TermsAndCond = () => {
           <div className='flex flex-col'>
           <hr className="h-0.5 -ml-7 w-90 mx-auto bg-gray-400 border-0 rounded-lg"></hr>
           </div>
-          <ul className="list-disc pl-5 -ml-8 pt-2 text-[18px] text-justify font-lato dark:text-gray-300 -mr-5">
+          <ul className="list-disc pl-5 -ml-8 pt-2 text-[18px] text-justify font-lato  -mr-5">
             <li>All payments require manual verification.</li>
             <li>System doesn't process payments automatically.</li>
             <li>You're responsible for payment disputes.</li>
@@ -81,7 +81,7 @@ const TermsAndCond = () => {
           <div className='flex flex-col'>
           <hr className="h-0.5 -ml-7 mt-1 w-90 mx-auto bg-gray-400 border-0 rounded-lg"></hr>
           </div>
-          <ul className="list-disc pt-2 pl-5 -ml-8 text-[18px] text-justify font-lato dark:text-gray-300">
+          <ul className="list-disc pt-2 pl-5 -ml-8 text-[18px] text-justify font-lato ">
             <li>No barcode scanner integration.</li>
             <li>Mobile-responsive but no dedicated app.</li>
           </ul>
@@ -97,7 +97,7 @@ const TermsAndCond = () => {
         <div className='flex flex-col'>
         <hr className="h-0.5 -ml-7 w-90 mx-auto bg-gray-400 border-0 rounded-lg"></hr>
         </div>
-        <ul className="list-disc pl-5 -ml-8 pt-2 text-[18px] text-justify font-lato dark:text-gray-300 -mr-5">
+        <ul className="list-disc pl-5 -ml-8 pt-2 text-[18px] text-justify font-lato  -mr-5">
           <li>Back up your business data regularly.</li>
           <li>Delete customer info after projects end.</li>
         </ul>
