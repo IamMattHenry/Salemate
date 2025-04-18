@@ -1,13 +1,12 @@
 import React from 'react'
-import { BsArrowLeftCircle } from "react-icons/bs";
+import { CiPower } from "react-icons/ci";
 
-const DashboardLogout = () => {
+const DashboardLogout = ({isMinimized}) => {
   return (
-    <div className='w-full flex justify-end'>
-      <button type='submit'>
-        <BsArrowLeftCircle className='text-gray-500 mx-3 size-5 cursor-pointer hover:text-yellowsm transition-all'/>
-      </button>
-    </div>
+    <button type="button" className="flex items-center justify-center p-2 space-x-2 cursor-pointer mb-10">
+        <CiPower className='text-2xl text-black' />
+        {!isMinimized && <span className='font-lato text-[1.05rem] font-semibold'>Logout</span>}
+    </button>
   )
 }
 
