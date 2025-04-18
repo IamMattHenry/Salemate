@@ -235,7 +235,6 @@ const InventoryNav = () => {
         searchProps={searchProps}
         saveButton={saveButton}
         actionButton={actionButton}
-        className="justify-start w-full"
       />
     </>
   );
