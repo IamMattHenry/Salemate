@@ -1,18 +1,29 @@
 import React from "react";
 import { BsArrowLeftCircle, BsList } from "react-icons/bs";
+import { motion } from "motion/react"
 
 const DashboardSideToggle = ({ toggleSideNav, isMinimized }) => {
+  const MotionBsArrowLeftCircle = motion(BsArrowLeftCircle);
+  const MotionBsList = motion(BsList);
+
   return (
-    <div className="w-full flex">
+    <div className={isMinimized ? "flex w-full justify-center" : "flex justify-end w-full"}>
       <button
       type="button"
       onClick={toggleSideNav}
-      className={isMinimized ? "w-full flex justify-center" : "w-full flex justify-end"}
     >
       {isMinimized ? (
-        <BsList className="text-gray-500 mx-3 size-7 cursor-pointer hover:text-yellowsm" />
+        <MotionBsList
+        className="text-black mx-3 size-7 cursor-pointer hover:text-yellowsm"
+        animate={{ rotate: -180 }}
+        transition={{ duration: 0.3 }}
+      />
       ) : (
-        <BsArrowLeftCircle className="text-black mx-3 size-7 cursor-pointer hover:text-yellowsm" />
+        <MotionBsArrowLeftCircle
+      className="text-black mx-3 size-7 cursor-pointer hover:text-yellowsm"
+      animate={{ rotate: 360 }}
+      transition={{ duration: 0.3 }}
+    />
       )}
     </button>
     </div>

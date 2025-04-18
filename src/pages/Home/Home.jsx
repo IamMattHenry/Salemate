@@ -1,17 +1,18 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "motion/react";
 
 function Home() {
   const navigate = useNavigate();
 
   const toSignIn = (e) => {
     e.preventDefault();
-
     navigate("/signin");
   };
 
   return (
     <div>
+      <section className="w-full">
       <div className="heading-quote min-w-auto md:w-3xl flex justify-center mx-auto flex-col text-center mt-10">
         <h1 className="font-league font-bold text-3xl md:text-5xl text-yellowsm">
           Your Partner for Efficient
@@ -102,6 +103,7 @@ function Home() {
           </div>
         </div>
       </div>
+      </section>
       <div className="w-full px-4 md:px-10 xl:px-20">
         <div className="space-y-20">
           {/* First Section */}

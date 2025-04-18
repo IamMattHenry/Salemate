@@ -9,7 +9,7 @@ const DashboardSideNav = ({ toggleSideNav, isMinimized }) => {
     <div
       className={`flex flex-col items-center pt-3 bg-gradient-to-b from-whitesm from-5% via-yellowf via-40% to-yellowsm to-90% overflow-y-hidden}`}
     >
-      <div>
+      <div className="w-full">
         <DashboardSideToggle toggleSideNav={toggleSideNav} isMinimized={isMinimized}/>
         <DashboardBrand isMinimized={isMinimized} />
       </div>
