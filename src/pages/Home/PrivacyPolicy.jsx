@@ -19,7 +19,7 @@ function PrivacyPolicy() {
           <br />
         </div>
         <div className="w-[50%] flex justify-end">
-          <img src="./public/PrivacyPic.png" alt="policy-image"></img>
+          <img src="/PrivacyPic.png" alt="policy-image"></img>
         </div>
       </div>
       <HomeRoutes />
