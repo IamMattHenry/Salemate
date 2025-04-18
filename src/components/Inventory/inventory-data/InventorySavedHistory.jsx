@@ -1,7 +1,7 @@
 import React from "react";
 import { IoIosFolderOpen } from "react-icons/io";
 
-const SavedHistory = () => {
+const InventorySavedHistory = () => {
   const savedData = [
       { icon: <IoIosFolderOpen />, dataName: "test", dataDate: "testDate" },
       { icon: <IoIosFolderOpen />, dataName: "test", dataDate: "testDate" },
@@ -39,4 +39,4 @@ const SavedHistory = () => {
   );
 };
 
-export default SavedHistory;
+export default InventorySavedHistory;

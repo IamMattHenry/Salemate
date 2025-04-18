@@ -32,7 +32,7 @@ import CustomersLayout from "./layouts/CustomersLayout.jsx";
 import CustomersOverview from "./components/Customers/customers-data/CustomersOverview.jsx";
 import InventoryLayout from "./layouts/InventoryLayout.jsx";
 import InventoryDaily from "./components/Inventory/inventory-data/InventoryDaily.jsx";
-import InventorySaveHistory from "./components/Inventory/inventory-data/SaveHistory.jsx"
+import InventorySavedHistory from "./components/Inventory/inventory-data/InventorySavedHistory.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <Router>
@@ -80,7 +80,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <Route path="/inventory" element={<InventoryLayout />}>
         <Route index element={<Navigate to="daily-inventory" replace />} />
         <Route path="daily-inventory" element={<InventoryDaily />} />
-        <Route path="save-inventory" element={<InventorySaveHistory />} />
+        <Route path="saved-history" element={<InventorySavedHistory/>} />
       </Route>
     </Routes>
   </Router>

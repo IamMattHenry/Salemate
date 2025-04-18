@@ -14,7 +14,7 @@ const InventoryNav = () => {
 
   const inventoryNavLinks = [
     { path: "/inventory/daily-inventory", label: "Daily Inventory" },
-    { path: "/inventory/save-history", label: "Save History" },
+    { path: "/inventory/saved-history", label: "Saved History" },
   ];
 
   const searchProps = {
