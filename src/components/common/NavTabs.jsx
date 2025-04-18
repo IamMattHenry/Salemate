@@ -1,7 +1,9 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 const NavTabs = ({ links, searchProps, actionButton, saveButton, className = "" }) => {
+const location = useLocation();
   return (
     <div className="w-full grid grid-cols-[60%_1fr] h-auto place-content-center">
       <div className="font-lato font-medium text-[1.05rem] justify-around items-center">
@@ -41,19 +43,19 @@ const NavTabs = ({ links, searchProps, actionButton, saveButton, className = "" 
 
       <div>
         <div className="flex justify-end w-full">
-          <div className="flex justify-around gap-5 ml-15 items-center w-[80%]">
+          <div className="flex justify-around gap-5 ml-15 items-center w-[100%]">
             {searchProps && (
-              <div className="relative w-1/2">
+              <div className="relative w-1/2 pr-">
                 <input
                   type="text"
                   placeholder={searchProps.placeholder}
-                  className="font-lato bg-white border-[1px] border-gray-500 h-9 pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-sm placeholder:text-gray-500 w-"
+                  className="font-lato bg-white border-[1px] border-gray-500 h-9 pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-sm placeholder:text-gray-500 w-56"
                 />
-                <searchProps.icon className="absolute right-3 top-1/2 text-[15px] transform -translate-y-1/2 text-dark-500 text-xs" />
+                <searchProps.icon className="absolute -right-1 top-1/2 text-[15px] transform -translate-y-1/2 text-dark-500 text-xs" />
               </div>
             )}
 
-            {saveButton && (
+            {saveButton && location.pathname !== "/inventory/saved-history" && (
               <button
                 type="button"
                 className="bg-[#FFCF50] border border-[#D4A734] w-30 h-9 text-dark-600 font-medium px-2 py-1 border rounded-4xl flex items-center justify-center gap-1 cursor-pointer"

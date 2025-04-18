@@ -24,19 +24,19 @@ const InventoryDaily = () => {
               <span className="mt-4 ml-2">Beef</span>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 ml-7 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 ml-7 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
               <h2 className="bg-[#0CD742] border border-[#067a25] text-center rounded-2xl w-25 font-league spartan font-bold text-[15px] h-9 pt-2 ml-2 shadow-[inset_0_5px_5px_rgba(0,0,0,0.2)]">High</h2>
@@ -50,19 +50,19 @@ const InventoryDaily = () => {
               <span className="tracking-tight mt-4 ml-2 -mr-15">Puso ng Saging</span>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 ml-7 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 ml-7 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
               <h2 className="bg-[#0CD742] border border-[#067a25] text-center rounded-2xl w-25 font-league spartan font-bold text-[15px] h-9 pt-2 ml-2 shadow-[inset_0_5px_5px_rgba(0,0,0,0.2)]">High</h2>
@@ -76,19 +76,19 @@ const InventoryDaily = () => {
               <span className="mt-4 ml-2">Potato</span>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 ml-7 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 ml-7 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
               <h2 className="bg-[#0CD742] border border-[#067a25] text-center rounded-2xl w-25 font-league spartan font-bold text-[15px] h-9 pt-2 ml-2 shadow-[inset_0_5px_5px_rgba(0,0,0,0.2)]">High</h2>
@@ -102,19 +102,19 @@ const InventoryDaily = () => {
               <span className="mt-4 ml-2">Garlic</span>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 ml-7 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 ml-7 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
               <h2 className="bg-[#FFCF50] border border-[#B3861A] text-center rounded-2xl w-25 font-league spartan font-bold text-[15px] h-9 pt-2 ml-2 shadow-[inset_0_5px_5px_rgba(0,0,0,0.2)]">Moderate</h2>
@@ -128,19 +128,19 @@ const InventoryDaily = () => {
               <span className="mt-4 ml-2 -mr-15">Cucumber</span>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 ml-7 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 ml-7 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
               <h2 className="bg-[#0CD742] border border-[#067a25] text-center rounded-2xl w-25 font-league spartan font-bold text-[15px] h-9 pt-2 ml-2 shadow-[inset_0_5px_5px_rgba(0,0,0,0.2)]">High</h2>
@@ -154,19 +154,19 @@ const InventoryDaily = () => {
               <span className="mt-4 ml-2 -mr-15">Calamansi</span>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 ml-7 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 ml-7 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
-            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder=" kg "/>
+            <input type="" className="bg-gray-50 border border-dark-50 text-sm text-gray-900 rounded-lg w-20 h-9" placeholder="  "/>
             </div>
             <div className='pt-3'>
               <h2 className="bg-[#FF3434] border border-[#B82323] text-center rounded-2xl w-25 font-league spartan font-bold text-[15px] h-9 pt-2 ml-2 shadow-[inset_0_5px_5px_rgba(0,0,0,0.2)]">Low</h2>
