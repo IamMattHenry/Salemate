@@ -58,7 +58,7 @@ const location = useLocation();
             {saveButton && location.pathname !== "/inventory/saved-history" && (
               <button
                 type="button"
-                className="bg-[#FFCF50] border border-[#D4A734] w-30 h-9 text-dark-600 font-medium px-2 py-1 border rounded-4xl flex items-center justify-center gap-1 cursor-pointer"
+                className="bg-[#FFCF50] border-[#D4A734] w-30 h-9 text-dark-600 font-medium px-2 py-1 border rounded-4xl flex items-center justify-center gap-1 cursor-pointer"
                 onClick={saveButton.onClick}
               >
                 <span className="text-sm">{saveButton.label}</span>

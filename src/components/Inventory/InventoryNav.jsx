@@ -143,7 +143,7 @@ const InventoryNav = () => {
                 </div>
               </div>
 
-              <form className="flex grid items-center grid-cols-6 w-full">
+              <form className="grid items-center grid-cols-6 w-full">
                 <div className="pl-7">
                   <h2 className="font-league spartan font-semibold text-[23px] pb-3 pl-2">Raw Materials</h2>
                 <input type="text" placeholder="" className="w-40 px-3 py-2 border rounded-lg text-sm" />
