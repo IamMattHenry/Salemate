@@ -5,14 +5,10 @@ import CustomersPanel from '../../components/Customers/CustomersPanel'
 const Customers = () => {
   return (
     <>
-        <DashboardHeader />
-        
-
-
-        
+        <DashboardHeader />    
         <CustomersPanel />
         
-HEHEHEHEH
+
     </>
   )
 }
