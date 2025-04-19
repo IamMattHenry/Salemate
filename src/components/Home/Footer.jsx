@@ -6,11 +6,11 @@ function Footer() {
       <div className="w-full text-center">
         <div>
           <a href="/">
-          <img className="flex w-[200px] justify-center items-center ml-140 pt-20" src="/salemate.png" alt="logo"/>
+          <img className="flex w-[200px] justify-center items-center ml-140 pb-7 pt-20" src="/salemate.png" alt="logo"/>
           </a>
         </div>
-        <hr className="h-0.5 my-7 w-300 mx-auto bg-gray-700 border-0 rounded-lg dark:bg-400 opacity-10"></hr>  
-          <div className="flex text-[17px] font- tex-center justify-center gap-40">
+        <hr className="h-0.5 my-5 w-310 mx-auto bg-gray-700 border-0 rounded-lg dark:bg-400 opacity-10"></hr>  
+          <div className="flex text-[17px] font-league spartan font-extralight tex-center justify-center gap-43">
             <h2> 
               <a href="/contact">Contact Us</a>
             </h2>
@@ -27,8 +27,8 @@ function Footer() {
               <a href="/features">Features</a>
             </h2>
           </div>
-        <hr className="h-0.5 my-7 w-300 mx-auto bg-gray-700 border-0 rounded-lg dark:bg-400 opacity-10"></hr>  
-        <p className="mt-3 font-lato text-gray-600 text-sm pb-10 pt-5">Copyright &copy; 2025 Salemate. All Rights Reserved.</p>
+        <hr className="h-0.5 my-5 w-310 mx-auto bg-gray-700 border-0 rounded-lg dark:bg-400 opacity-10"></hr>  
+        <p className="mt-3 font-lato text-dark-500 opacity-[50%] text-sm pb-10 pt-5">Copyright &copy; 2025 Salemate. All Rights Reserved.</p>
       </div>
     </div>
   );
