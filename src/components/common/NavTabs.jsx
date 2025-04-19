@@ -21,11 +21,11 @@ const location = useLocation();
               <span
                 className={`
                   relative inline-block
-                  text-[22px]
+                  text-[20px]
                   ml-9
                   after:content-[""]
                   after:absolute
-                  after:bottom-0
+                  after:-bottom-1
                   after:left-1/4
                   after:w-1/2
                   after:h-0.5
