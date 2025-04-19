@@ -5,60 +5,90 @@ import { HomeRoutes } from "../../components/Home/HomeRoutes";
 function Contact() {
   return (
     <div>
-      <div className="heading-quote min-w-auto md:w-10/12 flex mx-auto md:flex-row my-10 justify-between p-7">
-        <div className="flex flex-col lg:flex-col w-[50%] md:w-[40%] flex-start">
-          <h1 className="font-lato font-semibold text-2xl md:text-4xl">
+      <div className="min-w-auto md:w-10/12 flex mx-auto md:flex-row my-25 justify-between px-12 items-center">
+        <div className="flex flex-col lg:flex-col w-[50%] md:w-[40%] items-start">
+          <h1 className="font-lato font-semibold text-2xl md:text-7xl">
             Contact Us
-            <br />
           </h1>
-          <span className="mt-5 font-lato text-lg md:text-lg text-justify">
+          <span className="mt-5 font-lato text-[23px] text-justify">
             If you have any questions or concerns regarding this Privacy Policy
             or our data practices, or if you would like to exercise your privacy
             rights, please reach out to us using the contact information below:
           </span>
-          <br />
         </div>
-        <div className=" mr-100 w-[20%]">
-        <img src="/Cntct_1.png" alt="contact-image" className=" w-full h-auto rounded-lg shadow-md" />
+        <div className="w-[50%] flex justify-end">
+          <img src="/Cntct_1.png" alt="contact illustration" />
         </div>
       </div>
+
       <div className="flex flex-col items-center">
         <HomeRoutes />
         <HomePanel>
-        <div className="flex justify-between space-x-6">
-        {/* First Div */}
-        <div className="bg-white md:h-[600px] w-[500px] flex flex-col items-center shadow-feat rounded-2xl py-10 overflow-auto"> 
-           <div className="bg-redct h-[120px] w-[120px] rounded-full flex justify-center items-center mt-15">
-              <img src="/Address_1.png" alt="contact-image" className="w-[70px] h-[50px]" />  
-           </div>
-            <h1 className="font-lato font-medium text-xl mt-12">Address</h1> 
-            <div className="h-px bg-black w-100 mt-12"></div>
-            <h1 className="font-lato font-light text-xl mt-12">673 Quirino Hwy, Novaliches, <br /> Quezon City, Metro Manila</h1>
-        </div>
+          <div className="w-full p-5">
+            {/* Added padding top/bottom */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+              {/* Address */}
+              <div className="bg-white flex flex-col items-center shadow-feat rounded-2xl py-30 min-h-[340px] w-[340px]">
+                <div className="bg-redct md:p-5 rounded-full h-[75px] w-[75px] inset-ring inset-ring-black/25 flex justify-center items-center">
+                  <img
+                    src="/Address_1.png"
+                    alt="address icon"
+                    className="w-[40px] h-[40px]"
+                  />
+                </div>
+                <div className="w-[75%] space-y-5 mt-10">
+                  <h3 className="font-lato font-semibold md:text-md border-b-2 border-gray-400 pb-6 text-center">
+                    Address
+                  </h3>
+                  <p className="font-lato text-center md:text-sm">
+                    673 Quirino Hwy, Novaliches,
+                    <br />
+                    Quezon City, Metro Manila
+                  </p>
+                </div>
+              </div>
 
-         {/* Second Div */}
-        <div className="bg-white md:h-[600px] w-[500px] flex flex-col items-center shadow-feat rounded-2xl py-10 overflow-auto"> 
-          <div className="bg-redct h-[120px] w-[120px] rounded-full flex justify-center items-center mt-15">
-            <img src="/email_1.png" alt="contact-image" className="w-[70px] h-[50px]" />  
+              {/* Email */}
+              <div className="bg-white flex flex-col items-center shadow-feat rounded-2xl py-30 min-h-[340px] w-[340px]">
+                <div className="bg-redct md:p-5 rounded-full h-[75px] w-[75px] inset-ring inset-ring-black/25 flex justify-center items-center">
+                  <img
+                    src="/email_1.png"
+                    alt="email icon"
+                    className="w-[40px] h-[40px]"
+                  />
+                </div>
+                <div className="w-[75%] space-y-5 mt-10">
+                  <h3 className="font-lato font-semibold md:text-md border-b-2 border-gray-400 pb-6 text-center">
+                    Email
+                  </h3>
+                  <p className="font-lato text-center md:text-sm">
+                    sampleadmin@gmail.com
+                  </p>
+                </div>
+              </div>
+
+              {/* Phone */}
+              <div className="bg-white flex flex-col items-center shadow-feat rounded-2xl py-30 min-h-[340px] w-[340px]">
+                <div className="bg-redct md:p-5 rounded-full h-[75px] w-[75px] inset-ring inset-ring-black/25 flex justify-center items-center">
+                  <img
+                    src="/phone_1.png"
+                    alt="phone icon"
+                    className="w-[40px] h-[40px]"
+                  />
+                </div>
+                <div className="w-[75%] space-y-5 mt-10">
+                  <h3 className="font-lato font-semibold md:text-md border-b-2 border-gray-400 pb-6 text-center">
+                    Contact Number
+                  </h3>
+                  <p className="font-lato text-center md:text-sm">
+                    Landline: 3626253
+                    <br />
+                    Smartphone: 09197266332
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-          <h1 className="font-lato font-medium text-xl mt-12">Email</h1> 
-          <div className="h-px bg-black w-100 mt-12"></div>
-          <h1 className="font-lato font-light text-xl mt-12">sampleadmin@gmail.com</h1>
-        </div>
-
-        {/* Third Div */}
-        <div className="bg-white md:h-[600px] w-[500px] flex flex-col items-center shadow-feat rounded-2xl py-10 overflow-auto"> 
-          <div className="bg-redct h-[120px] w-[120px] rounded-full flex justify-center items-center mt-15">
-            <img src="/phone_1.png" alt="contact-image" className="w-[70px] h-[50px]" />  
-          </div>
-          <h1 className="font-lato font-medium text-xl mt-12">Phone</h1> 
-          <div className="h-px bg-black w-100 mt-12"></div>
-          <h1 className="font-lato font-light text-xl mt-12 text-center"> Landline: 386325253 <br /> Smartphone: 09572365332</h1>
-        </div>
-      </div>
-
-        
-
         </HomePanel>
       </div>
     </div>
