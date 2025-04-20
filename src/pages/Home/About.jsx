@@ -6,13 +6,13 @@ import TeamPage from "./TeamMembers";
 const About = () => {
   return (
     <div>
-      <div className="heading-quote min-w-auto md:w-10/12 flex mx-auto md:flex-row my-25 justify-between items-center px-12">
+      <div className="heading-quote min-w-auto md:w-10/12 flex mx-15 md:flex-row my-15 justify-between items-center px-12">
         <div className="flex flex-col lg:flex-col w-[50%] md:w-[40%] flex-start">
-          <h1 className="font-lato font-semibold text-2xl md:text-7xl">
+          <h1 className="font-lato font-semibold md:text-[80px]">
             About Us
             <br />
           </h1>
-          <span className="mt-5 font-lato text-[23px] text-justify">
+          <span className="tracking-tight -mr-5 font-lato text-[22px] text-">
             We're proud to introduce Salemate <br></br>
             <br />
             Your web-based platform designed to simplify sales operations and
@@ -21,40 +21,40 @@ const About = () => {
           </span>
           <br />
         </div>
-        <div className="w-[50%] flex justify-end">
+        <div className="w-[500px] flex -mr-50 -mt-10">
           <img alt="" src="/about-0.png"></img>
         </div>
       </div>
       <div className="flex flex-col items-center">
         <HomeRoutes />
         <HomePanel>
-          <div className="max-w-full mx-auto md:px-15 min-h-auto bg-white border border-gray-100 rounded-3xl shadow-lg p-5 dark:border-white-700">
-            <h2 className="text-5xl font-bold font-lato text-center mt-5">
+          <div className="max-w-full mx-auto h-1130 bg-white border border-gray-100 rounded-3xl shadow-lg p-5 dark:border-white-700">
+            <h2 className="text-5xl font-bold font-lato font-semibold text-center mt-20">
               Our Story
             </h2>
-            <p className="mt-3 font-lato text-2xl tracking-tight text-center">
+            <p className="mt-5 px-28 font-lato text-[25px] tracking-tight text-center">
               At Salemate, we don't just build sales tools we create solutions
               that empower businesses to thrive. Born from the frustration of
               clunky, outdated systems. Salemate was designed to turn sales
               chaos into clarity, one smart feature at a time.
             </p>
-            <hr className="h-0.5 my-7 w-200 mx-auto bg-gray-400 border-0 rounded-lg dark:bg-gray-400"></hr>
+            <hr className="h-0.5 my-7 mt-10 w-230 mx-auto bg-black opacity-25 border-0 rounded-lg"></hr>
 
-            <div className="flex items-center justify-center">
+            <div className="flex items-center justify-center mt-9">
               <img
-                className="h-[350px] max-w-full"
+                className="h-[390px] w-[1230px]"
                 src="/about-1.jpg"
                 alt="team"
               />
             </div>
 
             <div className="flex mt-10">
-              <h2 className="text-5xl font-bold font-league spartan text-center pt-10 mt-10 ml-10 -mr-60">
+              <h2 className="text-5xl font-semibold font-lato text-center pt-10 mt-10 ml-35 -mr-60">
                 How did Salemate come to be?
               </h2>
 
-              <div className="px- flex flex-col tracking-tight font-lato pt-8">
-                <p className=" text-2xl text-[25px] font-lato text-center ml-80 mr-5">
+              <div className="flex flex-col tracking-tight font-lato text-justify pt-8">
+                <p className="tracking-tight text-2xl text-[25px] font-lato text-center ml-100 mr-15">
                   It all started in our classrooms. Watching fellow
                   entrepreneurship students struggle with clunky spreadsheets,
                   lost sales data, and late-night formula errors, we asked: "Why
@@ -66,23 +66,23 @@ const About = () => {
                   formula fails. Just more time to grow your business."
                 </p>
                 <div className="">
-                  <hr className="h-0.5 my-7 w-200 mx-auto bg-gray-400 border-0 rounded-lg dark:bg-gray-400 ml-17"></hr>
+                  <hr className="h-0.5 my-7 mt-10 w-230 bg-black opacity-25 border-0 rounded-lg"></hr>
                 </div>
               </div>
             </div>
 
             <div className="flex mt-10">
               <img
-                className="w-[750px] h-[400px] ml-5"
+                className="w-690 h-110 ml-15 mt-10"
                 src="/about-2.jpg"
                 alt="team"
               />
 
-              <div className="mt-10">
-                <h2 className="text-5xl font-bold font-league spartan text-center ml-15">
+              <div className="mt-25">
+                <h2 className="text-5xl font-semibold font-lato text-center ml-5">
                   Prioritizing the entrepreneurship students of QCU
                 </h2>
-                <p className="text-2xl text-[25px] pt-5 font-lato text-center ml-5 -mr-10">
+                <p className="tracking-tight text-2xl text-[25px] pt-5 font-lato text-center ml-13 mr-10">
                   We understood various challenges faced by these students,
                   that's why Salemate has to come to the game and making sure
                   that all transactions are smoothly running and efficient
@@ -92,16 +92,16 @@ const About = () => {
             </div>
 
             <div className="mt-10">
-              <hr className="h-0.5 my-7 w-200 mx-auto bg-gray-400 border-0 rounded-lg dark:bg-gray-400 ml-35 mt-20"></hr>
+              <hr className="h-0.5 my-7 w-230 bg-black opacity-25 border-0 rounded-lg ml-43 mt-25"></hr>
             </div>
 
             <div className="flex flex-col justify-center">
-              <h2 className="text-5xl font-bold font-lato text-center">
+              <h2 className="text-5xl font-semibold font-lato text-center">
                 The team behind &nbsp;&nbsp;
-                <span className="text-[#ffcf50] text-[60px] font-redacted font-bold">
+                <span className="text-[#ffcf50] text-[65px] font-redacted font-bold">
                   S
                 </span>{" "}
-                <span className="text-[#ffcf50] font-quicksand font-semibold">
+                <span className="text-[#ffcf50] text-[45px] font-quicksand font-semibold">
                   salemate
                 </span>
               </h2>
