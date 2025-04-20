@@ -14,7 +14,7 @@ const AnalyticsNav = () => {
     { path: "/analytics/daily-sales", label: "Daily Sales" },
     { path: "/analytics/product-sales", label: "Product Sales" },
     { path: "/analytics/customer-frequency", label: "Customer Frequency" },
-    { path: "/analytics/save-history", label: "Save History" },
+    { path: "/analytics/save-history", label: "Saved History" },
   ];
 
   const searchProps = {
