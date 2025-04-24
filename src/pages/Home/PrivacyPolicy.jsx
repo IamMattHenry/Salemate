@@ -24,8 +24,8 @@ function PrivacyPolicy() {
       </div>
       <div className="relative">
         <HomeRoutes />
-        <HomePanel>
-          <div className="w-full pt-15"> {/* TO ADJUST NINYO */}
+        <HomePanel className="mt-40">
+          <div className="w-full "> {/* TO ADJUST NINYO PADDING DITO, WAG NA GAYAHIN CLASS NG HOME PANEL*/}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
               <div className="bg-white flex flex-col items-center shadow-feat rounded-2xl py-10 overflow-auto">
                 <svg
@@ -37,14 +37,14 @@ function PrivacyPolicy() {
                   <path d="M3.5 11.5a3.5 3.5 0 1 1 3.163-5H14L15.5 8 14 9.5l-1-1-1 1-1-1-1 1-1-1-1 1H6.663a3.5 3.5 0 0 1-3.163 2M2.5 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2" />
                 </svg>
                 <div className="w-[75%] space-y-5">
-                  <h3 className="font-lato font-semibold md:text-md mt-10 border-b-2 border-gray-400 pb-6">
+                  <h3 className="font-lato font-semibold md:text-lg mt-10 border-b-2 border-gray-400 pb-6">
                     1. Information We Collect
                   </h3>
-                  <p className="font-lato text-justify md:text-sm">
+                  <p className="font-lato text-justify md:text-[1rem]">
                     We may collect the following types of information when you
                     use our Web App:<br></br>
                   </p>
-                  <ul className="list-inside list-disc font-lato md:text-sm">
+                  <ul className="list-inside list-disc font-lato md:text-[1rem]">
                     <li>
                       Personal Information: When you sign up for an account, we
                       may collect personal information such as your name, email
@@ -78,15 +78,15 @@ function PrivacyPolicy() {
                   />
                 </svg>
                 <div className="w-[75%] space-y-5">
-                  <h3 className="font-lato font-semibold md:text-md mt-10 border-b-2 border-gray-400 pb-6">
+                  <h3 className="font-lato font-semibold md:text-lg mt-10 border-b-2 border-gray-400 pb-6">
                     2. How We Use Your Information
                   </h3>
-                  <p className="font-lato text-justify md:text-sm">
+                  <p className="font-lato text-justify md:text-[1rem]">
                     We use the information we collect for the following
                     purposes:
                     <br></br>
                   </p>
-                  <ul className="list-inside list-disc font-lato md:text-sm">
+                  <ul className="list-inside list-disc font-lato md:text-[1rem]">
                     <li>
                       To provide, maintain, and improve our Web App and
                       services.
@@ -119,15 +119,15 @@ function PrivacyPolicy() {
                   <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2" />
                 </svg>
                 <div className="w-[75%] space-y-5">
-                  <h3 className="font-lato font-semibold md:text-md mt-10 border-b-2 border-gray-400 pb-6">
+                  <h3 className="font-lato font-semibold md:text-lg mt-10 border-b-2 border-gray-400 pb-6">
                     3. How We Share Your Information
                   </h3>
-                  <p className="font-lato text-justify md:text-sm">
+                  <p className="font-lato text-justify md:text-[1rem]">
                     We do not sell, rent, or trade your personal information.
                     However, we may share your data in the following
                     circumstances:<br></br>
                   </p>
-                  <ul className="list-inside list-disc font-lato md:text-sm">
+                  <ul className="list-inside list-disc font-lato md:text-[1rem]">
                     <li>
                       Service Providers: We may share your information with
                       trusted third-party vendors or service providers who
