@@ -1,7 +1,8 @@
+// src/components/SignIn.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import firebaseApp from "../../firebaseConfig"; // Adjust the path to your Firebase config file
+import firebaseApp from "../firebaseConfig"; // Adjust the path to your Firebase config file
 
 function SignIn() {
   const [email, setEmail] = useState("");
