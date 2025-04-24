@@ -22,7 +22,7 @@ function NavBar() {
                 to="/contact"
                 className={({ isActive }) =>
                   isActive
-                    ? "py-3 px-5 rounded-3xl text-yellowsm transition ease-in-out hover:bg-yellowsm hover:text-white border-2 border-yellowsm"
+                    ? "bg-yellowsm text-whitesm hover:bg-whitesm hover:text-yellowsm py-3 px-5 rounded-3xl transition ease-in-out border-yellowsm"
                     : "py-3 px-5 rounded-3xl text-yellowsm transition ease-in-out hover:bg-yellowsm hover:text-white border-2 border-yellowsm"
                 }
               >

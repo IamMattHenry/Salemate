@@ -22,13 +22,13 @@ function SignIn() {
   const handleSubmit = (e) => {
     e.preventDefault();
     navigate("/dashboard");
-  };
+  }
 
   return (
     <div>
       <form onSubmit={handleSubmit}>
-        <div className="w-96 md:w-6/12 lg:w-4/12 h-auto block mx-auto my-12">
-          <div className="bg-yellowsm/20 flex flex-col items-center font-lato h-full space-y-5 py-5 rounded-3xl shadow-2xl">
+        <div className="form w-96 md:w-6/12 lg:w-4/12 h-auto block mx-auto my-12">
+          <div className="form-box bg-yellowb flex flex-col items-center font-lato h-full space-y-5 py-5 min-w-0 rounded-3xl shadow-2xl">
             <div className="icon">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -50,12 +50,12 @@ function SignIn() {
             </div>
             <div className="signin text-center">
               <h3 className="text-3xl text-black mb-2">Sign In</h3>
-              <p className="text-[1rem] text-black">
+              <p className="text-sm text-black">
                 Make sure to create your account first before signing in
               </p>
             </div>
             <div className="signin-inp space-y-3">
-              <div className="relative w-full mx-auto">
+              <div className="relative w-full max-w-xs mx-auto">
                 <svg
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
                   xmlns="http://www.w3.org/2000/svg"
@@ -69,10 +69,10 @@ function SignIn() {
                 <input
                   type="text"
                   placeholder="Username"
-                  className="pl-10 pr-4 py-2 w-full rounded-2xl focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white"
+                  className="pl-10 pr-4 py-2 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white"
                 />
               </div>
-              <div className="relative w-full mx-auto">
+              <div className="relative w-full max-w-xs mx-auto">
                 <svg
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
                   xmlns="http://www.w3.org/2000/svg"
@@ -90,7 +90,7 @@ function SignIn() {
                   id="password"
                   type="password"
                   placeholder="Password"
-                  className="pl-10 pr-10 py-2 w-84 rounded-2xl focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white"
+                  className="pl-10 pr-10 py-2 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white"
                 />
                 <svg
                   id="togglePassword"
@@ -113,17 +113,16 @@ function SignIn() {
               </div>
               <div className="text-center">
                 <button
-                  className="font-lato font-bold mt-4 bg-black py-3 px-5 rounded-2xl text-whitesm cursor-pointer"
-                  type="submit"
-                >
+                  className="font-lato font-bold mt-4 bg-black py-3 px-5 rounded-lg text-whitesm cursor-pointer"
+                  type="submit">
                   Sign In
                 </button>
               </div>
               <div className="w-full text-center">
-                <p className="text-black text-[.8rem] font-latrue">
+                <p className="text-black text-sm font-lato">
                   Don't have an account yet?{" "}
                   <a
-                    className="text-[.8rem] font-latrue underline cursor-pointer"
+                    className="text-sm font-lato underline cursor-pointer"
                     href="/signup"
                     target="_self"
                   >
