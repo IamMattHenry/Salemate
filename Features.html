@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Salemate Features</title>
+    <link rel="icon" type="image/png" href="img/S.png">
+    <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: 'Lato', sans-serif;
+        background: linear-gradient(to bottom, #fefae0 60%, #ffcf50 75%);
+      }
+      .header {
+        font-family: 'League Spartan', sans-serif;
+      }
+      .intro {
+        display: flex;
+        flex-direction: column;
+        padding: 4rem 2.5rem;
+       
+      }
+      @media (min-width: 768px) {
+        .intro {
+          flex-direction: row;
+          align-items: center;
+        }
+      }
+      .intro-text {
+        flex: 2;
+        margin-left: 70px;
+      }
+      .intro-img img {
+        margin-right: 70px;
+        width: 386px;
+      }
+      .intro-text h1{
+        font-family: 'League Spartan', sans-serif;
+        font-size: 80px;
+      }
+      .features-grid h3{
+        font-family: 'League Spartan', sans-serif;
+        font-size: 35px;
+        text-align: center;
+        padding-bottom: 1rem;
+      }
+      .features-grid p{
+        font-family: 'Lato', sans-serif;
+        font-size: 22px;
+        text-align: justify;
+        margin-right: 5rem;
+        margin-left: 5rem;
+        padding-bottom: 3rem;
+      }
+      .vertical-divider {
+        border-left: 2px solid #ccc;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 50%;
+      }
+    </style>
+</head>
+<body>
+        <header class="header bg-fefae0 px-6 py-4 flex justify-between items-center">
+        <div class="logo text-3xl font-bold text-yellow-500 flex items-center">
+            <img src="img/S.png" class="h-8 w-auto mr-2">
+            <a href="#" class="">Salemate</a>
+        </div>
+        <div class="buttons flex gap-4 text-sm">
+            <button class="btn-outline border-2 border-yellow-500 text-yellow-500 bg-white hover:bg-fef9c3 rounded-full px-4 py-2 transition-colors duration-300">CONTACT US</button>
+            <button class="btn-primary bg-yellow-500 text-fefae0 rounded-full px-4 py-2 font-semibold hover:bg-eab308 transition-colors duration-300">GET ACCESS</button>
+        </div>
+    </header>
+
+
+    <section class="intro">
+        <div class="intro-text flex-1 mr-20 text-left" style="margin-left: 10rem;">
+            <h1 class="title text-6xl font-bold text-gray-800 mb-4">Features</h1>
+            <p class="subtitle text-xl font-medium text-gray-700 mb-4">We're proud to introduce Salemate</p>
+            <p class="description text-gray-600 mt-5 max-w-2xl">Your web-based platform designed to simplify sales operations and make work life easier. Built for efficiency, our tools help you manage sales wisely, easily, and quickly.</p>
+        </div>
+        <div class="intro-img w-[50%] flex justify-end">
+            <img src="img/light.png" alt="Idea" class="">
+        </div>
+    </section>
+
+
+    <nav class="nav-tabs flex justify-center gap-10 bg-white rounded-full shadow-md my-8 w-fit mx-auto" style="margin-top: 1rem;">
+        <a href="#" class="text-lg text-gray-600 hover:text-black  px-4 py-3 rounded-md transition-colors duration-300">Privacy Policy</a>
+        <a href="#" class="text-lg text-gray-600 hover:text-black px-4 py-3 rounded-md transition-colors duration-300">Contact Us</a>
+        <a href="#" class="text-lg text-gray-600 hover:text-black px-4 py-3 rounded-md transition-colors duration-300">About Us</a>
+        <a href="#" class="text-lg text-gray-600 hover:text-black px-4 py-3 rounded-md transition-colors duration-300">Terms and Condition</a>
+        <a href="Features.html" class="active-tab text-lg font-bold text-white bg-yellow-500 px-3 py-3 rounded-md transition-colors duration-250">Features</a>
+    </nav>
+
+
+    <section class="features bg-white rounded-3xl shadow-xl px-10 py-10 mx-10 mb-8 relative" style="height: fit; padding-top: 7rem;">
+        <div class="features-grid grid grid-cols-1 md:grid-cols-2 gap-8 relative">
+            <div class="vertical-divider absolute top-0 bottom-0 left-50%"></div>
+            <div class="left-column">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Available through a web browser or mobile app</h3>
+                <p class="text-gray-600 text-lg">Access your Salemate POS system in the most convenient way whether you're using a classroom computer, your Android tablet, or smartphone. Our platform adapts seamlessly to any device.</p>
+            </div>
+            <div class="right-column">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Manage from everywhere</h3>
+                <p class="text-gray-600 text-lg">Update inventory, process sales, and check analytics whether you're at your campus store, home, or supplier meetings. All you need is an internet connection.</p>
+            </div>
+            <div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Customer insights</h3>
+                <p class="text-gray-600 text-lg">Rate and categorize your regular customers based on purchase frequency, order size, and loyalty. Build relationships that help grow your student business.</p>
+            </div>
+            <div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Visual product layout</h3>
+                <p class="text-gray-600 text-lg">We've designed Salemate to work flawlessly on the devices QCU students use most – especially Android tablets and Chrome browsers for the smoothest experience.</p>
+            </div>
+            <div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Smart Inventory Overview</h3>
+                <p class="text-gray-600 text-lg">See your entire inventory at a glance with our intuitive shelf-style display. Zoom in to check stock details or out to view your full product range.</p>
+            </div>
+            <div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Role-based access control</h3>
+                <p class="text-gray-600 text-lg">Assign different access levels for team members from owners who need full analytics to cashiers who only require transaction functions.</p>
+            </div>
+            <div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Smart client database</h3>
+                <p class="text-gray-600 text-lg">Build and maintain a searchable customer directory that automatically tracks order history, contact details, and purchase patterns.</p>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

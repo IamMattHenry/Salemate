@@ -108,10 +108,10 @@ function Home() {
                 loading="lazy"
               />
             </div>
-            <p className="text-center mt-3 font-lato font-bold text-2xl">
+            <p className="text-center mt-3 font-lato font-bold text-xl">
               Customer Relation Management
             </p>
-            <p className="text-md font-latrue">
+            <p className="text-md font-lato">
               Manages and compiles your loyal customers.
             </p>
           </motion.div>
@@ -133,10 +133,10 @@ function Home() {
                 loading="lazy"
               />
             </div>
-            <p className="text-center mt-3 font-lato font-bold text-2xl">
+            <p className="text-center mt-3 font-lato font-bold text-xl">
               Analytics & Finance Report
             </p>
-            <p className="text-md font-latrue">
+            <p className="text-md font-lato">
               Easier way to generate sales and finance report.
             </p>
           </motion.div>
@@ -158,95 +158,97 @@ function Home() {
                 loading="lazy"
               />
             </div>
-            <p className="text-center mt-3 font-lato font-bold text-2xl">
+            <p className="text-center mt-3 font-lato font-bold text-xl">
               Inventory Management
             </p>
-            <p className="text-md font-latrue">
+            <p className="text-md font-lato">
               Inventory of materials and corresponding information.
             </p>
           </motion.div>
         </div>
-        <div className="h-20 bg-yellowsm/20 shadow-lg flex items-center justify-center w-full mt-10">
-          <div className="flex space-x-1">
-            <motion.h1
-              className="font-lato text-3xl"
-              initial={{
-                translateX: -300,
-                opacity: 0.1,
-              }}
-              whileInView={{
-                translateX: 0,
-                opacity: 1,
-              }}
-              transition={{
-                duration: 0.5,
-              }}
-              viewport={{ once: true }}
-            >
-              Whatever your role is,
-            </motion.h1>
-            <div className="flex space-x-1">
-              <motion.span
-                className="font-lato text-3xl font-bold inline-block"
-                initial={{ scale: 1.1, y: -30, opacity: 0 }}
-                whileInView={{ scale: 1, y: 0, opacity: 1 }}
+        <div className="h-25 w-full bg-yellowsm mt-15">
+          <div className="h-20 bg-[#FFCF50] p-10 w-full mt-20">
+            <div className="flex items-center justify-center space-x-1">
+              <motion.h1
+                className="font-lato text-3xl"
+                initial={{
+                  translateX: -300,
+                  opacity: 0.1,
+                }}
+                whileInView={{
+                  translateX: 0,
+                  opacity: 1,
+                }}
                 transition={{
-                  duration: 0.3,
-                  delay: 0.2,
-                  type: "spring",
-                  stiffness: 500,
-                  damping: 30,
+                  duration: 0.5,
                 }}
                 viewport={{ once: true }}
               >
-                we've{" "}
-              </motion.span>
-              <motion.span
-                className="font-lato text-3xl font-bold inline-block"
-                initial={{ scale: 1.2, y: -30, opacity: 0 }}
-                whileInView={{ scale: 1, y: 0, opacity: 1 }}
-                transition={{
-                  duration: 0.3,
-                  delay: 0.4,
-                  type: "spring",
-                  stiffness: 500,
-                  damping: 30,
-                }}
-                viewport={{ once: true }}
-              >
-                got{" "}
-              </motion.span>
-              <motion.span
-                className="font-lato text-3xl font-bold inline-block"
-                initial={{ scale: 1.2, y: -30, opacity: 0 }}
-                whileInView={{ scale: 1, y: 0, opacity: 1 }}
-                transition={{
-                  duration: 0.3,
-                  delay: 0.6,
-                  type: "spring",
-                  stiffness: 500,
-                  damping: 30,
-                }}
-                viewport={{ once: true }}
-              >
-                you{" "}
-              </motion.span>
-              <motion.span
-                className="font-lato text-3xl font-bold inline-block"
-                initial={{ scale: 1.2, y: -30, opacity: 0 }}
-                whileInView={{ scale: 1, y: 0, opacity: 1 }}
-                transition={{
-                  duration: 0.3,
-                  delay: 1.2,
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 10,
-                  bounce: 0.8,
-                }}
-                viewport={{ once: true }}
-              >
-                covered{" "}
-              </motion.span>
+                Whatever your role is,
+              </motion.h1>
+              <div className="flex space-x-1">
+                <motion.span
+                  className="font-lato text-3xl font-bold inline-block"
+                  initial={{ scale: 1.1, y: -30, opacity: 0 }}
+                  whileInView={{ scale: 1, y: 0, opacity: 1 }}
+                  transition={{
+                    duration: 0.3,
+                    delay: 0.2,
+                    type: "spring",
+                    stiffness: 500,
+                    damping: 30,
+                  }}
+                  viewport={{ once: true }}
+                >
+                  we've{" "}
+                </motion.span>
+                <motion.span
+                  className="font-lato text-3xl font-bold inline-block"
+                  initial={{ scale: 1.2, y: -30, opacity: 0 }}
+                  whileInView={{ scale: 1, y: 0, opacity: 1 }}
+                  transition={{
+                    duration: 0.3,
+                    delay: 0.4,
+                    type: "spring",
+                    stiffness: 500,
+                    damping: 30,
+                  }}
+                  viewport={{ once: true }}
+                >
+                  got{" "}
+                </motion.span>
+                <motion.span
+                  className="font-lato text-3xl font-bold inline-block"
+                  initial={{ scale: 1.2, y: -30, opacity: 0 }}
+                  whileInView={{ scale: 1, y: 0, opacity: 1 }}
+                  transition={{
+                    duration: 0.3,
+                    delay: 0.6,
+                    type: "spring",
+                    stiffness: 500,
+                    damping: 30,
+                  }}
+                  viewport={{ once: true }}
+                >
+                  you{" "}
+                </motion.span>
+                <motion.span
+                  className="font-lato text-3xl font-bold inline-block"
+                  initial={{ scale: 1.2, y: -30, opacity: 0 }}
+                  whileInView={{ scale: 1, y: 0, opacity: 1 }}
+                  transition={{
+                    duration: 0.3,
+                    delay: 1.2,
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 10,
+                    bounce: 0.8,
+                  }}
+                  viewport={{ once: true }}
+                >
+                  covered{" "}
+                </motion.span>
+              </div>
             </div>
           </div>
         </div>
@@ -275,7 +277,7 @@ function Home() {
               <h1 className="font-bold font-lato text-3xl xl:text-4xl">
                 Easily manages the <br /> purchasing process
               </h1>
-              <h1 className="font-normal font-latrue text-xl xl:text-2xl">
+              <h1 className="font-normal font-lato text-xl xl:text-2xl">
                 By just using the dashboard for <br /> transactions and
                 purchasing process, <br /> you can monitor orders, sales, and{" "}
                 <br />
@@ -300,7 +302,7 @@ function Home() {
               <h1 className="font-bold font-lato text-3xl xl:text-4xl">
                 Monitor real time orders
               </h1>
-              <h1 className="font-normal font-latrue text-xl xl:text-2xl">
+              <h1 className="font-normal font-lato text-xl xl:text-2xl">
                 Easily track, record, and monitor customer <br /> orders with
                 the Order History Dashboard. <br /> Stay updated on order status
                 and ensure <br />
@@ -339,7 +341,7 @@ function Home() {
                 Provides necessary <br />
                 business information
               </h1>
-              <h1 className="font-normal font-latrue text-xl xl:text-2xl">
+              <h1 className="font-normal font-lato text-xl xl:text-2xl">
                 Analytic report page summarizes the overall <br /> performance
                 of your business and see the <br /> effectiveness of your
                 business operation.
@@ -362,7 +364,7 @@ function Home() {
               <h1 className="font-bold font-lato text-3xl xl:text-4xl">
                 Tracking the <br /> frequency of orders
               </h1>
-              <h1 className="font-normal font-latrue text-xl xl:text-2xl">
+              <h1 className="font-normal font-lato text-xl xl:text-2xl">
                 With Salemate, you can track your customer <br /> This system
                 will allow you to know if your customers <br /> are active or
                 not actively ordering, and even <br /> the overall number of
@@ -402,7 +404,7 @@ function Home() {
               <h1 className="font-bold font-lato text-3xl xl:text-4xl">
                 Manage inventory <br /> seamlessly
               </h1>
-              <h1 className="font-normal font-latrue text-xl xl:text-2xl">
+              <h1 className="font-normal font-lato text-xl xl:text-2xl">
                 Stay informed on stock levels, monitor item <br /> availability,
                 and make data-driven decisions <br /> to optimize your inventory
                 management.
