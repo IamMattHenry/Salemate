@@ -6,7 +6,8 @@ import { useLocation } from "react-router-dom";
 import firebaseApp from "../../firebaseConfig"; 
 
 const DashboardHeader = () => {
-  const [userData, setUserData] = useState(null);
+  const [lastName, setLastName] = useState(""); // State to store the last name
+  const [department, setDepartment] = useState(""); // State to store the department
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const location = useLocation(); 
@@ -21,7 +22,8 @@ const DashboardHeader = () => {
           const userDoc = await getDoc(userDocRef);
 
           if (userDoc.exists()) {
-            setUserData(userDoc.data());
+            setLastName(userDoc.data().lastName); // Fetch the last name
+            setDepartment(userDoc.data().department); // Fetch the department
           } else {
             setError("User data not found.");
           }
@@ -77,10 +79,10 @@ const DashboardHeader = () => {
           <div className="flex items-center">
             <div className="flex flex-col text-center mx-2 leading-none">
               <h3 className="font-semibold font-lato text-xl p-0 mb-[-7px]">
-                {userData?.firstName} {userData?.lastName}
+                {lastName} {/* Display the last name */}
               </h3>
               <span className="font-lato text-gray-400 text-sm">
-                {userData?.department}
+                {department} {/* Display the department */}
               </span>
             </div>
             <div>

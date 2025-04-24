@@ -30,7 +30,7 @@ function SignUp() {
   };
 
   const validateFields = () => {
-    const nameRegex = /^[a-zA-Z]+$/; // Only letters allowed
+    const nameRegex = /^[a-zA-Z\s]+$/; // Allow letters and spaces
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Valid email format
     const passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,}$/; // At least 6 characters, 1 numeric, 1 special character
 
