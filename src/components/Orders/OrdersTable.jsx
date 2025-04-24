@@ -66,14 +66,14 @@ const OrdersTable = () => {
   };
 
   const TableHead = () => (
-    <thead className="font-semibold border-b-[0.1px] border-b-yellowsm/40">
-      <tr className="text-center">
-        <th className="px-4 py-2">Order</th>
-        <th className="px-4 py-2">Recipient</th>
-        <th className="px-4 py-2">Amount</th>
-        <th className="px-4 py-2">Time</th>
-        <th className="px-4 py-2">Date</th>
-        <th className="px-4 py-2">Status</th>
+    <thead className="font-semibold border-b border-b-gray-600/50">
+      <tr className="text-left">
+        <th className="p-1.5">Order</th>
+        <th className="p-1.5">Recipient</th>
+        <th className="p-1.5">Amount</th>
+        <th className="p-1.5">Time</th>
+        <th className="p-1.5">Date</th>
+        <th className="p-1.5">Status</th>
       </tr>
     </thead>
   );
@@ -94,15 +94,15 @@ const OrdersTable = () => {
   const TableRow = () => (
     <tbody>
       {orders.map((order, index) => (
-        <tr key={index} className="bg-white hover:bg-[#ffcf50]/20 transition-colors border-b-[0.1px] border-b-yellowsm/40 text-[1rem] font-latrue text-center">
-          <td className="px-4 py-2">{order.order}</td>
-          <td className="px-4 py-2">{order.recipient}</td>
-          <td className="px-4 py-2">{order.amount}</td>
-          <td className="px-4 py-2">{order.time}</td>
-          <td className="px-4 py-2">{order.date}</td>
-          <td className="px-4 py-2 flex justify-center flex-center">
+        <tr key={index} className="bg-white hover:bg-[#ffcf50]/20 transition-colors border-b-[0.1px] border-b-gray-600/20">
+          <td className="p-1.5">{order.order}</td>
+          <td className="p-1.5">{order.recipient}</td>
+          <td className="p-1.5">{order.amount}</td>
+          <td className="p-1.5">{order.time}</td>
+          <td className="p-1.5">{order.date}</td>
+          <td className="p-1.5">
             <span
-              className={`w-[8rem] flex items-center justify-between text-sm font-bold px-4 py-2 rounded-3xl border-[0.1px] ${getStatusClass(
+              className={`w-[8rem] flex items-center justify-between text-sm font-bold px-3 py-2 rounded-xl ${getStatusClass(
                 order.status
               )}`}
             >

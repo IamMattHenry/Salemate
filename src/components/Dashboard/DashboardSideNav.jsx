@@ -7,7 +7,7 @@ import DashboardLogout from "./DashboardLogout";
 const DashboardSideNav = ({ toggleSideNav, isMinimized }) => {
   return (
     <div
-      className={`flex flex-col pt-3 bg-gradient-to-b from-whitesm from-5% via-yellowf via-40% to-yellowsm to-90% min-h-full`}
+      className={`flex flex-col items-center pt-3 bg-gradient-to-b from-whitesm from-5% via-yellowf via-40% to-yellowsm to-90% overflow-y-hidden}`}
     >
       <div className="w-full">
         <DashboardSideToggle toggleSideNav={toggleSideNav} isMinimized={isMinimized}/>

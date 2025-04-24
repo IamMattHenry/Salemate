@@ -5,7 +5,7 @@ function NavBar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <nav className="z-50 fixed">
+    <nav className="z-50">
       <div className="relative">
         <div className="flex justify-between items-center w-full px-3 py-5">
           <h3 className="text-yellowsm md:text-3xl md:ml-5">

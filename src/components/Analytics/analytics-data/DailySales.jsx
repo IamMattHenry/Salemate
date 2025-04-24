@@ -37,7 +37,7 @@ const DailySales = () => {
   ];
 
   return (
-    <section className="bg-white rounded-2xl shadow-feat w-full mx-auto block pb-5">
+    <section className="bg-white rounded-2xl shadow-feat w-full mx-auto block my-4 pb-5">
       <AnalyticsDataHeader sectionHeader={sectionHeader} />
       <div className="mt-7 mx-7 w-auto">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 mb-6">

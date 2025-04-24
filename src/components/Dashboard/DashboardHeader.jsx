@@ -13,7 +13,7 @@ const DashboardHeader = ({ user }) => {
 
   return (
     <div className="bg-whitesm/50 w-full pt-2">
-      <div className="w-full flex justify-between items-center pr-5 pl-8.5 py-2">
+      <div className="w-full flex justify-between items-center px-3 py-2">
         <h3 className="font-lato font-bold text-4xl">Test</h3>
         <div className="flex items-center pr-3 py-1">
           <h4 className="font-lato border-r-2 py-1 pr-3">{formattedDate}</h4>

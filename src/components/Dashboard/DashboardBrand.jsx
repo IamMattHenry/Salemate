@@ -10,25 +10,28 @@ const DashboardBrand = ({ isMinimized }) => {
             : "text-yellowsm flex justify-center space-x-2 text-center items-center"
         }`}
       >
-        <span
-          className={`${
-            isMinimized
-              ? "font-redacted font-bold text-5xl -mb-3 mt-3"
-              : "font-redacted font-bold text-5xl"
-          }`}
-        >
-          S
-        </span>
-
-        <span
-          className={`${
-            isMinimized
-              ? "font-quicksand font-bold text-sm"
-              : "font-quicksand font-bold text-xl"
-          }`}
-        >
-          salemate
-        </span>
+        <a href="/">
+          <span
+            className={`${
+              isMinimized
+                ? "font-redacted font-bold text-4xl -mb-3 mt-3"
+                : "font-redacted font-bold text-4xl"
+            }`}
+          >
+            S
+          </span>
+        </a>
+        <a href="/">
+          <span
+            className={`${
+              isMinimized
+                ? "font-quicksand font-bold text-sm"
+                : "font-quicksand font-bold text-xl"
+            }`}
+          >
+            salemate
+          </span>
+        </a>
       </h3>
     </div>
   );

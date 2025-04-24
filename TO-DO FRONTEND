@@ -4,7 +4,7 @@ TO ALL:
 -- pagaya ng design sa figma as much as possible
 --  replace font-lato with font-latrue (sa mga hindi heading) sa mga page bago mag login
 
---> LANDING (MATT) DONE
+--> LANDING (MATT) ./. DONE
 -- NavBrand (Larger Logo)
 -- NavLink (Get Access Highlighted at Landing)
 -- Margin on top higher
@@ -33,7 +33,7 @@ TO ALL:
 -- may mga kulang na element
 -- adjust text
 
---> SIGN IN, SIGN OUT (MATT) DONE
+--> SIGN IN, SIGN OUT (MATT) ./. DONE
 -- add input to signout
 -- lower opacity
 -- larger text
