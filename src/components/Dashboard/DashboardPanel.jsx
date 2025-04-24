@@ -14,7 +14,7 @@ const DashboardPanel = () => {
   return (
     <div className="bg-white/50 w-auto rounded-xl shadow-feat h-auto grid grid-cols-[60%_1fr] ml-5 mr-5">
       <div className="pt-5 px-5 pb-5">
-        <h3 className="font-lato font-semibold text-xl">MENU CATEGORIES</h3>
+        <h3 className="font-lato font-semibold text-2xl ml-10 mt-5">MENU CATEGORIES</h3>
         <div>
           <DashboardCategory />
         </div>

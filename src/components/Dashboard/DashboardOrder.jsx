@@ -226,10 +226,10 @@ import React from "react";
        )}
        <div className="bg-white shadow-feat px-2 pt-2 h-full rounded-tr-xl rounded-br-xl">
          <div className="flex items-center justify-between">
-           <h3 className="font-lato font-semibold text-lg">
+           <h3 className="font-lato font-semibold p-2 text-[26px]">
              Order {orderNumber}:{" "}
            </h3>
-           <div className="font-lato text-xs font-semibold space-x-2 flex">
+           <div className="font-lato text-xs font-semibold space-x-2 flex mr-5">
              <span className="flex gap-1">
                <IoMdTime />
                {timeToday}{" "}
@@ -241,44 +241,44 @@ import React from "react";
            </div>
          </div>
          <div className="space-y-1 mt-5 mx-3">
-           <h4 className="font-lato font-semibold text-sm">Mode of Payment:</h4>
-           <div className="font-semibold font-lato text-[.87rem] flex items-center justify-between">
-             <div className="space-x-3">
-               <button className="border rounded-xl py-0.5 px-6 cursor-pointer hover:bg-yellowsm/20 transition">
+           <h4 className="font-lato font-semibold text-sm ml-3">Mode of Payment:</h4>
+           <div className="font-semibold font-lato flex items-center justify-between">
+             <div className="space-x-3 pt-2 ml-3">
+               <button className="border rounded-3xl py-0.5 w-23 h-8 cursor-pointer hover:bg-yellowsm/20 transition font-bold shadow-[inset_1px_1px_5px_rgba(0,0,0,0.3)]">
                  Cash
                </button>
-               <button className="border rounded-xl py-0.5 px-5 cursor-pointer hover:bg-yellowsm/20 transition">
+               <button className="border rounded-3xl py-0.5 w-23 h-8 cursor-pointer hover:bg-yellowsm/20 transition font-bold shadow-[inset_1px_1px_5px_rgba(0,0,0,0.3)]">
                  Online
                </button>
              </div>
-             <div className="text-red-600 text-xl cursor-pointer">
+             <div className="text-red-600 text-[25px] mr-5 cursor-pointer">
                <IoMdTrash />
              </div>
            </div>
          </div>
          <div className="h-[17.3rem] w-full mt-5 flex flex-col space-y-5 overflow-y-auto product-scroll">
            {/* Nag seed lang ako ng data para mapakita itsura ninya pag may data na. Gagawin ko ring dynamic 'to soon*/}
-           <div className="relative grid grid-cols-[30%_1fr_35%] gap-2 items-center">
+           <div className="bg-gray-50 relative grid grid-cols-[30%_1fr_35%] gap-2 items-center">
              <div>
                <img
                  src={product.url}
                  alt="katsu"
-                 className="size-20 md:h-auto md:w-full rounded-[50%]"
+                 className="md:size-20 rounded-[50%] ml-5 mt-3 mb-3"
                />
              </div>
-             <div className="flex flex-col justify-start">
-               <span className="font-semibold text-sm">{product.title}</span>
+             <div className="flex flex-col justify-start text-left">
+               <span className="font-semibold text-[20px]">{product.title}</span>
                <span className="text-sm text-gray-500 font-lato">
                  {product.description}
                </span>
                <span className="text-xs">&#8369; {product.price}</span>
              </div>
              <div className=" font-lato font-bold text-sm text-center flex flex-col justify-between h-full">
-               <div className="text-sm flex justify-end space-x-1">
-                 <IoPencil />
-                 <MdCancel className="text-red-600" />
+               <div className="text-sm flex justify-end space-x-1 mt-3">
+                 <IoPencil className="size-4 mr-1" />
+                 <MdCancel className="size-4 text-red-600 mr-7.5" />
                </div>
-               <div className="space-x-2 flex items-center justify-center">
+               <div className="space-x-2 flex items-center justify-center ml-4 mb-3">
                  <button
                    onClick={decreaseQuantity}
                    className="cursor-pointer text-xl"
@@ -288,7 +288,7 @@ import React from "react";
                  <input
                    type="text"
                    placeholder={quantity}
-                   className="border-[0.5px] border-gray-500 w-[50%] text-center rounded-xl"
+                   className="border-[0.5px] border-gray-500 w-[35%] text-center rounded-xl"
                  />
                  <button
                    onClick={increaseQuantity}
@@ -299,27 +299,27 @@ import React from "react";
                </div>
              </div>
            </div>
-           <div className="relative grid grid-cols-[30%_1fr_35%] gap-2 items-center">
+           <div className="bg-gray-50 relative grid grid-cols-[30%_1fr_35%] gap-2 items-center">
              <div>
                <img
                  src={product.url}
                  alt="katsu"
-                 className="size-20 md:h-auto md:w-full rounded-[50%]"
+                 className="md:size-20 rounded-[50%] ml-5 mt-3 mb-3"
                />
              </div>
-             <div className="flex flex-col justify-start">
-               <span className="font-semibold text-sm">{product.title}</span>
+             <div className="flex flex-col justify-start text-left">
+               <span className="font-semibold text-[20px]">{product.title}</span>
                <span className="text-sm text-gray-500 font-lato">
                  {product.description}
                </span>
                <span className="text-xs">&#8369; {product.price}</span>
              </div>
              <div className=" font-lato font-bold text-sm text-center flex flex-col justify-between h-full">
-               <div className="text-sm flex justify-end space-x-1">
-                 <IoPencil />
-                 <MdCancel className="text-red-600" />
+               <div className="text-sm flex justify-end space-x-1 mt-3">
+                 <IoPencil className="size-4 mr-1" />
+                 <MdCancel className="size-4 text-red-600 mr-7.5" />
                </div>
-               <div className="space-x-2 flex items-center justify-center">
+               <div className="space-x-2 flex items-center justify-center ml-4 mb-3">
                  <button
                    onClick={decreaseQuantity}
                    className="cursor-pointer text-xl"
@@ -329,7 +329,7 @@ import React from "react";
                  <input
                    type="text"
                    placeholder={quantity}
-                   className="border-[0.5px] border-gray-500 w-[50%] text-center rounded-xl"
+                   className="border-[0.5px] border-gray-500 w-[35%] text-center rounded-xl"
                  />
                  <button
                    onClick={increaseQuantity}
@@ -340,27 +340,27 @@ import React from "react";
                </div>
              </div>
            </div>
-           <div className="relative grid grid-cols-[30%_1fr_35%] gap-2 items-center">
+           <div className="bg-gray-50 relative grid grid-cols-[30%_1fr_35%] gap-2 items-center">
              <div>
                <img
                  src={product.url}
                  alt="katsu"
-                 className="size-20 md:h-auto md:w-full rounded-[50%]"
+                 className="md:size-20 rounded-[50%] ml-5 mt-3 mb-3"
                />
              </div>
-             <div className="flex flex-col justify-start">
-               <span className="font-semibold text-sm">{product.title}</span>
+             <div className="flex flex-col justify-start text-left">
+               <span className="font-semibold text-[20px]">{product.title}</span>
                <span className="text-sm text-gray-500 font-lato">
                  {product.description}
                </span>
                <span className="text-xs">&#8369; {product.price}</span>
              </div>
              <div className=" font-lato font-bold text-sm text-center flex flex-col justify-between h-full">
-               <div className="text-sm flex justify-end space-x-1">
-                 <IoPencil />
-                 <MdCancel className="text-red-600" />
+               <div className="text-sm flex justify-end space-x-1 mt-3">
+                 <IoPencil className="size-4 mr-1" />
+                 <MdCancel className="size-4 text-red-600 mr-7.5" />
                </div>
-               <div className="space-x-2 flex items-center justify-center">
+               <div className="space-x-2 flex items-center justify-center ml-4 mb-3">
                  <button
                    onClick={decreaseQuantity}
                    className="cursor-pointer text-xl"
@@ -370,7 +370,7 @@ import React from "react";
                  <input
                    type="text"
                    placeholder={quantity}
-                   className="border-[0.5px] border-gray-500 w-[50%] text-center rounded-xl"
+                   className="border-[0.5px] border-gray-500 w-[35%] text-center rounded-xl"
                  />
                  <button
                    onClick={increaseQuantity}
@@ -381,26 +381,27 @@ import React from "react";
                </div>
              </div>
            </div>
+           
          </div>
-         <div className="grid grid-rows-2 bg-gray-300/30 h-[4.5rem] -mx-3 py-2 pl-3 pr-5 gap-2 mt-3">
+         <div className="grid grid-rows-2 bg-gray-300/30 h-[6.5rem] -mx-3 py-2 pl-3 pr-5 gap-2 mt-3">
            <div className="flex justify-between">
-             <span className="font-semibold font-lato text-[0.9rem]">
+             <span className="font-semibold font-lato text-[17px] mx-10 pt-3 mr-10">
                Number of Products:
              </span>
-             <span className="font-medium font-lato text-[0.9rem]">3x</span>
+             <span className="font-lato text-[17px] mx-10 pt-3">3x</span>
            </div>
            <div className="flex justify-between">
-             <span className="font-semibold font-lato text-[0.9rem]">
+             <span className="font-semibold font-lato text-[17px] mx-10">
                Subtotal:
              </span>
-             <span className="font-medium font-lato text-[0.9rem]">
+             <span className="font-lato text-[17px] mx-10">
                &#8369; 1050
              </span>
            </div>
          </div>
-         <div className="h-[3.3rem] items-center flex justify-end">
+         <div className="h-[5.3rem] items-center flex ml-90">
            <button
-             className="text-sm font-lato font-bold bg-[#0cd742] rounded-3xl border-[0.5px] border-green-950 py-1 text-white px-3 cursor-pointer hover:bg-black/70"
+             className="text-sm font-lato font-bold bg-[#0cd742] rounded-3xl border-[0.5px] border-green-950 py-2 text-white px-5 cursor-pointer hover:bg-black/70 shadow-[inset_1px_1px_5px_rgba(0,0,0,0.3)]"
              onClick={showNameModal}
            >
              Checkout

@@ -24,11 +24,11 @@ function Contact() {
       <div className="flex flex-col items-center">
         <HomeRoutes />
         <HomePanel>
-          <div className="w-full p-5">
+          <div className="w-full p-">
             {/* Added padding top/bottom */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
               {/* Address */}
-              <div className="bg-white flex flex-col items-center shadow-feat rounded-2xl py-30 min-h-[340px] w-[340px]">
+              <div className="bg-white flex flex-col items-center shadow-feat rounded-2xl py- min-h-[340px] w-[340px]">
                 <div className="bg-redct md:p-5 rounded-full h-[75px] w-[75px] inset-ring inset-ring-black/25 flex justify-center items-center">
                   <img
                     src="/Address_1.png"

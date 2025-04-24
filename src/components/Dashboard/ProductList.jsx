@@ -139,23 +139,23 @@ const ProductList = ({ product }) => {
           </motion.div>
         </AnimatePresence>
       )}
-      <div className="mt-10 w-full flex justify-between items-center">
-        <h3 className="font-lato font-semibold text-xl">ALL PRODUCTS</h3>
-        <div className="relative w-1/3">
+      <div className="mt- w-full flex justify-between items-center">
+        <h3 className="font-lato font-semibold text-2xl ml-10 mt-20">ALL PRODUCTS</h3>
+        <div className="relative w-1/3 mt-18">
           <input
             type="text"
-            placeholder="Search"
-            className="font-lato bg-white border-[1px] border-gray-500 pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-sm placeholder:text-gray-500 w-full"
+            placeholder="  Search"
+            className="font-lato bg-white border-[1px] border-gray-300 pl-3 pr-7 pt-1 pb-0.5 h-9 rounded-3xl text-sm placeholder:text-gray-500 w-full"
           />
-          <IoIosSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs" />
+          <IoIosSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-black text-[17px]" />
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-4 mt-5 min-h-[10.25rem]">
-        <div className="bg-white rounded-xl flex items-center justify-center flex-col py-3 px-5 text-center shadow-feat">
+      <div className="grid grid-cols-3 mt-10 ml-12 min-h-[10.25rem]">
+        <div className="bg-white w-43 h-55 rounded-xl flex items-center justify-center flex-col py-3 px-5 text-center shadow-feat">
           <img
             src={product.url}
             alt="product-img"
-            className="object-contain rounded-[50%]"
+            className=" rounded-[50%] size-25 mb-3"
           />
           <h3 className="font-lato font-semibold text-lg">{product.title}</h3>
           <span className="text-xs font-lato text-gray-500 font-semibold">
@@ -165,11 +165,11 @@ const ProductList = ({ product }) => {
             Price: {product.price}
           </span>
         </div>
-        <div className="bg-white rounded-xl flex items-center justify-center flex-col py-3 px-5 text-center shadow-feat">
+        <div className="bg-white w-43 h-55 rounded-xl flex items-center justify-center flex-col py-3 px-5 text-center shadow-feat">
           <img
             src={product.url}
             alt="product-img"
-            className="object-contain rounded-[50%]"
+            className="size-25 rounded-[50%] mb-3"
           />
           <h3 className="font-lato font-semibold text-lg">{product.title}</h3>
           <span className="text-xs font-lato text-gray-500 font-semibold">
@@ -180,13 +180,13 @@ const ProductList = ({ product }) => {
           </span>
         </div>
         <div
-          className="bg-white rounded-xl flex items-center justify-center flex-col py-3 px-5 text-center shadow-feat cursor-pointer"
+          className="bg-white w-43 h-55 rounded-xl flex items-center justify-center flex-col py-3 px-5 text-center shadow-feat cursor-pointer"
           onClick={toggleModal}
         >
           {" "}
           {/*ADD ITEM*/}
-          <IoIosAdd className="text-gray-500 size-24" />
-          <span className="font-medium text-sm font-lato text-gray-500 mt-[-10px]">
+          <IoIosAdd className="text-gray-300 size-40" />
+          <span className="font-medium text-sm font-lato text-gray-500 mb-5">
             Add Item
           </span>
         </div>
