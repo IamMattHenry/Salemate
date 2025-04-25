@@ -9,7 +9,7 @@ const SavedHistory = () => {
     ];
   return (
     <section className="bg-white rounded-2xl shadow-feat w-full mx-auto block my-4">
-          <div className="overflow-x-auto font-lato">
+          <div className="overflow-x-auto font-latrue">
             <table className="w-full text-[1rem]">
               <thead>
                 <tr className="leading-normal border-b border-b-gray-600/50">

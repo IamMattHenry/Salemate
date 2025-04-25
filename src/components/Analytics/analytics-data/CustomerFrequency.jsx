@@ -9,29 +9,29 @@ const CustomerFrequency = () => {
       <AnalyticsDataHeader sectionHeader={sectionHeader} />
       <div className="mt-4 mx-7 w-auto">
         <div className="grid grid-rows-2 grid-cols-[40%_1fr] gap-4">
-          <Card className="bg-yellowsm/30 shadow-feat">
-            <div className="text-lg font-medium text-left mb-2 uppercase">
+          <Card className="bg-yellowsm/30 shadow-feat font-latrue">
+            <div className="text-xl font-medium text-left mb-2 uppercase">
               Customer Loyalty Metrics
             </div>
             <div className="flex justify-between w-full items-center my-1">
-              <div className="text-sm text-left">
+              <div className="text-sm text-left font-latrue">
                 <span>New Customers: </span>
               </div>
               <input
                 type="text"
                 disabled
-                className="bg-[#f5f4f4] px-2 border border-gray-400"
+                className="bg-[#f5f4f4] px-2 border text-sm border-gray-400"
                 placeholder="test"
               />
             </div>
             <div className="flex justify-between w-full items-center my-1">
-              <div className="text-sm text-left">
+              <div className="text-sm text-left font-latrue">
                 <span>Returning Customers: </span>
               </div>
               <input
                 type="text"
                 disabled
-                className="bg-[#f5f4f4] px-2 border border-gray-400"
+                className="bg-[#f5f4f4] px-2 border text-sm border-gray-400"
                 placeholder="test"
               />
             </div>
@@ -67,7 +67,7 @@ const CustomerFrequency = () => {
               <input
                 type="text"
                 disabled
-                className="bg-[#f5f4f4] px-2 border border-gray-400"
+                className="bg-[#f5f4f4] px-2 border border-gray-400 text-sm"
                 placeholder="test"
               />
             </div>
@@ -78,7 +78,7 @@ const CustomerFrequency = () => {
               <input
                 type="text"
                 disabled
-                className="bg-[#f5f4f4] px-2 border border-gray-400"
+                className="bg-[#f5f4f4] px-2 border border-gray-400 text-sm"
                 placeholder="test"
               />
             </div>
@@ -89,7 +89,7 @@ const CustomerFrequency = () => {
               <input
                 type="text"
                 disabled
-                className="bg-[#f5f4f4] ml-2 px-2 border border-gray-400"
+                className="bg-[#f5f4f4] px-2 border border-gray-400 text-sm"
                 placeholder="test"
               />
             </div>
@@ -102,7 +102,7 @@ const CustomerFrequency = () => {
 
 const Card = ({ children, className = "" }) => (
   <div
-    className={`w-full rounded-sm flex flex-col items-start py-3 font-lato px-5 ${className}`}
+    className={`w-full rounded-xl flex flex-col items-start py-3 px-5 font-latrue ${className}`}
   >
     {children}
   </div>
@@ -110,13 +110,13 @@ const Card = ({ children, className = "" }) => (
 
 const MonthInput = ({ label }) => (
   <div className="flex justify-between w-[90%] items-center">
-    <div className="text-sm text-left">
+    <div className="text-[1rem] text-left">
       <span>{label}</span>
     </div>
     <input
       type="text"
       disabled
-      className="bg-[#f5f4f4] px-2 border border-gray-400"
+      className="bg-[#f5f4f4] px-2 border border-gray-400 text-sm"
       placeholder="test"
     />
   </div>

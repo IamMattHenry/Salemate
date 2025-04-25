@@ -14,10 +14,10 @@ const InventorySaveHistory = () => {
   return (
     <section className="bg-white rounded-2xl shadow-feat w-full mx-auto block my-4">
       <AnalyticsDataHeader sectionHeader={sectionHeader} />
-      <div className="overflow-x-auto font-lato">
+      <div className="overflow-x-auto font-latrue">
         <table className="w-full text-[1rem]">
           <thead>
-            <tr className="leading-normal">
+            <tr className="leading-normal text-[1rem]">
               <th className="py-3 px-6 text-left">Name</th>
               <th className="py-3 px-6 text-left">Date Saved</th>
             </tr>
