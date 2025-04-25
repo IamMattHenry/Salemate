@@ -114,6 +114,11 @@ function SignIn() {
                 </svg>
               </div>
               {error && <p className="text-red-500 text-sm">{error}</p>}
+              <div className="w-full text-right">
+                <a className="self-end text-sm font-lato underline" href="/">
+                  Forgot Password?
+                </a>
+              </div>
               <div className="text-center">
                 <button
                   className="font-lato font-bold mt-4 bg-black py-3 px-5 rounded-lg text-whitesm cursor-pointer"
