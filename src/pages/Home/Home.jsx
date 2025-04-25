@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { animate, easeInOut, motion } from "motion/react";
+import { motion } from "motion/react";
 
 function Home() {
   const navigate = useNavigate();

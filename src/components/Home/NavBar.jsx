@@ -5,25 +5,25 @@ function NavBar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <nav className="z-50">
+    <nav className="z-50 w-full">
       <div className="relative">
-        <div className="flex justify-between items-center w-full px-3 py-5">
+        <div className="flex justify-between items-center w-full px-5 py-6.5">
           <h3 className="text-yellowsm md:text-3xl md:ml-5">
             <a href="/">
               <span className="font-redacted font-bold text-5xl -top-1 relative">S </span>
-              <span className="font-quicksand font-semibold relative -top-2 -left-2">
+              <span className="font-quicksand font-bold relative -top-2 -left-2">
                 salemate
               </span>
             </a>
           </h3>
-          <ul className="hidden sm:flex text-black font-heading text-md font-lato space-x-6 font-semibold">
+          <ul className="hidden sm:flex text-black font-heading text-md font-lato space-x-6 font-bold uppercase">
             <li>
               <NavLink
                 to="/contact"
                 className={({ isActive }) =>
                   isActive
-                    ? "py-3 px-5 rounded-3xl text-yellowsm transition ease-in-out hover:bg-yellowsm hover:text-white border-2 border-yellowsm"
-                    : "py-3 px-5 rounded-3xl text-yellowsm transition ease-in-out hover:bg-yellowsm hover:text-white border-2 border-yellowsm"
+                    ? "py-3 px-7 text-sm rounded-3xl text-yellowsm transition ease-in-out hover:bg-yellowsm hover:text-white border-2 border-yellowsm"
+                    : "py-3 px-7 text-sm rounded-3xl text-yellowsm transition ease-in-out hover:bg-yellowsm hover:text-white border-2 border-yellowsm"
                 }
               >
                 Contact Us
@@ -34,8 +34,8 @@ function NavBar() {
                 to="/signin"
                 className={({ isActive }) =>
                   isActive
-                    ? "bg-yellowsm text-whitesm hover:bg-whitesm hover:text-yellowsm py-3 px-5 rounded-3xl transition ease-in-out border-yellowsm"
-                    : "py-3 px-5 rounded-3xl text-whitesm bg-yellowsm transition ease-in-out hover:bg-whitesm hover:text-yellowsm border-2 border-yellowsm"
+                    ? "bg-yellowsm text-whitesm hover:bg-whitesm hover:text-yellowsm py-3 px-7 rounded-3xl transition ease-in-out border-yellowsm text-sm"
+                    : "py-3 px-7 rounded-3xl text-whitesm bg-yellowsm transition ease-in-out hover:bg-whitesm hover:text-yellowsm border-2 border-yellowsm text-sm"
                 }
               >
                 Get Access
@@ -51,6 +51,7 @@ function NavBar() {
             </button>
           </div>
         </div>
+
         <ul
           id="mobile-menu"
           className={`${
