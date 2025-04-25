@@ -17,48 +17,66 @@ function Home() {
   };
 
   return (
-    <div>
+    <>
       <section className="w-full">
-        <div className="heading-quote min-w-auto md:w-3xl flex justify-center mx-auto flex-col text-center mt-10">
-          <motion.h1
-            className="font-league font-bold text-3xl md:text-5xl text-yellowsm"
-            initial={{
-              scale: 0,
-              opacity: 0,
-            }}
-            animate={{
-              scale: 1,
-              opacity: 1,
-            }}
-            transition={{
-              duration: 0.5,
-            }}
-          >
-            Your Partner for Efficient
-            <br />
-          </motion.h1>
-          <motion.span
-            className="font-league font-bold text-3xl md:text-5xl"
-            initial={{
-              scale: 0,
-              opacity: 0,
-            }}
-            animate={{
-              scale: 1,
-              opacity: 1,
-            }}
-            transition={{
-              delay: 0.7,
-              type: "spring",
-              bounce: 0.8,
-              damping: 10,
-            }}
-          >
-            Sales Management
-          </motion.span>
-          <br />
+        <div className="heading-quote min-w-auto md:w-full flex justify-center mx-auto flex-col text-center mt-8 space-y-4">
+          <div className="overflow-x-visible">
+            <motion.h1
+              className="font-lato font-bold text-3xl md:text-[2.6rem] text-black"
+              initial={{
+                scale: 0,
+                opacity: 0,
+              }}
+              animate={{
+                scale: 1,
+                opacity: 1,
+              }}
+              transition={{
+                duration: 0.5,
+              }}
+            >
+              Your Partner for Efficient{" "}
+              <motion.span
+                className="font-lato font-bold text-3xl md:text-[2.6rem]"
+                initial={{
+                  scale: 0,
+                  opacity: 0,
+                }}
+                animate={{
+                  scale: 1,
+                  opacity: 1,
+                }}
+                transition={{
+                  delay: 0.7,
+                  type: "spring",
+                  bounce: 0.8,
+                  damping: 10,
+                }}
+              >
+                Sales Management
+              </motion.span>
+            </motion.h1>
+            <motion.p
+              className="font-latrue tracking-wide md:text-xl"
+              initial={{
+                opacity: 0,
+                y: 20,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{
+                delay: 1.2,
+                duration: 0.5,
+              }}
+            >
+              A web-based platform for managing your sales wisely, easily, and
+              quickly.
+            </motion.p>
+          </div>
           <motion.div
-            className="start-btn bg-yellowsm w-48 mx-auto flex flex-row items-center justify-center rounded-4xl hover:scale-105 transition shadow-xl"
+            className="start-btn bg-white border-2 border-yellowsm w-48 mx-auto flex items-center justify-center rounded-4xl hover:scale-105 transition shadow-xl mt-6 mb-2"
             initial={{
               translateX: -200,
               opacity: 0,
@@ -73,21 +91,11 @@ function Home() {
             }}
           >
             <button
-              className="text-whitesm font-league font-bold text-2xl mt-1 mr-2 drop-shadow-xl py-2 cursor-pointer"
+              className="text-yellowsm font-latrue font-extrabold text-lg drop-shadow-xl py-2 cursor-pointer "
               onClick={toSignIn}
             >
               START NOW
             </button>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              fill="currentColor"
-              className="bi bi-arrow-right-circle-fill text-whitesm"
-              viewBox="0 0 16 16"
-            >
-              <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0M4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5z" />
-            </svg>
           </motion.div>
         </div>
         <div className="flex flex-col md:flex-row justify-center gap-4 space-x-8 mt-10">
@@ -105,7 +113,6 @@ function Home() {
                 src="./1.jpg"
                 alt="Customer Relation Management"
                 className="rounded-xl w-full h-[448px] object-cover brightness-110 drop-shadow-[0_0_20px_rgba(255,215,0,0.6)]"
-                loading="lazy"
               />
             </div>
             <p className="text-center mt-3 font-lato font-bold text-2xl">
@@ -130,7 +137,6 @@ function Home() {
                 src="./3.jpg"
                 alt="Analytics & Finance Report"
                 className="rounded-xl w-full h-[448px] object-cover brightness-110 drop-shadow-[0_0_20px_rgba(255,215,0,0.6)]"
-                loading="lazy"
               />
             </div>
             <p className="text-center mt-3 font-lato font-bold text-2xl">
@@ -155,7 +161,6 @@ function Home() {
                 src="./2.jpg"
                 alt="Inventory Management"
                 className="rounded-xl w-full h-[448px] object-cover brightness-110 drop-shadow-[0_0_20px_rgba(255,215,0,0.6)]"
-                loading="lazy"
               />
             </div>
             <p className="text-center mt-3 font-lato font-bold text-2xl">
@@ -166,10 +171,10 @@ function Home() {
             </p>
           </motion.div>
         </div>
-        <div className="h-20 bg-yellowsm/20 shadow-lg flex items-center justify-center w-full mt-10">
+        <div className="h-20 bg-yellowsm/15 shadow-lg flex items-center justify-center w-full mt-10">
           <div className="flex space-x-1">
             <motion.h1
-              className="font-lato text-3xl"
+              className="font-lato text-4xl font-light"
               initial={{
                 translateX: -300,
                 opacity: 0.1,
@@ -187,7 +192,7 @@ function Home() {
             </motion.h1>
             <div className="flex space-x-1">
               <motion.span
-                className="font-lato text-3xl font-bold inline-block"
+                className="font-lato text-4xl font-bold inline-block tracking-wider"
                 initial={{ scale: 1.1, y: -30, opacity: 0 }}
                 whileInView={{ scale: 1, y: 0, opacity: 1 }}
                 transition={{
@@ -202,7 +207,7 @@ function Home() {
                 we've{" "}
               </motion.span>
               <motion.span
-                className="font-lato text-3xl font-bold inline-block"
+                className="font-lato text-4xl font-bold inline-block tracking-wider"
                 initial={{ scale: 1.2, y: -30, opacity: 0 }}
                 whileInView={{ scale: 1, y: 0, opacity: 1 }}
                 transition={{
@@ -217,7 +222,7 @@ function Home() {
                 got{" "}
               </motion.span>
               <motion.span
-                className="font-lato text-3xl font-bold inline-block"
+                className="font-lato text-4xl font-bold inline-block tracking-wider"
                 initial={{ scale: 1.2, y: -30, opacity: 0 }}
                 whileInView={{ scale: 1, y: 0, opacity: 1 }}
                 transition={{
@@ -232,7 +237,7 @@ function Home() {
                 you{" "}
               </motion.span>
               <motion.span
-                className="font-lato text-3xl font-bold inline-block"
+                className="font-lato text-4xl font-bold inline-block tracking-wider"
                 initial={{ scale: 1.2, y: -30, opacity: 0 }}
                 whileInView={{ scale: 1, y: 0, opacity: 1 }}
                 transition={{
@@ -251,7 +256,7 @@ function Home() {
           </div>
         </div>
       </section>
-      <div className="w-full px-4 md:px-10 xl:px-20">
+      <div className="w-full px-4 md:px-10 xl:px-15">
         <div className="space-y-20">
           {/* First Section */}
           <motion.div
@@ -264,11 +269,11 @@ function Home() {
             }}
             viewport={{ once: true }}
           >
-            <div className="bg-yellowsm rounded-3xl flex justify-center items-center w-full xl:w-1/2 h-[27rem]">
+            <div className="bg-yellowsm rounded-3xl flex justify-center items-center w-full xl:w-1/2 h-[21rem]">
               <img
                 src="/dashboard_2.png"
                 alt=""
-                className="h-[26rem] w-[95%] rounded-3xl object-cover"
+                className="h-auto w-[95%] rounded-3xl object-contain"
               />
             </div>
             <div className="flex flex-col justify-center items-center w-full xl:w-1/2 text-center space-y-4">
@@ -307,11 +312,11 @@ function Home() {
                 successful deliveries every time.
               </h1>
             </div>
-            <div className="bg-yellowsm rounded-3xl flex justify-center items-center w-full xl:w-1/2 h-[27rem]">
+            <div className="bg-yellowsm rounded-3xl flex justify-center items-center w-full xl:w-1/2 h-[21rem]">
               <img
                 src="/orderhisto_2.png"
                 alt=""
-                className="h-[26rem] w-[95%] rounded-3xl object-cover"
+                className="h-auto w-[95%] rounded-3xl object-contain"
               />
             </div>
           </motion.div>
@@ -327,11 +332,11 @@ function Home() {
             }}
             viewport={{ once: true }}
           >
-            <div className="bg-yellowsm rounded-3xl flex justify-center items-center w-full xl:w-1/2 h-[27rem]">
+            <div className="bg-yellowsm rounded-3xl flex justify-center items-center w-full xl:w-1/2 h-[21rem]">
               <img
                 src="/analytic_2.png"
                 alt=""
-                className="h-[26rem] w-[95%] rounded-3xl object-cover"
+                className="h-auto w-[95%] rounded-3xl object-contain"
               />
             </div>
             <div className="flex flex-col justify-center items-center w-full xl:w-1/2 text-center space-y-4">
@@ -371,11 +376,11 @@ function Home() {
                 purchasing information.
               </h1>
             </div>
-            <div className="bg-yellowsm rounded-3xl flex justify-center items-center w-full xl:w-1/2 h-[27rem]">
+            <div className="bg-yellowsm rounded-3xl flex justify-center items-center w-full xl:w-1/2 h-[21rem]">
               <img
                 src="/customer_@.png"
                 alt=""
-                className="h-[26rem] w-[95%] rounded-3xl object-cover"
+                className="h-auto w-[95%] rounded-3xl object-contain"
               />
             </div>
           </motion.div>
@@ -391,11 +396,11 @@ function Home() {
             }}
             viewport={{ once: true }}
           >
-            <div className="bg-yellowsm rounded-3xl flex justify-center items-center w-full xl:w-1/2 h-[27rem]">
+            <div className="bg-yellowsm rounded-3xl flex justify-center items-center w-full xl:w-1/2 h-[21rem]">
               <img
                 src="/inventory_2.png"
                 alt=""
-                className="h-[26rem] w-[95%] rounded-3xl object-cover"
+                className="h-auto w-[95%] rounded-3xl object-contain"
               />
             </div>
             <div className="flex flex-col justify-center items-center w-full xl:w-1/2 text-center space-y-4">
@@ -411,7 +416,7 @@ function Home() {
           </motion.div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
