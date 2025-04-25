@@ -116,14 +116,11 @@ function SignUp() {
   return (
     <div>
       <form onSubmit={handleSignUp}>
-        <div className="form w-96 md:w-6/12 lg:w-4/12 h-auto block mx-auto my-12">
-          <div className="form-box bg-yellowsm/20 flex flex-col items-center font-lato h-full space-y-5 py-5 min-w-0 rounded-3xl shadow-2xl">
-            <div className="icon">
-              <BsBoxArrowRight size={32} />
-            </div>
+        <div className="w-96 md:w-6/12 lg:w-4/12 h-auto block mx-auto">
+          <div className="form-box bg-yellowsm/10 flex flex-col items-center font-latrue h-full space-y-5 min-w-0 rounded-3xl shadow-lg py-12">
             <div className="signin text-center">
-              <h3 className="text-3xl text-black mb-2">Sign Up</h3>
-              <p className="text-[1rem] text-black">
+              <h3 className="text-3xl text-black mb-2 font-bold">Sign Up</h3>
+              <p className="text-[1rem] text-black font-light">
                 Please provide your information below
               </p>
             </div>
@@ -167,7 +164,7 @@ function SignUp() {
                   className="pl-10 pr-4 py-2 w-full rounded-2xl focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white"
                 />
               </div>
-              <div className="relative w-full max-w-xs mx-auto mt-4">
+              <div className="relative w-full max-w-xs mx-auto">
                 <BsPeopleFill
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
                   size={16}
@@ -239,14 +236,14 @@ function SignUp() {
               {success && <p className="text-green-500 text-sm">{success}</p>}
               <div className="text-center">
                 <button
-                  className="font-lato font-bold mt-4 bg-black py-3 px-5 rounded-2xl text-whitesm"
+                  className="font-latrue font-bold mt-7 bg-black py-3 px-10 rounded-2xl text-whitesm cursor-pointer"
                   type="submit"
                 >
                   Continue
                 </button>
               </div>
               <div className="w-full text-center">
-                <p className="text-black text-[.8rem] font-latrue">
+                <p className="text-black text-[.9rem] font-latrue">
                   Already had an account?{" "}
                   <a
                     className="text-[.8rem] font-latrue underline"

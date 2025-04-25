@@ -53,18 +53,15 @@ function SignIn() {
   return (
     <div>
       <form onSubmit={handleSubmit}>
-        <div className="w-96 md:w-6/12 lg:w-4/12 h-auto block mx-auto my-12">
-          <div className="bg-yellowsm/20 flex flex-col items-center font-lato h-full space-y-5 py-5 rounded-3xl shadow-2xl">
-            <div className="icon">
-              <BsBoxArrowRight size={32} />
-            </div>
+        <div className="w-96 md:w-6/12 lg:w-4/12 block mx-auto h-auto">
+          <div className="bg-yellowsm/10 flex flex-col items-center justify-center font-latrue space-y-5 rounded-3xl shadow-lg py-15">
             <div className="signin text-center">
-              <h3 className="text-3xl text-black mb-2">Sign In</h3>
-              <p className="text-[1rem] text-black">
-                Make sure to create your account first before signing in
+              <h3 className="text-3xl text-black mb-2 font-bold">Sign In</h3>
+              <p className="text-[1rem] text-black font-light">
+                Make sure to sign up first before signing in.
               </p>
             </div>
-            <div className="signin-inp space-y-3">
+            <div className="signin-inp space-y-4 mt-5">
               <div className="relative w-full mx-auto">
                 <BsAt
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
@@ -104,25 +101,25 @@ function SignIn() {
                   )}
                 </div>
               </div>
-              {error && <p className="text-red-500 text-sm">{error}</p>}
+              {error && <p className="text-red-500 text-[0.9rem]`">{error}</p>}
               <div className="w-full text-right">
-                <a className="self-end text-sm font-lato underline" href="/">
+                <a className="self-end text-[0.9rem] font-latrue underline" href="/">
                   Forgot Password?
                 </a>
               </div>
               <div className="text-center">
                 <button
-                  className="font-lato font-bold mt-4 bg-black py-3 px-5 rounded-2xl text-whitesm cursor-pointer"
+                  className="font-latrue font-bold mt-4 bg-black py-3 px-12 rounded-2xl text-whitesm cursor-pointer"
                   type="submit"
                 >
                   Sign In
                 </button>
               </div>
               <div className="w-full text-center">
-                <p className="text-black text-[.8rem] font-latrue">
+                <p className="text-black text-[0.9rem] font-latrue">
                   Don't have an account yet?{" "}
                   <a
-                    className="text-[.8rem] font-latrue underline cursor-pointer"
+                    className="text-[0.9rem] font-latrue underline cursor-pointer"
                     href="/signup"
                     target="_self"
                   >
