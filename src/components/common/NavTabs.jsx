@@ -6,10 +6,11 @@ const NavTabs = ({
   links,
   searchProps,
   actionButton,
-  saveButton,
+  onSearch,
   className = "",
 }) => {
   const location = useLocation();
+
   return (
     <div className="w-full grid grid-cols-[60%_1fr] h-auto mb-3">
       <div className="font-lato font-medium flex justify-start items-center space-x-12">
@@ -57,6 +58,7 @@ const NavTabs = ({
               <input
                 type="text"
                 placeholder={searchProps.placeholder}
+                onChange={(e) => onSearch(e.target.value)}
                 className="font-lato bg-white border border-gray-500 h-9 pl-3 pr-10 rounded-2xl text-sm placeholder:text-gray-500 w-full focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
               />
               <searchProps.icon
@@ -64,17 +66,6 @@ const NavTabs = ({
                 aria-hidden="true"
               />
             </div>
-          )}
-
-          {saveButton && location.pathname !== "/inventory/saved-history" && (
-            <button
-              type="button"
-              className="bg-[#FFCF50] border border-[#D4A734] h-9 text-dark-600 font-medium px-3 py-1 rounded-full flex items-center justify-center gap-1 cursor-pointer hover:opacity-90 transition-opacity shrink-0"
-              onClick={saveButton.onClick}
-            >
-              <span className="text-sm">{saveButton.label}</span>
-              <saveButton.icon className="text-lg" aria-hidden="true" />
-            </button>
           )}
 
           {actionButton && (
