@@ -1,13 +1,13 @@
-import { useState } from "react";
+import { useState } from 'react';
 
-const useModal = () => {
+const UseModal = () => {
   const [modal, setModal] = useState(false);
 
   const toggleModal = () => {
     setModal(!modal);
   };
 
-  return {modal, toggleModal};
+  return { modal, toggleModal };
 };
 
-export default useModal;
+export default UseModal;

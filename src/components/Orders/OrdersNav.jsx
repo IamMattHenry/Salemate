@@ -7,7 +7,7 @@ import { LiaFileDownloadSolid } from "react-icons/lia";
 import { IoIosSearch } from "react-icons/io";
 import NavTabs from "../common/NavTabs";
 
-const OrdersNav = () => {
+const OrdersNav = ({ onSearch }) => {
   const { modal, toggleModal } = useModal();
 
   const orderNavLinks = [
@@ -117,6 +117,7 @@ const OrdersNav = () => {
         links={orderNavLinks}
         searchProps={searchProps}
         actionButton={actionButton}
+        onSearch={onSearch}
       />
     </>
   );
