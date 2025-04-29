@@ -2,25 +2,22 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BsBoxArrowRight, BsAt, BsFillLockFill } from "react-icons/bs";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import firebaseApp from "../../firebaseConfig"; // Adjust the path to your Firebase config file
+import useModal from "../../hooks/Modal/UseModal"; // Import your custom hook
 
 function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const navigate = useNavigate();
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+  const { modal, toggleModal } = useModal(); // Use the custom modal hook
+  const navigate = useNavigate();
 
   const auth = getAuth(firebaseApp);
 
-  const togglePasswordVisibility = (field) => {
-    if (field === "password") {
-      setPasswordVisible(!passwordVisible);
-    } else if (field === "confirmPassword") {
-      setConfirmPasswordVisible(!confirmPasswordVisible);
-    }
+  const togglePasswordVisibility = () => {
+    setPasswordVisible(!passwordVisible);
   };
 
   const handleSubmit = async (e) => {
@@ -28,12 +25,7 @@ function SignIn() {
     setError("");
 
     try {
-      // Sign in the user with email and password
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
       console.log("User signed in:", user);
@@ -50,8 +42,29 @@ function SignIn() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    setError("");
+
+    if (!email) {
+      setError("Please enter your email address before resetting your password.");
+      return;
+    }
+
+    try {
+      await sendPasswordResetEmail(auth, email);
+      toggleModal(); // Open the modal
+    } catch (err) {
+      if (err.code === "auth/user-not-found") {
+        setError("No account found with this email.");
+      } else {
+        setError("Failed to send password reset email. Please try again.");
+      }
+      console.error("Error during password reset:", err.message);
+    }
+  };
+
   return (
-    <div>
+    <div className="relative">
       <form onSubmit={handleSubmit}>
         <div className="w-96 md:w-6/12 lg:w-4/12 block mx-auto h-auto">
           <div className="bg-yellowsm/10 flex flex-col items-center justify-center font-latrue space-y-5 rounded-3xl shadow-lg py-15">
@@ -83,7 +96,7 @@ function SignIn() {
                 />
                 <input
                   id="password"
-                  type={confirmPasswordVisible ? "text" : "password"}
+                  type={passwordVisible ? "text" : "password"}
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -92,20 +105,20 @@ function SignIn() {
                 />
                 <div
                   className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-500"
-                  onClick={() => togglePasswordVisibility("confirmPassword")}
+                  onClick={togglePasswordVisibility}
                 >
-                  {confirmPasswordVisible ? (
-                    <FaEyeSlash size={20} />
-                  ) : (
-                    <FaEye size={20} />
-                  )}
+                  {passwordVisible ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
                 </div>
               </div>
-              {error && <p className="text-red-500 text-[0.9rem]`">{error}</p>}
+              {error && <p className="text-red-500 text-[0.9rem]">{error}</p>}
               <div className="w-full text-right">
-                <a className="self-end text-[0.9rem] font-latrue underline" href="/">
+                <button
+                  type="button"
+                  className="self-end text-[0.9rem] font-latrue underline"
+                  onClick={handleForgotPassword} // Trigger password reset
+                >
                   Forgot Password?
-                </a>
+                </button>
               </div>
               <div className="text-center">
                 <button
@@ -131,7 +144,33 @@ function SignIn() {
           </div>
         </div>
       </form>
+
+      {/* Forgot Password Modal */}
+      {modal && (
+  <div className="fixed inset-0 flex justify-center items-center z-50 bg-black/30">
+    <div className="bg-white p-6 rounded-3xl shadow-lg w-72 animate-pop-up">
+      <div className="text-center">
+        <div className="bg-green-500 text-white rounded-full h-12 w-12 flex items-center justify-center mx-auto mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        
+        <h4 className="font-bold text-lg mb-1">We've sent a reset link to your email address</h4>
+        <p className="text-sm text-gray-600 mb-5">Please check your email account.</p>
+        
+        <button
+          type="button"
+          className="bg-green-500 text-white w-full py-2 rounded-full font-medium"
+          onClick={toggleModal}
+        >
+          Done
+        </button>
+      </div>
     </div>
+  </div>
+     )}
+   </div>
   );
 }
 
