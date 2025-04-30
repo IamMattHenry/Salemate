@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getFirestore, collection, getDocs, query, orderBy } from "firebase/firestore";
+import { getFirestore, collection, getDocs, query, orderBy, addDoc, serverTimestamp, limit, updateDoc, doc } from "firebase/firestore";
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
 import firebaseApp from "../../../firebaseConfig";
@@ -9,52 +9,30 @@ const SavedHistory = () => {
   const [savedHistories, setSavedHistories] = useState([]);
   const db = getFirestore(firebaseApp);
 
-  // Fetch saved histories from Firestore
   const fetchSavedHistories = async () => {
     try {
-      const historyQuery = query(
-        collection(db, "order_transaction"),
-        orderBy("order_date", "desc")
+      // Get saved histories
+      const savedQuery = query(
+        collection(db, "saved_history"),
+        orderBy("dateSaved", "desc")
       );
       
-      const querySnapshot = await getDocs(historyQuery);
-      const transactions = querySnapshot.docs.map(doc => ({
+      const savedSnapshot = await getDocs(savedQuery);
+      const histories = savedSnapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
+        dateSaved: new Date(doc.data().dateSaved.seconds * 1000).toLocaleDateString('en-US', {
+          month: '2-digit',
+          day: '2-digit',
+          year: '2-digit'
+        })
       }));
 
-      // Group by month/year
-      const grouped = transactions.reduce((acc, transaction) => {
-        const date = new Date(transaction.order_date.seconds * 1000);
-        const key = date.toLocaleDateString('en-US', { 
-          month: 'long', 
-          year: 'numeric' 
-        });
-        
-        if (!acc[key]) {
-          acc[key] = {
-            monthYear: key,
-            transactions: [],
-            dateSaved: date.toLocaleDateString('en-US', {
-              month: '2-digit',
-              day: '2-digit',
-              year: '2-digit'
-            })
-          };
-        }
-        acc[key].transactions.push(transaction);
-        return acc;
-      }, {});
-
-      setSavedHistories(Object.values(grouped));
+      setSavedHistories(histories);
     } catch (error) {
       console.error("Error fetching histories:", error);
     }
   };
-
-  useEffect(() => {
-    fetchSavedHistories();
-  }, []);
 
   const generatePDF = async (monthYear, transactions) => {
     setLoading(true);
@@ -133,9 +111,195 @@ const SavedHistory = () => {
     }
   };
 
-  const handleRowClick = (history) => {
-    generatePDF(history.monthYear, history.transactions);
+  // Add this new function to get fresh transactions
+  const getFreshTransactions = async (monthYear) => {
+    try {
+      const transactionQuery = query(
+        collection(db, "order_transaction"),
+        orderBy("order_date", "desc")
+      );
+      
+      const transactionSnapshot = await getDocs(transactionQuery);
+      const allTransactions = transactionSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      // Filter for the specific month/year
+      const [month, year] = monthYear.split(" ");
+      return allTransactions.filter(t => {
+        const orderDate = new Date(t.order_date.seconds * 1000);
+        return orderDate.toLocaleString('en-US', { month: 'long' }) === month &&
+               orderDate.getFullYear().toString() === year;
+      });
+    } catch (error) {
+      console.error("Error getting fresh transactions:", error);
+      return [];
+    }
   };
+
+  // Update the handleRowClick function
+  const handleRowClick = async (history) => {
+    setLoading(true);
+    try {
+      // Get fresh transactions first
+      const freshTransactions = await getFreshTransactions(history.monthYear);
+      
+      // Update the record with fresh transactions
+      const monthCheckQuery = query(
+        collection(db, "saved_history"),
+        orderBy("dateSaved", "desc")
+      );
+      
+      const monthCheckSnapshot = await getDocs(monthCheckQuery);
+      const existingRecord = monthCheckSnapshot.docs.find(doc => doc.id === history.id);
+
+      if (existingRecord) {
+        await updateDoc(doc(db, "saved_history", existingRecord.id), {
+          transactions: freshTransactions,
+          lastUpdated: serverTimestamp()
+        });
+      }
+
+      // Generate PDF with fresh transactions
+      await generatePDF(history.monthYear, freshTransactions);
+      
+      // Refresh the list
+      await fetchSavedHistories();
+    } catch (error) {
+      console.error("Error processing request:", error);
+      alert("Error updating and generating PDF. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const checkAndSaveCurrentMonth = async () => {
+    try {
+      const currentDate = new Date();
+      const currentMonthYear = currentDate.toLocaleDateString('en-US', { 
+        month: 'long',
+        year: 'numeric' 
+      });
+
+      // Check if we already have a save for this month
+      const monthCheckQuery = query(
+        collection(db, "saved_history"),
+        orderBy("dateSaved", "desc"),
+        limit(1)
+      );
+
+      const monthCheckSnapshot = await getDocs(monthCheckQuery);
+      const lastSave = monthCheckSnapshot.docs[0]?.data();
+
+      if (lastSave) {
+        const lastSaveDate = new Date(lastSave.dateSaved.seconds * 1000);
+        
+        // If last save was in a different month, create new save
+        if (lastSaveDate.getMonth() !== currentDate.getMonth() || 
+            lastSaveDate.getFullYear() !== currentDate.getFullYear()) {
+          await createNewMonthlySave(currentMonthYear);
+        }
+      } else {
+        // No previous saves exist, create first save
+        await createNewMonthlySave(currentMonthYear);
+      }
+    } catch (error) {
+      console.error("Error checking monthly save:", error);
+    }
+  };
+
+  const createNewMonthlySave = async (monthYear, transactions) => {
+    try {
+      // First check if a record for this month already exists
+      const monthCheckQuery = query(
+        collection(db, "saved_history"),
+        orderBy("dateSaved", "desc")
+      );
+      
+      const monthCheckSnapshot = await getDocs(monthCheckQuery);
+      const existingRecord = monthCheckSnapshot.docs.find(doc => {
+        const data = doc.data();
+        const savedDate = new Date(data.dateSaved.seconds * 1000);
+        const currentDate = new Date();
+        return savedDate.getMonth() === currentDate.getMonth() && 
+               savedDate.getFullYear() === currentDate.getFullYear();
+      });
+
+      // Get current month's transactions
+      const transactionQuery = query(
+        collection(db, "order_transaction"),
+        orderBy("order_date", "desc")
+      );
+      
+      const transactionSnapshot = await getDocs(transactionQuery);
+      const currentTransactions = transactionSnapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        .filter(t => {
+          const orderDate = new Date(t.order_date.seconds * 1000);
+          const currentDate = new Date();
+          return orderDate.getMonth() === currentDate.getMonth() && 
+                 orderDate.getFullYear() === currentDate.getFullYear();
+        });
+
+      if (currentTransactions.length > 0) {
+        if (existingRecord) {
+          // Update existing record
+          await updateDoc(doc(db, "saved_history", existingRecord.id), {
+            transactions: currentTransactions,
+            lastUpdated: serverTimestamp()
+          });
+        } else {
+          // Create new record only if none exists for this month
+          await addDoc(collection(db, "saved_history"), {
+            monthYear,
+            transactions: currentTransactions,
+            dateSaved: serverTimestamp(),
+            lastUpdated: serverTimestamp()
+          });
+        }
+
+        // Refresh the list
+        await fetchSavedHistories();
+      }
+    } catch (error) {
+      console.error("Error creating/updating monthly save:", error);
+    }
+  };
+
+  // Add save button click handler
+  const handleSaveClick = async () => {
+    setLoading(true);
+    try {
+      const currentDate = new Date();
+      const currentMonthYear = currentDate.toLocaleDateString('en-US', { 
+        month: 'long',
+        year: 'numeric' 
+      });
+
+      // Get fresh transactions
+      const freshTransactions = await getFreshTransactions(currentMonthYear);
+      
+      // Update or create record
+      await createNewMonthlySave(currentMonthYear, freshTransactions);
+      
+      // Refresh the list
+      await fetchSavedHistories();
+    } catch (error) {
+      console.error("Error saving:", error);
+      alert("Error saving current month. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSavedHistories();
+    checkAndSaveCurrentMonth();
+  }, []);
 
   return (
     <section className="bg-white rounded-2xl shadow-feat w-full mx-auto block my-4">
@@ -170,7 +334,7 @@ const SavedHistory = () => {
         <div className="fixed inset-0 bg-black/25 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded-lg">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
-            <p className="mt-2 text-sm">Generating PDF...</p>
+            <p className="mt-2 text-sm">Processing...</p>
           </div>
         </div>
       )}
