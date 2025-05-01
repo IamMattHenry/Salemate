@@ -36,7 +36,7 @@ const CustomerFrequency = () => {
               />
             </div>
           </Card>
-          <Card className="row-span-2">
+          <Card className="row-span-2 bg-yellowsm/20">
             <div className="text-lg font-medium text-left mb-2 uppercase">
               Total Customer {`(Monthly)`}
             </div>

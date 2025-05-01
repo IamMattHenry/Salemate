@@ -25,6 +25,7 @@ const AnalyticsNav = () => {
   const actionButton = {
     icon: LiaFileDownloadSolid,
     onClick: toggleModal,
+    buttonClassName: "-mb-31 z-1000 absolute right-5"
   };
 
   return (

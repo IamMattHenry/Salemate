@@ -28,7 +28,7 @@ const ProductSales = () => {
 };
 
 const Card = ({ label, subLabel, amount }) => (
-  <div className="bg-yellowsm/30 h-40 w-full rounded-xl shadow-feat flex flex-row items-center justify-between font-lato px-5">
+  <div className="bg-yellowsm/20 h-40 w-full rounded-xl shadow-md flex flex-row items-center justify-between font-lato px-5">
     <div>
       <div>
         <div className="text-xl font-medium text-left">{label}</div>
@@ -42,7 +42,7 @@ const Card = ({ label, subLabel, amount }) => (
 );
 
 const CardOverallProf = ({ label, subLabel, amount }) => (
-  <div className="bg-yellowsm/30 w-full rounded-xl shadow-feat flex flex-row items-center justify-between font-lato px-5 h-40">
+  <div className="bg-yellowsm/20 w-full rounded-xl shadow-md flex flex-row items-center justify-between font-lato px-5 h-40">
     <div>
       <div>
         <div className="text-xl font-medium text-left">{label}</div>

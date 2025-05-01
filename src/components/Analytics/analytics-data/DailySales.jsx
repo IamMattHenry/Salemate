@@ -60,8 +60,8 @@ const DailySales = () => {
             amount="₱12,270"
           />
         </div>
-        <div className="overflow-x-auto rounded-sm shadow font-lato">
-          <table className="min-w-full bg-yellowsm/30 text-center overflow-scroll">
+        <div className="overflow-x-auto rounded-xl shadow-md font-lato">
+          <table className="min-w-full bg-yellowsm/20 text-center overflow-scroll">
             <thead>
               <tr className="text-[1rem] leading-normal border-b-[0.5px] border-b-yellowsm/50">
                 <th className="py-3 px-6 text-center">Order ID</th>
@@ -95,7 +95,7 @@ const DailySales = () => {
 };
 
 const Card = ({ icon, label, subLabel, amount }) => (
-  <div className="bg-yellowsm/30 h-35 w-full rounded-sm shadow-feat flex flex-row items-center justify-between font-lato px-5">
+  <div className="bg-yellowsm/20 h-35 w-full rounded-xl shadow-lg flex flex-row items-center justify-between font-lato px-5">
     <div>
       <div className="text-lg font-medium text-left">{label}</div>
       <div className="text-sm text-gray-600 -mt-2 mb-5 text-left">{subLabel}</div>
