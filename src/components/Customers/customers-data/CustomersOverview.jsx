@@ -15,8 +15,8 @@ const CustomersOverview = () => {
 
   const isCustomerActive = (lastOrderDate) => {
     const now = new Date();
-    const twoDaysAgo = new Date(now.setDate(now.getDate() - 2));
-    return lastOrderDate.toDate() > twoDaysAgo;
+    const oneWeekAgo = new Date(now.setDate(now.getDate() - 7)); // Changed from 2 to 7 days
+    return lastOrderDate.toDate() > oneWeekAgo;
   };
 
   const formatCustomerId = (id) => {

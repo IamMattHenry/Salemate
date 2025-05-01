@@ -3,6 +3,7 @@ import { getFirestore, collection, getDocs, query, orderBy, addDoc, serverTimest
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
 import firebaseApp from "../../../firebaseConfig";
+import { LuDownload } from "react-icons/lu"; // Add this import at the top
 
 const SavedHistory = () => {
   const [loading, setLoading] = useState(false);
@@ -315,14 +316,22 @@ const SavedHistory = () => {
             {savedHistories.map((history, index) => (
               <tr
                 key={index}
-                onClick={() => handleRowClick(history)}
-                className="hover:bg-yellowsm/30 hover:shadow-sm border-b border-yellowsm/50 cursor-pointer"
+                className="hover:bg-yellowsm/30 hover:shadow-sm border-b border-yellowsm/50"
               >
                 <td className="py-3 px-6 text-left">
                   {`${history.monthYear}.pdf`}
                 </td>
                 <td className="py-3 px-6 text-left">
                   {history.dateSaved}
+                </td>
+                <td className="py-3 px-6 text-center">
+                  <button
+                    onClick={() => handleRowClick(history)}
+                    className="text-amber-600 hover:text-amber-700 transition-colors cursor-pointer"
+                    title="Download PDF"
+                  > 
+                    <LuDownload size={20} />
+                  </button>
                 </td>
               </tr>
             ))}
