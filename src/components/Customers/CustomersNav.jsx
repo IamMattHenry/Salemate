@@ -1,7 +1,8 @@
 import React from "react";
 import NavTabs from "../common/NavTabs";
 import { IoIosSearch } from "react-icons/io";
-const CustomersNav = () => {
+
+const CustomersNav = ({ onSearch }) => {
   const customersNavLink = [
     {
       path: "/customer/overview",
@@ -10,7 +11,7 @@ const CustomersNav = () => {
   ];
 
   const searchProps = {
-    placeholder: "Type name or date (mm/dd/yy)",
+    placeholder: "Search by name, ID (23-2023), or date",
     icon: IoIosSearch,
   };
 
@@ -18,6 +19,7 @@ const CustomersNav = () => {
     <NavTabs
       links={customersNavLink}
       searchProps={searchProps}
+      onSearch={onSearch}
       className="justify-start w-full" 
     />
   );
