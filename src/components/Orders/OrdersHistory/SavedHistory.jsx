@@ -5,6 +5,7 @@ import autoTable from 'jspdf-autotable';
 import firebaseApp from "../../../firebaseConfig";
 import { LuDownload } from "react-icons/lu"; // Add this import at the top
 
+
 const SavedHistory = () => {
   const [loading, setLoading] = useState(false);
   const [savedHistories, setSavedHistories] = useState([]);
