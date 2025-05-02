@@ -345,7 +345,6 @@ const CustomersSaveHistory = () => {
               <tr className="leading-normal border-b-[0.5px] border-b-gray-600/50">
                 <th className="py-3 px-6 text-left">Name</th>
                 <th className="py-3 px-6 text-left">Date Saved</th>
-                <th className="py-3 px-6 text-center">Action</th>
               </tr>
             </thead>
             <tbody>
