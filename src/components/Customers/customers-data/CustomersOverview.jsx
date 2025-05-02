@@ -187,7 +187,7 @@ const CustomersOverview = () => {
           filteredCustomers.map((customer, idx) => (
             <div
               key={idx}
-              className="grid grid-cols-6 gap-x-4 items-center px-4 py-3 hover:bg-amber-100/50 transition-colors border-t border-gray-200 text-sm"
+              className="grid grid-cols-6 gap-x-4 items-center px-4 py-5 hover:bg-yellowsm/20 hover:shadow-lg transition-colors border-t border-gray-200 text-[1rem]"
             >
               <p className="text-center">{customer.recipient}</p>
               <p className="text-center">{customer.customerId}</p>

@@ -8,6 +8,10 @@ const CustomersNav = ({ onSearch }) => {
       path: "/customer/overview",
       label: "Overview",
     },
+    {
+      path: "/customer/saved-history",
+      label: "Saved History"
+    }
   ];
 
   const searchProps = {
