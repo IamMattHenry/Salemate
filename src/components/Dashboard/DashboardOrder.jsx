@@ -61,8 +61,8 @@ const DashboardOrder = ({ product }) => {
             >
               <div className="w-full rounded-t-xl flex items-center justify-between bg-[#0cd742] text-white py-2 px-3">
                 <div className="flex items-center text-center justify-center space-x-1.5">
-                  <IoMdInformationCircle className="text-sm" />
-                  <span className="font-semibold text-sm pt-1">Add Item</span>
+                  <IoMdInformationCircle className="text-[1rem]" />
+                  <span className="font-semibold text-[1rem] pt-1">Add Item</span>
                 </div>
                 <div>
                   <MdCancel className="cursor-pointer" onClick={toggleModal} />
@@ -70,7 +70,7 @@ const DashboardOrder = ({ product }) => {
               </div>
               <div className="w-auto h-auto justify-center flex flex-col items-center pt-5">
                 <div className="space-y-2">
-                  <span className="text-sm">
+                  <span className="text-[1rem]">
                     Please enter the customer's name:
                   </span>
                   <div>
@@ -78,14 +78,14 @@ const DashboardOrder = ({ product }) => {
                       <input
                         type="text"
                         placeholder="e.g. Juan Dela Cruz"
-                        className="font-lato border-[1px] border-gray-500 pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-xs placeholder:text-gray-500 w-full bg-gray-300 shadow"
+                        className="font-lato border-[1px] border-gray-500 pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-sm placeholder:text-gray-500 w-full bg-gray-300 shadow"
                       />
-                      <FaEdit className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs" />
+                      <FaEdit className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm" />
                     </div>
                   </div>
                   <div className="w-full flex items-center justify-center mx-a">
                     <button
-                      className="bg-[#0cd742] text-white text-center py-1 mt-1 px-8.5 rounded-2xl text-[0.77rem] cursor-pointer hover:bg-black/70"
+                      className="bg-[#0cd742] text-white text-center py-1 mt-1 px-8.5 rounded-2xl text-[0.875rem] border-[0.5px] border-black cursor-pointer hover:bg-black/70"
                       type="submit"
                       onClick={() => {
                         showNameModal();
@@ -120,19 +120,19 @@ const DashboardOrder = ({ product }) => {
             >
               <div className="w-full rounded-t-4xl flex items-center flex-col text-black pt-4 px-3">
                 <div className="flex items-center flex-col text-center space-x-1.5">
-                  <FaCheckCircle className="size-14 text-[#0cd742]" />
-                  <span className="font-bold text-2xl pt-1">
+                  <FaCheckCircle className="size-18 text-[#0cd742]" />
+                  <span className="font-bold text-2xl pt-1 mt-1">
                     Order Completed
                   </span>
                   <div>
-                    <div className="w-auto h-auto justify-center flex flex-col items-center mt-2">
-                      <div className="space-y-2 w-[80%]">
+                    <div className="w-auto h-auto justify-center flex flex-col items-center">
+                      <div className="space-y-2 w-8/12">
                         <span className="text-[.9rem]">
                           Congrats! You have ordered successfully
                         </span>
                       </div>
                       <button
-                        className="bg-[#0cd742] text-white text-center py-1 mt-3 px-8.5 rounded-2xl text-[0.77rem] cursor-pointer hover:bg-black/70"
+                        className="bg-[#0cd742] text-white text-center py-1 mt-3 px-8.5 rounded-2xl text-[0.875rem] border-[0.5px] border-black cursor-pointer hover:bg-black/70"
                         type="submit"
                         onClick={() => {
                           showSuccessModal();
@@ -167,8 +167,8 @@ const DashboardOrder = ({ product }) => {
             >
               <div className="w-full rounded-t-3xl flex items-center justify-between bg-[#0cd742] text-white py-2 px-3">
                 <div className="flex items-center text-center justify-center space-x-1.5">
-                  <IoMdInformationCircle className="text-sm" />
-                  <span className="font-semibold text-sm pt-1">
+                  <IoMdInformationCircle className="text-[1rem]" />
+                  <span className="font-semibold text-[1rem] pt-1">
                     Confirm Order
                   </span>
                 </div>
@@ -176,7 +176,7 @@ const DashboardOrder = ({ product }) => {
                   <MdCancel className="cursor-pointer" onClick={toggleModal} />
                 </div>
               </div>
-              <div className="grid grid-rows-[1rem_1fr] h-[60%] w-auto pt-2 gap-y-2 px-3">
+              <div className="grid grid-rows-[1rem_1fr] h-[60%] w-auto pt-2 gap-y-2 px-3 font-latrue">
                 <div className="flex justify-between">
                   <h3 className="font-medium">Order 12345</h3>
                   <h3 className="text-gray-500">Cash Payment</h3>
@@ -184,29 +184,29 @@ const DashboardOrder = ({ product }) => {
                 <div className="pt-3 space-y-1">
                   <div className="flex justify-between">
                     <div className="flex flex-col">
-                      <span className="font-bold text-sm">Spicy</span>
-                      <span className="text-gray-500 text-xs">Total: 250</span>
+                      <span className="font-bold text-[1rem]">Spicy</span>
+                      <span className="text-gray-500 text-sm">Total: 250</span>
                     </div>
-                    <span className="text-gray-500 text-xs">x1</span>
+                    <span className="text-gray-500 text-sm mt-4">x1</span>
                   </div>
                   <div className="flex justify-between">
                     <div className="flex flex-col">
                       <span className="font-bold">Spicy</span>
-                      <span className="text-gray-500 text-xs">Total: 250</span>
+                      <span className="text-gray-500 text-sm">Total: 250</span>
                     </div>
-                    <span className="text-gray-500 text-xs">x2</span>
+                    <span className="text-gray-500 text-sm mt-4">x2</span>
                   </div>
                   <div className="flex justify-between mt-2">
-                    <span className="text-xs font-medium">Total: 750</span>
+                    <span className="text-sm font-medium">Total: 750</span>
                     <div>
-                      <span className="text-gray-500 text-xs">x3</span>
+                      <span className="text-gray-500 text-sm mt-4">x3</span>
                     </div>
                   </div>
                 </div>
               </div>
               <div className="items-center flex justify-center mt-4">
                 <button
-                  className="text-sm font-lato font-bold bg-[#0cd742] rounded-3xl border-[0.5px] border-green-950 py-1 text-white px-5.5 cursor-pointer hover:bg-black/70"
+                  className="text-[0.875rem] font-latrue font-bold bg-[#0cd742] rounded-3xl border-[0.5px] border-green-950 py-1 text-white px-5.5 cursor-pointer hover:bg-black/70"
                   onClick={() => {
                     toggleModal();
                     showSuccessModal();
@@ -236,7 +236,7 @@ const DashboardOrder = ({ product }) => {
           </div>
         </div>
         <div className="space-y-1 mt-5 mx-3">
-          <h4 className="font-latrue font-semibold text-sm mb-4">
+          <h4 className="font-latrue font-semibold text-[1rem] mb-4">
             Mode of Payment:
           </h4>
           <div className="font-semibold font-latrue text-[.87rem] flex items-center justify-between">
@@ -271,13 +271,13 @@ const DashboardOrder = ({ product }) => {
             </div>
             <div className="flex flex-col justify-start font-latrue">
               <span className="font-semibold text-lg">{product.title}</span>
-              <span className="text-sm text-gray-500 font-latrue -mt-2 mb-2">
+              <span className="text-[1rem] text-gray-500 font-latrue -mt-2 mb-2">
                 {product.description}
               </span>
               <span className="text-xs font-bold">&#8369; {product.price}</span>
             </div>
-            <div className=" font-latrue font-bold text-sm text-center flex flex-col justify-between h-full">
-              <div className="text-sm flex justify-end space-x-1">
+            <div className=" font-latrue font-bold text-[1rem] text-center flex flex-col justify-between h-full">
+              <div className="text-[1rem] flex justify-end space-x-1">
                 <IoPencil />
                 <MdCancel className="text-red-600" />
               </div>
@@ -321,7 +321,7 @@ const DashboardOrder = ({ product }) => {
         </div>
         <div className="h-[3.3rem] items-center flex justify-end mt-3">
           <button
-            className="text-sm font-latrue font-bold bg-[#0cd742] rounded-3xl border-[0.5px] border-green-950 py-2 text-white px-4 cursor-pointer hover:bg-black/70"
+            className="text-[1rem] font-latrue font-bold bg-[#0cd742] rounded-3xl border-[0.5px] border-green-950 py-2 text-white px-4 cursor-pointer hover:bg-black/70"
             onClick={showNameModal}
           >
             Checkout

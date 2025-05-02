@@ -140,8 +140,8 @@ const CustomersOverview = () => {
   return (
     <div className="w-full">
       <CustomersNav onSearch={handleSearch} />
-      <section className="bg-white rounded-2xl shadow-feat w-full mx-auto block my-4 pb-5 font-lato">
-        <div className="h-15 w-full rounded-xl text-xl font-semibold grid grid-cols-6 gap-x-4 items-center px-4 pt-7 pb-3">
+      <section className="bg-white rounded-2xl shadow-feat w-full mx-auto block my-4 pb-5">
+        <div className="h-15 w-full rounded-xl text-xl font-semibold grid grid-cols-6 gap-x-4 items-center px-4 pt-7 pb-3 font-lato">
           <h1 className="text-center">Recipient</h1>
           <h1 className="text-center">Customer ID</h1>
           <h1 className="text-center">Monthly Orders</h1>
@@ -159,7 +159,7 @@ const CustomersOverview = () => {
             {filteredCustomers.map((customer) => (
               <div
                 key={customer.customerId}
-                className="grid grid-cols-6 gap-x-4 items-center px-4 py-5 hover:bg-yellowsm/20 hover:shadow-sm transition-colors text-[1rem]"
+                className="grid grid-cols-6 gap-x-4 items-center px-4 py-5 hover:bg-yellowsm/20 hover:shadow-sm transition-colors text-[1rem] font-latrue"
               >
                 <p className="text-center">{customer.recipient}</p>
                 <p className="text-center">{formatCustomerId(customer.customerId)}</p>
