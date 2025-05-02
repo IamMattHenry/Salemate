@@ -72,7 +72,7 @@ const NavTabs = ({
           {saveButton && (
               <button
                 type="button"
-                className="bg-[#FFCF50] border border-[#D4A734] w-30 h-9 text-dark-600 font-medium py-1 border rounded-4xl flex items-center justify-center cursor-pointer"
+                className="bg-[#FFCF50] border border-[#D4A734] w-30 h-9 text-dark-600 font-medium py-1 rounded-4xl flex items-center justify-center cursor-pointer"
                 onClick={saveButton.onClick}
               >
                 <span className="text-sm">{saveButton.label}</span>
