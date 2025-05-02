@@ -316,7 +316,7 @@ const SavedHistory = () => {
             {savedHistories.map((history, index) => (
               <tr
                 key={index}
-                className="hover:bg-yellowsm/20 hover:shadow-sm border-b-[0.5px] border-yellowsm/50"
+                className="hover:bg-yellowsm/20 hover:shadow-lg border-b-[0.5px] border-yellowsm/50"
               >
                 <td className="py-3 px-6 text-left">
                   {`${history.monthYear}.pdf`}

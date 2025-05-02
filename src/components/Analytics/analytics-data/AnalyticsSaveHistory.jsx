@@ -26,7 +26,7 @@ const InventorySaveHistory = () => {
             {savedData.map((saved, index) => (
               <tr
                 key={index}
-                className="hover:bg-yellowsm/20 hover:shadow-sm border-b-yellowsm/50 border-b-[0.5px]"
+                className="hover:bg-yellowsm/20 hover:shadow-lg border-b-yellowsm/50 border-b-[0.5px]"
               >
                 <td className="py-3 px-6 text-left">
                   <div className="flex items-center space-x-3">

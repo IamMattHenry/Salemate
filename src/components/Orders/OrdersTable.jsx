@@ -128,14 +128,14 @@ const OrdersTable = () => {
   }, []);
 
   const TableHead = () => (
-    <thead className="font-semibold border-b-[0.1px] border-b-yellowsm/40">
+    <thead className="text-[1.25rem] border-b-[0.5px] border-b-yellowsm/20 font-lato">
       <tr className="text-center">
-        <th className="px-4 py-4">Order</th>
-        <th className="px-4 py-4">Recipient</th>
-        <th className="px-4 py-4">Amount</th>
-        <th className="px-4 py-4">Time</th>
-        <th className="px-4 py-4">Date</th>
-        <th className="px-4 py-4">Status</th>
+        <th className="px-4 py-4 font-semibold">Order</th>
+        <th className="px-4 py-4 font-semibold">Recipient</th>
+        <th className="px-4 py-4 font-semibold">Amount</th>
+        <th className="px-4 py-4 font-semibold">Time</th>
+        <th className="px-4 py-4 font-semibold">Date</th>
+        <th className="px-4 py-4 font-semibold`">Status</th>
       </tr>
     </thead>
   );
@@ -180,7 +180,7 @@ const OrdersTable = () => {
       {filterOrdersBySearch(filterOrders(orders)).map((order) => (
         <tr
           key={order.id}
-          className="hover:bg-[#ffcf50]/20 transition-colors border-t border-gray-100"
+          className="hover:bg-[#ffcf50]/20 hover:shadow-lg transition-colors border-b-[0.5px] border-yellowsm/20 font-medium font-latrue"
           onClick={() => handleRowClick(order)}
         >
           <td className="px-4 py-4 text-center cursor-pointer">
@@ -202,11 +202,11 @@ const OrdersTable = () => {
           <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-center">
               <div
-                className={`py-2 px-6 rounded-full flex items-center justify-between min-w-7/12 border-[0.5px] ${getStatusClass(
+                className={`py-2 px-6 rounded-full flex items-center justify-between min-w-1/5 border-[0.5px] ${getStatusClass(
                   order.order_status
                 )}`}
               >
-                <span className="font-bold text-center">
+                <span className="font-ebold font-lato text-center">
                   {order.order_status}
                 </span>
                 <OrderStatusDropdown
@@ -228,7 +228,7 @@ const OrdersTable = () => {
   );
 
   return (
-    <section className="bg-white rounded-2xl shadow-feat w-full mx-auto my-4 font-latrue">
+    <section className="bg-white rounded-2xl shadow-feat w-full mx-auto">
       {error && <div className="p-4 text-red-500">{error}</div>}
       {loading ? (
         <div className="p-8 text-center">
