@@ -5,11 +5,13 @@ import { useLocation } from "react-router-dom";
 const NavTabs = ({
   links,
   searchProps,
-  actionButton,
   saveButton,
+  actionButton,
+  onSearch,
   className = "",
 }) => {
   const location = useLocation();
+
   return (
     <div className="w-full grid grid-cols-[60%_1fr] h-auto mb-3">
       <div className="font-lato font-medium flex justify-start items-center space-x-12">
@@ -51,36 +53,37 @@ const NavTabs = ({
         ))}
       </div>
       <div>
-        <div className="flex justify-end items-center gap-3 sm:gap-5 w-full">
+        <div className="flex justify-end items-center gap-3 sm:gap-5 w-full relative">
           {searchProps && (
-            <div className="relative w-full max-w-xs sm:max-w-sm md:w-2/3">
+            <div className="relative w-full sm:max-w-sm md:w-2/3 ml-10">
               <input
                 type="text"
                 placeholder={searchProps.placeholder}
-                className="font-lato bg-white border border-gray-500 h-9 pl-3 pr-10 rounded-2xl text-sm placeholder:text-gray-500 w-full focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                onChange={(e) => onSearch(e.target.value)}
+                className="font-lato bg-white border border-gray-500 h-9 pl-3 rounded-2xl text-sm placeholder:text-gray-500 w-60 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
               />
               <searchProps.icon
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 pointer-events-none"
+                className="absolute ml-52 top-1/2 transform -translate-y-1/2 size-4 text-dark pointer-events-none"
                 aria-hidden="true"
               />
             </div>
           )}
 
-          {saveButton && location.pathname !== "/inventory/saved-history" && (
-            <button
-              type="button"
-              className="bg-[#FFCF50] border border-[#D4A734] h-9 text-dark-600 font-medium px-3 py-1 rounded-full flex items-center justify-center gap-1 cursor-pointer hover:opacity-90 transition-opacity shrink-0"
-              onClick={saveButton.onClick}
-            >
-              <span className="text-sm">{saveButton.label}</span>
-              <saveButton.icon className="text-lg" aria-hidden="true" />
-            </button>
-          )}
+          {saveButton && (
+              <button
+                type="button"
+                className="bg-[#FFCF50] border border-[#D4A734] w-30 h-9 text-dark-600 font-medium py-1 rounded-4xl flex items-center justify-center cursor-pointer"
+                onClick={saveButton.onClick}
+              >
+                <span className="text-sm">{saveButton.label}</span>
+                <saveButton.icon className="text-lg" />
+              </button>
+            )}
 
           {actionButton && (
             <button
               type="button"
-              className="text-dark-600 p-1.5 border border-gray-600 bg-white rounded-full cursor-pointer hover:bg-gray-100 transition-colors shrink-0"
+              className={`text-dark-600 p-1.5 border border-gray-600 bg-white rounded-full cursor-pointer hover:bg-gray-100 transition-colors shrink-0 ${actionButton.buttonClassName || ''}`}
               onClick={actionButton.onClick}
               aria-label={actionButton.label || "Action"}
             >

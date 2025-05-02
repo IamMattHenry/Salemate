@@ -105,9 +105,9 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
   };
 
   // Filter products based on search query
-  const filteredProducts = products.filter((product) => {
+  const filteredProducts = products ? products.filter((product) => {
     return product.title.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  }) : [];
 
   return (
     <>
@@ -130,8 +130,8 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
             >
               <div className="w-full rounded-t-4xl flex items-center flex-col text-black pt-4 px-3">
                 <div className="flex items-center flex-col text-center space-x-1.5">
-                  <FaCheckCircle className="size-14 text-[#0cd742]" />
-                  <span className="font-bold text-2xl pt-1">
+                  <FaCheckCircle className="size-19 text-[#0cd742]" />
+                  <span className="font-bold text-2xl pt-1 mt-2">
                     Item Successfully Added
                   </span>
                   <div>
@@ -142,8 +142,8 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
                         </span>
                       </div>
                       <button
-                        className="bg-[#0cd742] text-white text-center py-1 mt-3 px-5.5 rounded-2xl text-[0.77rem] cursor-pointer hover:bg-black/70"
-                        type="button"
+                        className="bg-[#0cd742] text-white text-center py-1 mt-1 px-7 rounded-2xl border-[0.5px] border-black text-[0.875rem] cursor-pointer hover:bg-black/70"
+                        type="submit"
                         onClick={() => {
                           showSuccessModal(); // Close the success modal
                         }}
@@ -169,16 +169,16 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className="bg-white h-123 w-120 rounded-xl font-lato"
+              className="bg-white h-120 w-112 rounded-xl font-lato"
               initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1 }}
+              animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
               transition={{ duration: 0.2 }}
             >
               <div className="w-full rounded-t-xl flex items-center justify-between bg-[#0cd742] text-white py-2 px-3">
                 <div className="flex items-center text-center justify-center space-x-1.5">
-                  <IoMdInformationCircle className="text-sm" />
-                  <span className="font-semibold text-sm pt-1">Add Item</span>
+                  <IoMdInformationCircle className="text-[1rem]" />
+                  <span className="font-semibold text-[1rem] pt-1">Add Item</span>
                 </div>
                 <div>
                   <MdCancel className="cursor-pointer" onClick={toggleModal} />
@@ -193,11 +193,11 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
                       <input
                         type="text"
                         placeholder="Type description"
-                        className="font-lato border-[1px] border-gray-500 pl-4 pr-8 pt-2 pb-2 rounded-2xl text-base placeholder:text-base w-full bg-gray-300 shadow"
+                        className="font-lato border-[1px] border-gray-500 pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-[1rem] placeholder:text-gray-500 min-w-[20rem] bg-gray-300 shadow"
                         value={description} // Bind to state
-                        onChange={(e) => setDescription(e.target.value)} // Update state on change  
+                        onChange={(e) => setDescription(e.target.value)} // Update state on change
                       />
-                      <FaEdit className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm" />
+                      <FaEdit className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-[1rem]" />
                     </div>
                   </div>
                   {/* Name Field */}
@@ -207,11 +207,11 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
                       <input
                         type="text"
                         placeholder="Type any item name"
-                        className="font-lato border-[1px] border-gray-500 pl-4 pr-8 pt-2 pb-2 rounded-2xl text-base placeholder:text-base w-full bg-gray-300 shadow"
+                        className="font-lato border-[1px] border-gray-500 pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-[1rem] placeholder:text-gray-500 w-full bg-gray-300 shadow"
                         value={name} // Bind to state
                         onChange={(e) => setName(e.target.value)} // Update state on change
                       />
-                      <FaEdit className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm" />
+                      <FaEdit className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-[1rem]" />
                     </div>
                   </div>
                   {/* Price Field */}
@@ -221,11 +221,11 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
                       <input
                         type="text"
                         placeholder="Type item price"
-                        className="font-lato border-[1px] border-gray-500 pl-4 pr-8 pt-2 pb-2 rounded-2xl text-base placeholder:text-base w-full bg-gray-300 shadow"
+                        className="font-lato border-[1px] border-gray-500 pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-[1rem] placeholder:text-gray-500 w-full bg-gray-300 shadow"
                         value={price} // Bind to state
                         onChange={(e) => setPrice(e.target.value)} // Update state on change
                       />
-                      <FaEdit className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm" />
+                      <FaEdit className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-[1rem]" />
                     </div>
                   </div>
 
@@ -236,7 +236,7 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
                       <input
                         type="file"
                         accept="image/*"
-                        className="font-lato border-[1px] border-gray-500 pl-4 pr-8 pt-2 pb-2 rounded-2xl text-base placeholder:text-base w-full bg-gray-300 shadow"
+                        className="font-lato border-[1px] border-gray-500 pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-[1rem] placeholder:text-gray-500 w-full bg-gray-300 shadow"
                         onChange={(e) => handlePictureUpload(e)}
                       />
                     </div>
@@ -247,7 +247,7 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
                   <div>
                     <div className="relative w-full">
                       <select
-                        className="font-lato border-[1px] border-gray-500 pl-4 pr-8 pt-2 pb-2 rounded-2xl text-base w-full bg-gray-300 shadow"
+                        className="font-lato border-[1px] border-gray-500 pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-[1rem] w-full bg-gray-300 shadow"
                         value={category} // Bind to state
                         onChange={(e) => setCategory(e.target.value)} // Update state on change
                       >
@@ -393,12 +393,12 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
         </motion.div>
       )}
       <div className="mt-10 w-full flex justify-between items-center">
-        <h3 className="font-lato font-semibold text-xl">ALL PRODUCTS</h3>
+        <h3 className="font-lato font-semibold text-2xl ml-6">ALL PRODUCTS</h3>
         <div className="relative w-2/5 mr-5">
           <input
             type="text"
             placeholder="Search"
-            className="font-lato bg-white border-[1px] border-gray-500 pl-3 pr-7 pt-1 pb-2 rounded-2xl text-sm placeholder:text-gray-500 w-full"
+            className="font-lato bg-white border-[1px] border-gray-500 pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-sm placeholder:text-gray-500 w-full"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)} // Update search query
           />
@@ -424,13 +424,13 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
             <img
               src={product.url}
               alt="product-img"
-              className="object-contain rounded-[50%] size-35 my-3"
+              className="object-contain rounded-[50%] size-27.5 my-3"
             />
-            <h3 className="font-lato font-semibold text-xl">{product.title}</h3>
-            <span className="text-sm font-lato text-gray-500 font-semibold">
+            <h3 className="font-latrue font-extrabold text-xl">{product.title}</h3>
+            <span className="text-sm font-latrue -mb-1 tracking-tight w-10/12 text-gray-500 font-semibold">
               {product.description}
             </span>
-            <span className="font-bold text-sm font-lato mt-3">
+            <span className="font-bold text-sm font-latrue mt-3">
               Price: {product.price}
             </span>
           </div>
@@ -442,13 +442,13 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
           onClick={toggleModal}
         >
           <IoIosAdd className="text-gray-500 size-24" />
-          <span className="font-medium text-sm font-lato text-gray-500 mt-[-10px]">
+          <span className="font-medium text-sm font-latrue text-gray-500 mt-[-10px]">
             Add Item
           </span>
         </div>
 
         {/* Placeholder Boxes for Consistency */}
-        {Array.from({
+        {products && Array.from({
           length: (3 - ((filteredProducts.length + 1) % 3)) % 3, // Calculate remaining spaces
         }).map((_, index) => (
           <div
@@ -458,7 +458,7 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
         ))}
       </div>
     </>
-  );  
+  );
 };
 
 export default ProductList;

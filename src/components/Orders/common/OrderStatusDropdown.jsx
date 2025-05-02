@@ -1,82 +1,184 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { IoIosArrowDown } from "react-icons/io";
-import useModal from "../../../hooks/Modal/UseModal";
-import { AnimatePresence, motion } from "motion/react";
-import { IoMdInformationCircle } from "react-icons/io";
-import { MdCancel } from "react-icons/md";
+import { TbCancel } from "react-icons/tb";
+import { IoMdWarning } from "react-icons/io";
+import { motion, AnimatePresence } from "framer-motion";
 
-const OrderStatusDropdown = () => {
-  const { modal, toggleModal } = useModal();
+const OrderStatusDropdown = ({
+  currentStatus,
+  onStatusChange,
+  isOpen,
+  onToggle,
+}) => {
+  const dropdownRef = useRef(null);
+  const containerRef = useRef(null);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState(null);
+
+  useEffect(() => {
+    if (isOpen && dropdownRef.current && containerRef.current) {
+      const dropdownRect = dropdownRef.current.getBoundingClientRect();
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const spaceBelow = viewportHeight - containerRect.bottom;
+      const spaceAbove = containerRect.top;
+
+      if (spaceBelow < dropdownRect.height && spaceAbove > spaceBelow) {
+        dropdownRef.current.style.cssText = `
+          bottom: 100%;
+          top: auto;
+          margin-top: 0;
+          margin-bottom: 0.5rem;
+        `;
+      } else {
+        dropdownRef.current.style.cssText = `
+          top: 100%;
+          bottom: auto;
+          margin-top: 0.5rem;
+          margin-bottom: 0;
+        `;
+      }
+    }
+  }, [isOpen]);
+
+  const statusOptions = [
+    { value: "Preparing", label: "Preparing", color: "bg-[#ffcf50]" },
+    { value: "Delivered", label: "Delivered", color: "bg-[#0CD742]" },
+    { value: "Cancelled", label: "Cancelled", color: "bg-[#ff3434]" },
+  ];
+
+  const handleStatusChange = (newStatus) => {
+    if (currentStatus === "Cancelled") return;
+    if (currentStatus === "Delivered" && newStatus === "Cancelled") return;
+
+    if (newStatus === "Cancelled") {
+      setPendingStatus(newStatus);
+      setShowCancelConfirm(true);
+      return;
+    }
+
+    onStatusChange(newStatus);
+    onToggle(false);
+  };
+
+  const handleConfirmCancel = () => {
+    onStatusChange(pendingStatus);
+    setShowCancelConfirm(false);
+    onToggle(false);
+  };
+
+  const availableOptions = statusOptions.filter((option) => {
+    if (currentStatus === "Cancelled") return false;
+    if (currentStatus === "Delivered" && option.value === "Cancelled")
+      return false;
+    return true;
+  });
 
   return (
-    <>
-      <button type="button" onClick={toggleModal} className="cursor-pointer">
-        <IoIosArrowDown />
-      </button>
-
-      {modal && (
-        <AnimatePresence>
+    <div className="relative flex items-center" ref={containerRef}>
+      {/* Cancel Confirmation Modal */}
+      <AnimatePresence>
+        {showCancelConfirm && (
           <motion.div
-            className="h-screen w-screen bg-black/25 flex justify-center items-center fixed top-0 left-0 bottom-0 right-0 z-50"
+            className="fixed inset-0 bg-black/25 flex items-center justify-center z-[1000]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className="bg-white h-auto w-[30rem] rounded-3xl font-lato"
+              className="bg-white w-[28rem] font-latrue rounded-2xl overflow-hidden"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="w-full rounded-t-3xl flex items-center justify-between bg-[#0cd742] text-white py-2 px-3">
-                <div className="flex items-center text-center justify-center space-x-1.5">
-                  <IoMdInformationCircle className="text-lg" />
-                  <span className="font-semibold text-lg pt-1">
-                    Order Info
-                  </span>
+              {/* Header */}
+              <div className="w-full flex items-center justify-between px-4 py-2 bg-[#ff3434] text-white">
+                <div className="flex items-center gap-2">
+                  <IoMdWarning className="text-2xl" />
+                  <span className="font-medium text-lg">Confirm Cancellation</span>
                 </div>
-                <div>
-                  <MdCancel className="cursor-pointer text-lg" onClick={toggleModal} />
-                </div>
+                <button
+                  onClick={() => setShowCancelConfirm(false)}
+                  className="hover:opacity-70 text-lg font-bold cursor-pointer"
+                >
+                  ✕
+                </button>
               </div>
-              <div className="flex w-full justify-between p-4">
-                <div>
-                  <h3 className="font-bold text-lg">Order ID: </h3>
-                  <span className=" font-medium">Status:</span>
-                  <br />
-                  <span className=" font-medium">Recipient Name:</span>
+
+              {/* Content */}
+              <div className="p-6">
+                <div className="mb-6 text-center">
+                  <p className="text-lg font-semibold mb-2">
+                    Are you sure you want to cancel this order?
+                  </p>
+                  <p className="text-gray-600">
+                    This action cannot be undone.
+                  </p>
                 </div>
-                <div>
-                  <span className=" font-medium">Date:</span>
-                  <br />
-                  <span className=" font-medium">Time:</span>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-1 w-full mb-6 px-4">
-                <div className="flex justify-start flex-col bg-yellowsm/20 size-32 p-3 shadow-feat w-full rounded-xl">
-                  <h4 className="font-bold text-[1rem] mb-3">Order(s)</h4>
-                  <span className="font-normal">test</span>
-                </div>
-                <div className="flex justify-start flex-col bg-yellowsm/20 p-3 size-32 shadow-feat w-full rounded-xl">
-                  <h4 className="font-semibold text-[1rem] mb-3">Order(s)</h4>
-                  <span className="font-normal">test</span>
-                </div>
-                <div className="flex justify-start flex-col bg-yellowsm/20 size-32 p-3 shadow-feat w-full rounded-xl">
-                  <h4 className="font-semibold text-[1rem] mb-3">Order(s)</h4>
-                  <span className="font-normal">test</span>
-                </div>
-                <div className="flex justify-start flex-col bg-yellowsm/20 size-32 p-3 shadow-feat w-full rounded-xl">
-                  <h4 className="font-semibold text-[1rem] mb-3">Order(s)</h4>
-                  <span className="font-normal">test</span>
+
+                <div className="flex justify-center gap-4">
+                  <button
+                    className="px-6 py-2 bg-gray-200 rounded-lg font-medium hover:bg-gray-300 transition-colors cursor-pointer"
+                    onClick={() => setShowCancelConfirm(false)}
+                  >
+                    No, Keep Order
+                  </button>
+                  <button
+                    className="px-6 py-2 bg-[#ff3434] text-white rounded-lg font-medium hover:bg-[#e62e2e] transition-colors cursor-pointer"
+                    onClick={handleConfirmCancel}
+                  >
+                    Yes, Cancel Order
+                  </button>
                 </div>
               </div>
             </motion.div>
           </motion.div>
-        </AnimatePresence>
+        )}
+      </AnimatePresence>
+
+      {/* Dropdown Trigger */}
+      <button
+        type="button"
+        onClick={() => {
+          if (currentStatus !== "Cancelled") {
+            onToggle(!isOpen);
+          }
+        }}
+        className={`ml-3 mt-0.5 ${
+          currentStatus === "Cancelled" ? "cursor-not-allowed" : "cursor-pointer"
+        }`}
+      >
+        {currentStatus !== "Cancelled" ? (
+          <IoIosArrowDown />
+        ) : (
+          <TbCancel />
+        )}
+      </button>
+
+      {/* Dropdown Menu */}
+      {isOpen && availableOptions.length > 0 && (
+        <div
+          ref={dropdownRef}
+          className="absolute right-0 py-2 w-32 bg-white rounded-xl shadow-lg border border-gray-100 z-[999]"
+        >
+          {availableOptions.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => handleStatusChange(option.value)}
+              className={`
+                w-full px-4 py-2 text-left text-sm hover:bg-gray-100
+                ${currentStatus === option.value ? "font-semibold" : ""}
+              `}
+              disabled={currentStatus === option.value}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
       )}
-    </>
+    </div>
   );
 };
 
