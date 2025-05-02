@@ -19,16 +19,6 @@ const DashboardBrand = ({ isMinimized }) => {
         >
           S
         </span>
-
-        <span
-          className={`${
-            isMinimized
-              ? "font-quicksand font-bold text-sm"
-              : "font-quicksand font-bold text-xl"
-          }`}
-        >
-          salemate
-        </span>
       </h3>
     </div>
   );
