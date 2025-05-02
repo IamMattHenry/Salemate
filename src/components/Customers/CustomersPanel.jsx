@@ -1,14 +1,16 @@
-import React from 'react'
+import React from 'react';
 import { Outlet } from "react-router-dom";
-import CustomersNav from './CustomersNav';
+import { useModal } from "../../hooks/useModal";
 
 const CustomersPanel = () => {
-  return (
-    <section className="grid grid-rows-[10%_1fr] w-auto h-[87.5%] mx-7 p-3">
-      <CustomersNav />
-      <Outlet />
-    </section>
-  )
-}
+  const { modal, toggleModal } = useModal();
 
-export default CustomersPanel
+  return (
+    <div className="w-full px-7 py-3">
+      
+      <Outlet />
+    </div>
+  );
+};
+
+export default CustomersPanel;

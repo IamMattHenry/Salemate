@@ -1,20 +1,20 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import {
-  BsFillCartFill,
   BsGraphUp,
   BsFillBoxFill,
-  BsFillPeopleFill,
 } from "react-icons/bs";
+import { FaBasketShopping } from "react-icons/fa6";
+import { RiServiceFill } from "react-icons/ri";
 import { SiDashlane } from "react-icons/si";
 
 const SideRoutes = ({ isMinimized }) => {
   const routes = [
     { path: "/dashboard", label: "Dashboard", icon: <SiDashlane /> },
-    { path: "/orders", label: "Orders", icon: <BsFillCartFill /> },
+    { path: "/orders", label: "Orders", icon: <FaBasketShopping /> },
     { path: "/analytics", label: "Analytics", icon: <BsGraphUp /> },
     { path: "/inventory", label: "Inventory", icon: <BsFillBoxFill /> },
-    { path: "/customer", label: "Customer", icon: <BsFillPeopleFill /> },
+    { path: "/customer", label: "Customer", icon: <RiServiceFill /> },
   ];
 
   return (

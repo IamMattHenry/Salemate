@@ -53,7 +53,7 @@ const NavTabs = ({
         ))}
       </div>
       <div>
-        <div className="flex justify-end items-center gap- sm:gap-5 w-full">
+        <div className="flex justify-end items-center gap-3 sm:gap-5 w-full relative">
           {searchProps && (
             <div className="relative w-full sm:max-w-sm md:w-2/3 ml-10">
               <input
@@ -83,7 +83,7 @@ const NavTabs = ({
           {actionButton && (
             <button
               type="button"
-              className="text-dark-600 p-1.5 border border-gray-600 bg-white rounded-full cursor-pointer hover:bg-gray-100 transition-colors shrink-0"
+              className={`text-dark-600 p-1.5 border border-gray-600 bg-white rounded-full cursor-pointer hover:bg-gray-100 transition-colors shrink-0 ${actionButton.buttonClassName || ''}`}
               onClick={actionButton.onClick}
               aria-label={actionButton.label || "Action"}
             >

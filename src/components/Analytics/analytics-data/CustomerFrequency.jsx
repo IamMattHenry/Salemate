@@ -5,11 +5,11 @@ const CustomerFrequency = () => {
   const sectionHeader = { label: "Monthly Customer Frequency", date: "test" };
 
   return (
-    <section className="bg-white rounded-2xl shadow-feat w-full mx-auto block my-4 pb-5">
+    <section className="bg-white rounded-2xl shadow-feat w-full mx-auto block pb-5">
       <AnalyticsDataHeader sectionHeader={sectionHeader} />
       <div className="mt-4 mx-7 w-auto">
         <div className="grid grid-rows-2 grid-cols-[40%_1fr] gap-4">
-          <Card className="bg-yellowsm/30 shadow-feat font-latrue">
+          <Card className="bg-yellowsm/20 shadow-lg font-latrue">
             <div className="text-xl font-medium text-left mb-2 uppercase">
               Customer Loyalty Metrics
             </div>
@@ -36,7 +36,7 @@ const CustomerFrequency = () => {
               />
             </div>
           </Card>
-          <Card className="row-span-2">
+          <Card className="row-span-2 bg-yellowsm/20 shadow-lg">
             <div className="text-lg font-medium text-left mb-2 uppercase">
               Total Customer {`(Monthly)`}
             </div>
@@ -56,7 +56,7 @@ const CustomerFrequency = () => {
               <MonthInput label="December" />
             </div>
           </Card>
-          <Card className="bg-yellowsm/30 shadow-feat">
+          <Card className="bg-yellowsm/20 shadow-lg">
             <div className="text-lg font-medium text-left mb-2 uppercase">
               Customer Segments and average order value
             </div>
