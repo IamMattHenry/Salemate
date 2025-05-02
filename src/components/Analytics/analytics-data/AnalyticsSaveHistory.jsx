@@ -12,12 +12,12 @@ const InventorySaveHistory = () => {
   ];
 
   return (
-    <section className="bg-white rounded-2xl shadow-feat w-full mx-auto block my-4">
+    <section className="bg-white rounded-2xl shadow-feat w-full mx-auto block">
       <AnalyticsDataHeader sectionHeader={sectionHeader} />
       <div className="overflow-x-auto font-latrue">
         <table className="w-full text-[1rem]">
           <thead>
-            <tr className="leading-normal text-[1rem]">
+            <tr className="leading-normal font-bold text-[1rem] border-b-[0.5px] border-b-gray-600/50">
               <th className="py-3 px-6 text-left">Name</th>
               <th className="py-3 px-6 text-left">Date Saved</th>
             </tr>
@@ -26,7 +26,7 @@ const InventorySaveHistory = () => {
             {savedData.map((saved, index) => (
               <tr
                 key={index}
-                className="hover:bg-yellowsm/30 hover:shadow-sm border-yellowsm/50 border-b-[0.5]"
+                className="hover:bg-yellowsm/20 hover:shadow-sm border-b-yellowsm/50 border-b-[0.5px]"
               >
                 <td className="py-3 px-6 text-left">
                   <div className="flex items-center space-x-3">

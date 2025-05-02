@@ -5,7 +5,7 @@ const ProductSales = () => {
   const sectionHeader = { label: "Monthly Statistics", date: "test" };
 
   return (
-    <section className="bg-white rounded-2xl shadow-feat w-full mx-auto block my-4">
+    <section className="bg-white rounded-2xl shadow-feat w-full mx-auto block">
       <AnalyticsDataHeader sectionHeader={sectionHeader} />
       <div className="my-5 mx-7 w-auto">
         <div className="grid grid-cols-10 gap-4">

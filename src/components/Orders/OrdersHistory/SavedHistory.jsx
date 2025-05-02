@@ -303,11 +303,11 @@ const SavedHistory = () => {
   }, []);
 
   return (
-    <section className="bg-white rounded-2xl shadow-feat w-full mx-auto block my-4">
+    <section className="bg-white rounded-2xl shadow-feat w-full mx-auto block my-4 font-latrue">
       <div className="overflow-x-auto">
         <table className="w-full text-[1rem]">
           <thead>
-            <tr className="leading-normal border-b border-b-gray-600/50">
+            <tr className="leading-normal border-b-[0.5px] border-b-gray-600/50">
               <th className="py-3 px-6 text-left">Name</th>
               <th className="py-3 px-6 text-left">Date Saved</th>
             </tr>
@@ -316,7 +316,7 @@ const SavedHistory = () => {
             {savedHistories.map((history, index) => (
               <tr
                 key={index}
-                className="hover:bg-yellowsm/30 hover:shadow-sm border-b border-yellowsm/50"
+                className="hover:bg-yellowsm/20 hover:shadow-sm border-b-[0.5px] border-yellowsm/50"
               >
                 <td className="py-3 px-6 text-left">
                   {`${history.monthYear}.pdf`}

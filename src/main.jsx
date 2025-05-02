@@ -27,7 +27,7 @@ import AnalyticsLayout from "./layouts/AnalyticsLayout.jsx";
 import DailySales from "./components/Analytics/analytics-data/DailySales.jsx";
 import ProductSales from "./components/Analytics/analytics-data/ProductSales.jsx";
 import CustomerFrequency from "./components/Analytics/analytics-data/CustomerFrequency.jsx";
-import SaveHistory from "./components/Analytics/analytics-data/InventorySaveHistory.jsx";
+import AnalyticsSavedHistory from "./components/Analytics/analytics-data/AnalyticsSaveHistory.jsx";
 import CustomersLayout from "./layouts/CustomersLayout.jsx";
 import CustomersOverview from "./components/Customers/customers-data/CustomersOverview.jsx";
 import InventoryLayout from "./layouts/InventoryLayout.jsx";
@@ -67,7 +67,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="daily-sales" element={<DailySales />} />
         <Route path="product-sales" element={<ProductSales />} />
         <Route path="customer-frequency" element={<CustomerFrequency />} />
-        <Route path="save-history" element={<SaveHistory />} />
+        <Route path="save-history" element={<AnalyticsSavedHistory />} />
       </Route>
 
       {/* Customers section route */}
