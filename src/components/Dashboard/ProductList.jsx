@@ -140,7 +140,7 @@ const ProductList = ({ product }) => {
         </AnimatePresence>
       )}
       <div className="mt-10 w-full flex justify-between items-center">
-        <h3 className="font-lato font-semibold text-xl">ALL PRODUCTS</h3>
+        <h3 className="font-lato font-semibold text-2xl ml-6">ALL PRODUCTS</h3>
         <div className="relative w-2/5 mr-5">
           <input
             type="text"
@@ -155,7 +155,7 @@ const ProductList = ({ product }) => {
           <img
             src={product.url}
             alt="product-img"
-            className="object-contain rounded-[50%] size-35 my-3"
+            className="object-contain rounded-[50%] size-27.5 my-3"
           />
           <h3 className="font-lato font-semibold text-xl">{product.title}</h3>
           <span className="text-sm font-lato text-gray-500 font-semibold">
@@ -166,7 +166,7 @@ const ProductList = ({ product }) => {
           </span>
         </div>
         <div
-          className="bg-white rounded-xl flex items-center justify-center flex-col py-3 px-5 text-center shadow-feat cursor-pointer"
+          className="bg-white rounded-3xl flex items-center justify-center flex-col py-3 px-5 text-center shadow-feat cursor-pointer"
           onClick={toggleModal}
         >
           {" "}
