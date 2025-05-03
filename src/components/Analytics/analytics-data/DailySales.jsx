@@ -60,7 +60,7 @@ const DailySales = () => {
           }
 
           sales.push({
-            id: data.order_name, // Using order_name as ID
+            quantity: data.no_order, // Changed from order_name to no_order
             recipient: data.recipient,
             amount: data.order_total,
             time: new Date(data.order_date.toDate()).toLocaleTimeString('en-US', {
@@ -68,11 +68,7 @@ const DailySales = () => {
               minute: '2-digit',
               hour12: true
             }),
-            date: new Date(data.order_date.toDate()).toLocaleDateString('en-US', {
-              month: '2-digit',
-              day: '2-digit',
-              year: 'numeric'
-            }),
+            mop: data.mop,
             status: data.order_status
           });
         });
@@ -129,11 +125,11 @@ const DailySales = () => {
           <table className="min-w-full bg-yellowsm/20 text-center overflow-scroll">
             <thead>
               <tr className="text-[1rem] leading-normal border-b-[0.5px] border-b-yellowsm/50">
-                <th className="py-3 px-6 text-center">Order</th>
+                <th className="py-3 px-6 text-center">Quantity</th>
                 <th className="py-3 px-6 text-center">Recipient</th>
                 <th className="py-3 px-6 text-center">Amount</th>
                 <th className="py-3 px-6 text-center">Time</th>
-                <th className="py-3 px-6 text-center">Date</th>
+                <th className="py-3 px-6 text-center">MOP</th>
                 <th className="py-3 px-6 text-center">Status</th>
               </tr>
             </thead>
@@ -143,11 +139,11 @@ const DailySales = () => {
                   key={index}
                   className="hover:bg-yellowsm/30 text-[1rem] border-b-[0.5px] border-b-yellowsm/50"
                 >
-                  <td className="py-3 px-6 text-center">{sale.id}</td>
+                  <td className="py-3 px-6 text-center">{sale.quantity}x</td>
                   <td className="py-3 px-6 text-center">{sale.recipient}</td>
                   <td className="py-3 px-6 text-center">₱{sale.amount}</td>
                   <td className="py-3 px-6 text-center">{sale.time}</td>
-                  <td className="py-3 px-6 text-center">{sale.date}</td>
+                  <td className="py-3 px-6 text-center">{sale.mop}</td>
                   <td className="py-3 px-6 text-center">{sale.status}</td>
                 </tr>
               ))}
