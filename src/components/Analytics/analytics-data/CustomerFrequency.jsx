@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { collection, query, onSnapshot, getFirestore } from 'firebase/firestore';
+import { collection, query, onSnapshot, getFirestore, Timestamp } from 'firebase/firestore';
 import firebaseApp from "../../../firebaseConfig";
 import AnalyticsDataHeader from "../analytics-common/AnalyticsDataHeader";
 import {
@@ -9,13 +9,14 @@ import {
   BarElement,
   LineElement,
   PointElement,
-  LineController, // Add this
-  BarController,  // Add this
+  LineController, 
+  BarController,  
   Title,
   Tooltip,
   Legend,
+  Filler // Add this
 } from 'chart.js';
-import { Bar } from 'react-chartjs-2';
+import { Line } from 'react-chartjs-2'; // Change from Bar to Line
 
 // Register ChartJS components
 ChartJS.register(
@@ -24,11 +25,12 @@ ChartJS.register(
   BarElement,
   LineElement,
   PointElement,
-  LineController, // Add this
-  BarController,  // Add this
+  LineController, 
+  BarController,  
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler // Add this
 );
 
 const CustomerFrequency = () => {
@@ -58,58 +60,103 @@ const CustomerFrequency = () => {
     const unsubscribe = onSnapshot(orderRef, (snapshot) => {
       try {
         const customerOrders = new Map();
-        const monthlyNewCustomers = {
-          January: new Set(), February: new Set(), March: new Set(),
-          April: new Set(), May: new Set(), June: new Set(),
-          July: new Set(), August: new Set(), September: new Set(),
-          October: new Set(), November: new Set(), December: new Set()
-        };
-        const monthlyReturningCustomers = {
-          January: new Set(), February: new Set(), March: new Set(),
-          April: new Set(), May: new Set(), June: new Set(),
-          July: new Set(), August: new Set(), September: new Set(),
-          October: new Set(), November: new Set(), December: new Set()
-        };
+        const customerFirstOrders = new Map();
 
-        // First pass to identify returning customers
+        // First pass: Process all orders and track first orders
         snapshot.forEach((doc) => {
           const data = doc.data();
-          const customerId = data.customer_id;
-          const orderDate = data.order_date.toDate();
-          const month = orderDate.toLocaleString('default', { month: 'long' });
+          const recipient = data.recipient || '';
           
-          const previousOrders = customerOrders.get(customerId) || 0;
-          customerOrders.set(customerId, previousOrders + 1);
+          if (recipient) {
+            const orderDate = data.order_date?.seconds ? 
+              new Date(data.order_date.seconds * 1000) : 
+              new Date();
 
-          if (previousOrders === 0) {
-            monthlyNewCustomers[month].add(customerId);
-          } else {
-            monthlyReturningCustomers[month].add(customerId);
+            // Track order count
+            const currentCount = customerOrders.get(recipient) || 0;
+            customerOrders.set(recipient, currentCount + 1);
+
+            // Track customer's first order
+            if (!customerFirstOrders.has(recipient) || 
+                orderDate < customerFirstOrders.get(recipient)) {
+              customerFirstOrders.set(recipient, orderDate);
+            }
           }
         });
 
-        // Convert Sets to counts
-        const monthlyTotals = {};
-        const newCustomerTotals = {};
-        const returningCustomerTotals = {};
+        // Initialize metrics
+        let newCustomersCount = 0;
+        let returningCustomersCount = 0;
+        let oneTimeCount = 0;
+        let twoToTenCount = 0;
+        let elevenPlusCount = 0;
 
-        Object.keys(monthlyNewCustomers).forEach(month => {
-          newCustomerTotals[month] = monthlyNewCustomers[month].size;
-          returningCustomerTotals[month] = monthlyReturningCustomers[month].size;
-          monthlyTotals[month] = newCustomerTotals[month] + returningCustomerTotals[month];
+        // Initialize monthly data
+        const monthlyTotals = {
+          January: 0, February: 0, March: 0, April: 0,
+          May: 0, June: 0, July: 0, August: 0,
+          September: 0, October: 0, November: 0, December: 0
+        };
+        const monthlyNewCustomers = {...monthlyTotals};
+        const monthlyReturningCustomers = {...monthlyTotals};
+
+        // Process customer segments and monthly data
+        customerOrders.forEach((orderCount, recipient) => {
+          // Update segment counts
+          if (orderCount === 1) {
+            oneTimeCount++;
+            newCustomersCount++;
+          } else {
+            returningCustomersCount++;
+            if (orderCount >= 2 && orderCount <= 10) {
+              twoToTenCount++;
+            } else if (orderCount > 10) {
+              elevenPlusCount++;
+            }
+          }
+
+          // Update monthly data
+          const firstOrderDate = customerFirstOrders.get(recipient);
+          const month = firstOrderDate.toLocaleString('default', { month: 'long' });
+          
+          if (orderCount === 1) {
+            monthlyNewCustomers[month]++;
+          } else {
+            monthlyReturningCustomers[month]++;
+          }
+          monthlyTotals[month]++;
         });
 
-        // ... rest of your existing metrics calculations ...
+        // Debug log
+        console.log('Customer Metrics:', {
+          newCustomers: newCustomersCount,
+          returningCustomers: returningCustomersCount,
+          oneTime: oneTimeCount,
+          twoToTen: twoToTenCount,
+          elevenPlus: elevenPlusCount,
+          monthlyData: {
+            total: monthlyTotals,
+            new: monthlyNewCustomers,
+            returning: monthlyReturningCustomers
+          }
+        });
 
-        setCustomerMetrics(prev => ({
-          ...prev,
+        // Update state with all metrics
+        setCustomerMetrics({
+          newCustomers: newCustomersCount,
+          returningCustomers: returningCustomersCount,
+          oneTime: oneTimeCount,
+          twoToTen: twoToTenCount,
+          elevenPlus: elevenPlusCount,
           monthlyTotals,
-          monthlyNewCustomers: newCustomerTotals,
-          monthlyReturningCustomers: returningCustomerTotals
-        }));
+          monthlyNewCustomers,
+          monthlyReturningCustomers
+        });
 
+        setLoading(false);
       } catch (error) {
         console.error("Error processing customer data:", error);
+        setLoading(false);
       }
     });
 
@@ -243,38 +290,11 @@ const CustomerFrequency = () => {
   };
 
   return (
-    <section className="bg-white rounded-2xl shadow-feat w-full mx-auto block pb-5">
+    <div className="bg-white rounded-2xl shadow-feat w-full mx-auto block pb-5">
       <AnalyticsDataHeader sectionHeader={sectionHeader} />
       <div className="mt-4 mx-7 w-auto">
         <div className="grid grid-rows-2 grid-cols-[40%_1fr] gap-4">
-          <Card className="bg-yellowsm/20 shadow-lg font-latrue">
-            <div className="text-xl font-medium text-left mb-2 uppercase">
-              Customer Loyalty Metrics
-            </div>
-            <div className="flex justify-between w-full items-center my-1">
-              <div className="text-sm text-left font-latrue">
-                <span>New Customers: </span>
-              </div>
-              <input
-                type="text"
-                disabled
-                value={customerMetrics.newCustomers}
-                className="bg-[#f5f4f4] px-2 border text-sm border-gray-400"
-              />
-            </div>
-            <div className="flex justify-between w-full items-center my-1">
-              <div className="text-sm text-left font-latrue">
-                <span>Returning Customers: </span>
-              </div>
-              <input
-                type="text"
-                disabled
-                value={customerMetrics.returningCustomers}
-                className="bg-[#f5f4f4] px-2 border text-sm border-gray-400"
-              />
-            </div>
-          </Card>
-          
+          <CustomerLoyaltyMetrics metrics={customerMetrics} />
           {/* Monthly totals section */}
           <Card className="row-span-2 bg-yellowsm/20 shadow-lg">
             <div className="text-lg font-medium text-left mb-2 uppercase">
@@ -303,63 +323,23 @@ const CustomerFrequency = () => {
               </div>
             </div>
           </Card>
-
-          {/* Customer segments section */}
-          <Card className="bg-yellowsm/20 shadow-lg">
-            <div className="text-lg font-medium text-left mb-2 uppercase">
-              Customer Segments and average order value
-            </div>
-            <div className="flex justify-between w-full items-center my-1">
-              <div className="text-sm text-left">
-                <span>One Time Customer: </span>
-              </div>
-              <input
-                type="text"
-                disabled
-                value={customerMetrics.oneTime}
-                className="bg-[#f5f4f4] px-2 border border-gray-400 text-sm"
-              />
-            </div>
-            <div className="flex justify-between w-full items-center my-1">
-              <div className="text-sm text-left">
-                <span>2-10 Time Customers: </span>
-              </div>
-              <input
-                type="text"
-                disabled
-                value={customerMetrics.twoToTen}
-                className="bg-[#f5f4f4] px-2 border border-gray-400 text-sm"
-              />
-            </div>
-            <div className="flex justify-between w-full items-center my-1">
-              <div className="text-sm text-left">
-                <span>11+ Time Customers: </span>
-              </div>
-              <input
-                type="text"
-                disabled
-                value={customerMetrics.elevenPlus}
-                className="bg-[#f5f4f4] px-2 border border-gray-400 text-sm"
-              />
-            </div>
-          </Card>
+          <CustomerSegments metrics={customerMetrics} />
         </div>
       </div>
 
       {/* Add this after the grid */}
       <div className="mt-6 mx-7 bg-white rounded-xl shadow-md p-4">
         <div style={{ height: '300px' }}>
-          <Bar data={chartData} options={chartOptions} />
+          <Line data={chartData} options={chartOptions} />
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 
+// Update the Card component
 const Card = ({ children, className = "" }) => (
-  <div
-    className={`w-full rounded-xl flex flex-col items-start py-3 px-5 font-latrue ${className}`}
-  >
+  <div className={`w-full rounded-2xl p-6 ${className}`}>
     {children}
   </div>
 );
@@ -381,6 +361,69 @@ const MonthInput = ({ label, value }) => (
       className="bg-[#f5f4f4] w-20 px-2 py-1 border border-gray-400 text-sm rounded text-center ml-auto"
     />
   </div>
+);
+
+// Update the CustomerLoyaltyMetrics component
+const CustomerLoyaltyMetrics = ({ metrics }) => (
+  <Card className="bg-yellowsm/20 shadow-lg">
+    <div className="text-xl font-medium text-left mb-4">
+      CUSTOMER LOYALTY METRICS
+    </div>
+    <div className="flex justify-between w-full items-center mb-3">
+      <span>New Customers:</span>
+      <input
+        type="text"
+        readOnly
+        value={metrics.newCustomers || 0}
+        className="bg-[#f5f4f4] px-4 py-1.5 border border-gray-300 rounded-md w-32"
+      />
+    </div>
+    <div className="flex justify-between w-full items-center">
+      <span>Returning Customers:</span>
+      <input
+        type="text"
+        readOnly
+        value={metrics.returningCustomers || 0}
+        className="bg-[#f5f4f4] px-4 py-1.5 border border-gray-300 rounded-md w-32"
+      />
+    </div>
+  </Card>
+);
+
+// Update the CustomerSegments component
+const CustomerSegments = ({ metrics }) => (
+  <Card className="bg-yellowsm/20 shadow-lg">
+    <div className="text-xl font-medium text-left mb-4">
+      CUSTOMER SEGMENTS AND AVERAGE ORDER VALUE
+    </div>
+    <div className="flex justify-between w-full items-center mb-3">
+      <span>One Time Customer:</span>
+      <input
+        type="text"
+        readOnly
+        value={metrics.oneTime || 0}
+        className="bg-[#f5f4f4] px-4 py-1.5 border border-gray-300 rounded-md w-32"
+      />
+    </div>
+    <div className="flex justify-between w-full items-center mb-3">
+      <span>2-10 Time Customers:</span>
+      <input
+        type="text"
+        readOnly
+        value={metrics.twoToTen || 0}
+        className="bg-[#f5f4f4] px-4 py-1.5 border border-gray-300 rounded-md w-32"
+      />
+    </div>
+    <div className="flex justify-between w-full items-center">
+      <span>11+ Time Customers:</span>
+      <input
+        type="text"
+        readOnly
+        value={metrics.elevenPlus || 0}
+        className="bg-[#f5f4f4] px-4 py-1.5 border border-gray-300 rounded-md w-32"
+      />
+    </div>
+  </Card>
 );
 
 export default CustomerFrequency;

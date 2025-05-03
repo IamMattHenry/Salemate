@@ -87,30 +87,34 @@ const OrdersTable = () => {
     setError(null);
     try {
       const querySnapshot = await getDocs(collection(db, "order_transaction"));
-      const ordersList = querySnapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          time: new Date(data.order_date.seconds * 1000).toLocaleTimeString(
-            [],
-            {
-              hour: "2-digit",
-              minute: "2-digit",
-            }
-          ),
-          date: new Date(data.order_date.seconds * 1000).toLocaleDateString(
-            "en-US",
-            {
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            }
-          ),
-          // Store timestamp for sorting
-          timestamp: data.order_date.seconds,
-        };
-      });
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Start of today
+
+      const ordersList = querySnapshot.docs
+        .map((doc) => {
+          const data = doc.data();
+          const orderDate = new Date(data.order_date.seconds * 1000);
+          
+          // Format time
+          const time = orderDate.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          });
+
+          return {
+            id: doc.id,
+            ...data,
+            time: time,
+            mop: data.mop || 'Cash', // Add MOP with fallback
+            timestamp: data.order_date.seconds,
+          };
+        })
+        .filter(order => {
+          const orderDate = new Date(order.order_date.seconds * 1000);
+          orderDate.setHours(0, 0, 0, 0);
+          return orderDate.getTime() === today.getTime();
+        });
 
       // Sort by timestamp in descending order (newest first)
       const sortedOrders = ordersList.sort((a, b) => b.timestamp - a.timestamp);
@@ -134,8 +138,8 @@ const OrdersTable = () => {
         <th className="px-4 py-4 font-semibold">Recipient</th>
         <th className="px-4 py-4 font-semibold">Amount</th>
         <th className="px-4 py-4 font-semibold">Time</th>
-        <th className="px-4 py-4 font-semibold">Date</th>
-        <th className="px-4 py-4 font-semibold`">Status</th>
+        <th className="px-4 py-4 font-semibold">MOP</th>
+        <th className="px-4 py-4 font-semibold">Status</th>
       </tr>
     </thead>
   );
@@ -195,9 +199,13 @@ const OrdersTable = () => {
             ₱ {order.order_total}
           </td>
 
-          <td className="px-4 py-4 text-center cursor-pointer">{order.time}</td>
+          <td className="px-4 py-4 text-center cursor-pointer">
+            {order.time}
+          </td>
 
-          <td className="px-4 py-4 text-center cursor-pointer">{order.date}</td>
+          <td className="px-4 py-4 text-center cursor-pointer">
+            {order.mop}
+          </td>
 
           <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-center">
@@ -304,7 +312,11 @@ const OrdersTable = () => {
                       <div className="font-semibold">Recipient Name: {selectedOrder.recipient}</div>
                     </div>
                     <div className="text-right font-semibold text-sm">
-                      <div className="-mb-1">Date: {selectedOrder.date}</div>
+                      <div className="-mb-1">Date: {new Date(selectedOrder.order_date.seconds * 1000).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}</div>
                       <div>Time: {selectedOrder.time}</div>
                     </div>
                   </div>
