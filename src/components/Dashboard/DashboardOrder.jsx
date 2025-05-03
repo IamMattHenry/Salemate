@@ -7,21 +7,27 @@ import useNameModal from "../../hooks/Modal/EnterNameModal";
 import useConfirmOrderModal from "../../hooks/Modal/ConfirmOrderModal";
 import useSuccessModal from "../../hooks/Modal/SuccessModal";
 import { AnimatePresence, motion } from "framer-motion";
+import { collection, addDoc, serverTimestamp, updateDoc, doc, getFirestore } from "firebase/firestore";
+import firebaseApp from "../../firebaseConfig";
 
 const DashboardOrder = ({ product, orderList, setOrderList }) => {
-  const [orderNumber, setOrderNumber] = useState(1);
+  const [orderNumber, setOrderNumber] = useState(Math.floor(Math.random() * 90000) + 10000);
   const [quantities, setQuantities] = useState([]);
   const [paymentMode, setPaymentMode] = useState("Cash");
   const [totalQuantity, setTotalQuantity] = useState(0);
   const [subtotal, setSubtotal] = useState(0);
   const [customerName, setCustomerName] = useState("");
   const [studentId, setStudentId] = useState("");
+  
+  // Initialize Firestore
+  const db = getFirestore(firebaseApp);
 
   // Import custom hooks
   const { inputNameModal, showNameModal, toggleModal } = useNameModal();
   const { confirmOrderModal, showConfirmOrderModal, toggleConfirmOrderModal } = useConfirmOrderModal();
   const { okayModal, showSuccessModal } = useSuccessModal();
 
+  // Get current date and time
   const dateToday = new Date();
   const timeToday = dateToday.toLocaleTimeString([], {
     hour: "2-digit",
@@ -34,17 +40,37 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
     day: "numeric",
   });
 
-  // Initialize quantities based on the orderList length
+  // For backward compatibility with old implementation
+  const [quantity, setQuantity] = useState(1);
+  
+  // Initialize quantities based on the orderList length and quantity
   useEffect(() => {
-    setQuantities(orderList ? orderList.map(() => 1) : [1]); // Initialize quantities to 1 for each product
+    if (orderList && orderList.length > 0) {
+      // Use product quantities if they exist, otherwise default to 1
+      setQuantities(orderList.map(item => item.quantity || 1));
+    } else {
+      setQuantities([]);
+    }
   }, [orderList]);
 
   // Decrease quantity
   const decreaseQuantity = (index) => {
     if (orderList) {
-      setQuantities((prev) =>
-        prev.map((qty, i) => (i === index && qty > 1 ? qty - 1 : qty))
-      );
+      if (quantities[index] > 1) {
+        const updatedQuantities = [...quantities];
+        updatedQuantities[index] = quantities[index] - 1;
+        setQuantities(updatedQuantities);
+        
+        // Also update the orderList quantities to keep them in sync
+        if (setOrderList) {
+          const updatedOrderList = [...orderList];
+          updatedOrderList[index] = {
+            ...updatedOrderList[index],
+            quantity: quantities[index] - 1
+          };
+          setOrderList(updatedOrderList);
+        }
+      }
     } else if (quantity > 1) {
       setQuantity(quantity - 1);
     }
@@ -53,32 +79,48 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
   // Increase quantity
   const increaseQuantity = (index) => {
     if (orderList) {
-      setQuantities((prev) => prev.map((qty, i) => (i === index ? qty + 1 : qty)));
+      const updatedQuantities = [...quantities];
+      updatedQuantities[index] = quantities[index] + 1;
+      setQuantities(updatedQuantities);
+      
+      // Also update the orderList quantities to keep them in sync
+      if (setOrderList) {
+        const updatedOrderList = [...orderList];
+        updatedOrderList[index] = {
+          ...updatedOrderList[index],
+          quantity: quantities[index] + 1
+        };
+        setOrderList(updatedOrderList);
+      }
     } else {
       setQuantity(quantity + 1);
     }
   };
 
-  // For backward compatibility with old implementation
-  const [quantity, setQuantity] = useState(1);
-
   // Recalculate total quantity and subtotal dynamically
   useEffect(() => {
-    if (orderList && orderList.length > 0) {
+    if (orderList && orderList.length > 0 && quantities.length === orderList.length) {
       const totalQty = quantities.reduce((a, b) => a + b, 0); // Sum of all quantities
+      
       const totalSubtotal = orderList.reduce(
-        (total, item, index) => total + item.price * quantities[index],
+        (total, item, index) => {
+          const price = parseFloat(item.price);
+          return total + price * quantities[index];
+        },
         0
       );
 
       setTotalQuantity(totalQty); // Update total quantity
       setSubtotal(totalSubtotal); // Update subtotal
+    } else {
+      setTotalQuantity(0);
+      setSubtotal(0);
     }
   }, [quantities, orderList]);
 
   // Function to clear all orders - triggered by the red bin icon
   const clearAllOrders = () => {
-    console.log("Clearing all orders..."); // Debugging
+    console.log("Clearing all orders...");
     if (setOrderList) {
       setOrderList([]); // Clears the entire order list
       setQuantities([]); // Resets quantities
@@ -89,29 +131,97 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
 
   // Function to remove a specific product - triggered by the red "X" icon
   const removeItem = (index) => {
-    console.log(`Removing item at index: ${index}`); // Debugging
+    console.log(`Removing item at index: ${index}`);
     if (orderList && setOrderList) {
       const updatedOrderList = orderList.filter((_, i) => i !== index); // Remove the product at the given index
       const updatedQuantities = quantities.filter((_, i) => i !== index); // Remove the corresponding quantity
 
       setOrderList(updatedOrderList); // Update the order list
       setQuantities(updatedQuantities); // Update the quantities
+    }
+  };
 
-      // Recalculate total quantity and subtotal
-      const totalQty = updatedQuantities.reduce((a, b) => a + b, 0);
-      const totalSubtotal = updatedOrderList.reduce(
-        (total, item, i) => total + item.price * updatedQuantities[i],
-        0
-      );
-
-      setTotalQuantity(totalQty); // Update total quantity
-      setSubtotal(totalSubtotal); // Update subtotal
+  // Save order to Firebase
+  const saveOrderToFirebase = async () => {
+    try {
+      console.log("Saving order to Firebase...");
+  
+      // Get main product name for the order name (for table display)
+      const orderName = orderList && orderList.length > 0 ? 
+        orderList[0].category || orderList[0].title : "Unknown Order";
+  
+      // Prepare order items with correct data types
+      const orderItems = orderList.map((item, index) => {
+        const price = parseFloat(item.price);
+        const qty = quantities[index];
+        return {
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          price: price,
+          quantity: qty,
+          subtotal: price * qty,
+          category: item.category,
+          url: item.url,
+        };
+      });
+  
+      // Calculate final total
+      const orderTotal = orderItems.reduce((sum, item) => sum + item.subtotal, 0);
+  
+      // Save to "order_transaction" collection with fields matching the table display
+      const orderTransactionRef = await addDoc(collection(db, "order_transaction"), {
+        customer_id: studentId,
+        recipient: customerName,
+        no_order: totalQuantity, // Using total quantity for no_order as shown in screenshot
+        order_date: serverTimestamp(), // Use server timestamp for accurate time
+        order_time: timeToday,
+        order_name: orderName, // Using main category/title for order name
+        mop: paymentMode,
+        order_total: orderTotal,
+        order_status: "Preparing", // Default status is "Preparing"
+        status: true,
+        created_at: serverTimestamp(),
+        updated_at: serverTimestamp(),
+        items: orderItems, // Save the full list of items
+      });
+  
+      console.log("Order saved to order_transaction:", orderTransactionRef.id);
+  
+      // Update "customer_history" collection
+      const currentMonthYear = dateToday.toLocaleString("default", { month: "long", year: "numeric" });
+      const customerHistoryRef = collection(db, "customer_history");
+  
+      const customerHistorySnapshot = await addDoc(customerHistoryRef, {
+        monthYear: currentMonthYear,
+        totalItems: orderItems.reduce((sum, item) => sum + item.quantity, 0),
+        totalOrders: 1, // This is one order
+        totalSpent: orderTotal,
+        customerName: customerName,
+        studentId: studentId,
+        orderDate: formattedDate,
+        orderTime: timeToday,
+        customerCount: 1,
+        dateSaved: serverTimestamp(),
+        lastUpdated: serverTimestamp(),
+        orderItems: orderItems,
+      });
+  
+      console.log("Order saved to customer_history:", customerHistorySnapshot.id);
+      return true;
+    } catch (error) {
+      console.error("Error saving order to Firebase:", error);
+      return false;
     }
   };
 
   const handleCheckout = () => {
     console.log("Checkout clicked");
-    showNameModal(); // Show name input modal first
+    if (orderList && orderList.length > 0) {
+      showNameModal(); // Show name input modal first
+    } else {
+      console.log("Cannot checkout with empty order list");
+    }
   };
   
   const handleCustomerNameChange = (e) => {
@@ -128,17 +238,29 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
     }, 300);
   };
 
-  const handleConfirmOrder = () => {
+  const handleConfirmOrder = async () => {
     toggleConfirmOrderModal(); // Hide confirmation modal
 
-    setTimeout(() => {
-      showSuccessModal();
-    }, 300);
-    
-    // Reset order lists
-    if (setOrderList) {
-      setOrderList([]);
-      setQuantities([]);
+    // Generate a new order number for this transaction
+    setOrderNumber(Math.floor(Math.random() * 90000) + 10000);
+
+    // Save order to Firebase
+    const saveResult = await saveOrderToFirebase();
+
+    if (saveResult) {
+      setTimeout(() => {
+        showSuccessModal();
+      }, 300);
+      
+      // Reset order lists
+      if (setOrderList) {
+        setOrderList([]);
+        setQuantities([]);
+        setTotalQuantity(0);
+        setSubtotal(0);
+      }
+    } else {
+      alert("Failed to save order. Please try again.");
     }
   };
 
@@ -230,7 +352,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                   <span className="text-sm text-gray-500 font-lato">
                     {item.description}
                   </span>
-                  <span className="text-xs font-bold">&#8369; {item.price}</span>
+                  <span className="text-xs font-bold">&#8369; {parseFloat(item.price).toFixed(2)}</span>
                 </div>
                 <div className="font-lato font-bold text-sm text-center flex flex-col justify-between h-full">
                   <div className="text-sm flex justify-end space-x-1">
@@ -257,7 +379,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                     </button>
                     <input
                       type="text"
-                      value={orderList ? quantities[index] : quantity}
+                      value={quantities[index] || 1}
                       readOnly
                       className="border-[0.5px] border-gray-500 w-[50%] text-center rounded-xl"
                     />
@@ -285,13 +407,13 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
               Number of Products:
             </span>
             <span className="font-medium font-lato text-base">
-              {orderList ? totalQuantity : quantity}x
+              {totalQuantity}x
             </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="font-bold font-lato text-base text-gray-800">Subtotal:</span>
             <span className="font-medium font-lato text-base">
-              &#8369; {orderList ? subtotal.toFixed(2) : (product ? product.price * quantity : 0).toFixed(2)}
+              &#8369; {subtotal.toFixed(2)}
             </span>
           </div>
         </div>
@@ -410,7 +532,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
               </div>
               <div className="p-4">
                 <div className="flex justify-between mb-2">
-                  <span className="font-medium text-sm">Order #{Math.floor(Math.random() * 90000) + 10000}</span>
+                  <span className="font-medium text-sm">Order #{orderNumber}</span>
                   <span className="text-sm">{paymentMode} Payment</span>
                 </div>
                 
@@ -421,13 +543,13 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                       <div>
                         <div className="font-medium">{item.title}</div>
                         <div className="text-xs text-gray-500">
-                          Quantity: {orderList ? quantities[index] : quantity}
+                          Quantity: {quantities[index] || 1}
                         </div>
                       </div>
                       <div className="text-right">
-                        <div>₱{item.price}</div>
+                        <div>₱{parseFloat(item.price).toFixed(2)}</div>
                         <div className="text-xs">
-                          x{orderList ? quantities[index] : quantity}
+                          x{quantities[index] || 1}
                         </div>
                       </div>
                     </div>
@@ -439,10 +561,20 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                   <div className="flex justify-between font-medium">
                     <span>Total:</span>
                     <span>
-                      ₱{orderList 
-                         ? subtotal.toFixed(2) 
-                         : (product ? product.price * quantity : 0).toFixed(2)}
+                      ₱{subtotal.toFixed(2)}
                     </span>
+                  </div>
+                </div>
+                
+                {/* Date and Time */}
+                <div className="border-t pt-2 mb-4 text-sm">
+                  <div className="flex justify-between">
+                    <span>Date:</span>
+                    <span>{formattedDate}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Time:</span>
+                    <span>{timeToday}</span>
                   </div>
                 </div>
                 

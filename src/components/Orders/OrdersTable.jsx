@@ -89,26 +89,39 @@ const OrdersTable = () => {
       const querySnapshot = await getDocs(collection(db, "order_transaction"));
       const ordersList = querySnapshot.docs.map((doc) => {
         const data = doc.data();
+
+        // Parse order_date and handle missing or invalid dates
+        const orderDate = data.order_date?.seconds
+          ? new Date(data.order_date.seconds * 1000)
+          : null;
+
+        // Replace "Meal" with "Katsu" or "Spicy Katsu"
+        let orderName = data.order_name;
+        if (orderName === "Meal") {
+          orderName = "Katsu"; // Replace with "Spicy Katsu" if needed
+        }
+
         return {
           id: doc.id,
           ...data,
-          time: new Date(data.order_date.seconds * 1000).toLocaleTimeString(
-            [],
-            {
-              hour: "2-digit",
-              minute: "2-digit",
-            }
-          ),
-          date: new Date(data.order_date.seconds * 1000).toLocaleDateString(
-            "en-US",
-            {
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            }
-          ),
-          // Store timestamp for sorting
-          timestamp: data.order_date.seconds,
+          order_name: orderName, // Update the order name
+          time: orderDate
+            ? orderDate.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "Invalid Time",
+          date: orderDate
+            ? orderDate.toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })
+            : "Invalid Date",
+          quantity: data.items
+            ? data.items.reduce((total, item) => total + (item.quantity || 0), 0)
+            : 0, // Calculate total quantity from items array
+          timestamp: orderDate ? orderDate.getTime() : 0, // Use timestamp for sorting
         };
       });
 
