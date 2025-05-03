@@ -95,18 +95,33 @@ const OrdersTable = () => {
           const data = doc.data();
           const orderDate = new Date(data.order_date.seconds * 1000);
           
-          // Format time
+          // Format time with AM/PM
           const time = orderDate.toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
             hour12: true
           });
 
+          // Replace "Meal" with "Katsu"
+          let orderName = data.order_name;
+          if (orderName === "Meal") {
+            orderName = "Katsu";
+          }
+
           return {
             id: doc.id,
             ...data,
+            order_name: orderName, // Update the order name
             time: time,
+            date: orderDate.toLocaleDateString("en-US", {
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            }),
             mop: data.mop || 'Cash', // Add MOP with fallback
+            quantity: data.items
+              ? data.items.reduce((total, item) => total + (item.quantity || 0), 0)
+              : 0, // Calculate total quantity from items array
             timestamp: data.order_date.seconds,
           };
         })

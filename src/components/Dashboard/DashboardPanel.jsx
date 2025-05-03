@@ -6,7 +6,7 @@ import DashboardOrder from "./DashboardOrder";
 // Initial products data
 const initialProducts = [
   {
-    id: 1,
+    id: 1,  
     title: "Katsu",
     description: "Katsu with rice (not spicy)",
     price: "60",
