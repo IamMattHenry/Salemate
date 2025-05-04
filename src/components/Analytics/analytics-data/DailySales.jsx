@@ -37,12 +37,12 @@ const DailySales = () => {
         endOfDay.setHours(23, 59, 59, 999);
 
         const ordersRef = collection(db, 'order_transaction');
+        // Get all orders for today first
         const dailyQuery = query(
           ordersRef,
           where('order_date', '>=', Timestamp.fromDate(startOfDay)),
           where('order_date', '<=', Timestamp.fromDate(endOfDay)),
-          orderBy('order_date', 'desc'), // Sort by date in descending order
-          limit(5) // Limit to 5 most recent orders
+          orderBy('order_date', 'desc')
         );
 
         const querySnapshot = await getDocs(dailyQuery);
@@ -50,32 +50,36 @@ const DailySales = () => {
         let totalCashSales = 0;
         let totalOnlineSales = 0;
         
+        // Only process delivered orders
         querySnapshot.forEach((doc) => {
           const data = doc.data();
-          // Calculate totals based on mode of payment
-          if (data.mop === "Online") {
-            totalOnlineSales += data.order_total;
-          } else {
-            totalCashSales += data.order_total;
-          }
+          // Only include if status is "Delivered"
+          if (data.order_status === "Delivered") {
+            if (data.mop === "Online") {
+              totalOnlineSales += data.order_total;
+            } else {
+              totalCashSales += data.order_total;
+            }
 
-          sales.push({
-            quantity: data.no_order, // Changed from order_name to no_order
-            recipient: data.recipient,
-            amount: data.order_total,
-            time: new Date(data.order_date.toDate()).toLocaleTimeString('en-US', {
-              hour: 'numeric',
-              minute: '2-digit',
-              hour12: true
-            }),
-            mop: data.mop,
-            status: data.order_status
-          });
+            sales.push({
+              quantity: data.no_order,
+              recipient: data.recipient,
+              amount: data.order_total,
+              time: new Date(data.order_date.toDate()).toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+              }),
+              mop: data.mop,
+              status: data.order_status
+            });
+          }
         });
 
-        // Update state with all the data
-        setSalesData(sales);
-        // You can add additional state for the totals if needed
+        // Get only the 5 most recent delivered orders
+        const recentSales = sales.slice(0, 5);
+
+        setSalesData(recentSales);
         setTotalOnline(totalOnlineSales);
         setTotalCash(totalCashSales);
         
