@@ -8,6 +8,7 @@ import {
   doc,
   updateDoc,
   getFirestore,
+  getDoc,
 } from "firebase/firestore";
 import UseModal from "../../hooks/Modal/UseModal";
 import { motion, AnimatePresence } from "framer-motion";
@@ -82,46 +83,50 @@ const OrdersTable = () => {
     });
   };
 
+  // Modify the fetchOrders function to handle multiple items
   const fetchOrders = async () => {
     setLoading(true);
     setError(null);
     try {
       const querySnapshot = await getDocs(collection(db, "order_transaction"));
       const today = new Date();
-      today.setHours(0, 0, 0, 0); // Start of today
+      today.setHours(0, 0, 0, 0);
 
       const ordersList = querySnapshot.docs
         .map((doc) => {
           const data = doc.data();
           const orderDate = new Date(data.order_date.seconds * 1000);
           
-          // Format time with AM/PM
-          const time = orderDate.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-          });
-
-          // Replace "Meal" with "Katsu"
-          let orderName = data.order_name;
-          if (orderName === "Meal") {
-            orderName = "Katsu";
+          // Format order names from items array
+          let orderName = '';
+          if (data.items && data.items.length > 0) {
+            orderName = data.items
+              .map(item => item.title === "Meal" ? "Katsu" : item.title)
+              .filter((value, index, self) => self.indexOf(value) === index) // Remove duplicates
+              .join(' / ');
+          } else {
+            // Fallback for legacy data
+            orderName = data.order_name === "Meal" ? "Katsu" : data.order_name;
           }
 
           return {
             id: doc.id,
             ...data,
-            order_name: orderName, // Update the order name
-            time: time,
+            order_name: orderName,
+            time: orderDate.toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            }),
             date: orderDate.toLocaleDateString("en-US", {
               month: "long",
               day: "numeric",
               year: "numeric",
             }),
-            mop: data.mop || 'Cash', // Add MOP with fallback
+            mop: data.mop || 'Cash',
             quantity: data.items
               ? data.items.reduce((total, item) => total + (item.quantity || 0), 0)
-              : 0, // Calculate total quantity from items array
+              : 0,
             timestamp: data.order_date.seconds,
           };
         })
@@ -131,7 +136,6 @@ const OrdersTable = () => {
           return orderDate.getTime() === today.getTime();
         });
 
-      // Sort by timestamp in descending order (newest first)
       const sortedOrders = ordersList.sort((a, b) => b.timestamp - a.timestamp);
       setOrders(sortedOrders);
     } catch (error) {
@@ -175,11 +179,26 @@ const OrdersTable = () => {
   const handleStatusChange = async (orderId, newStatus) => {
     setLoading(true);
     try {
+      // Get the current order
       const orderRef = doc(db, "order_transaction", orderId);
+      const orderSnapshot = await getDoc(orderRef);
+      const currentOrder = orderSnapshot.data();
+  
+      // Check if all items in the order are ready before marking as Delivered
+      if (newStatus === "Delivered") {
+        // If any items are still preparing, prevent status change
+        if (currentOrder.items?.some(item => item.status === "Preparing")) {
+          setError("Cannot mark as delivered - some items are still being prepared");
+          return;
+        }
+      }
+  
+      // If all checks pass, update the order status
       await updateDoc(orderRef, {
         order_status: newStatus,
         updated_at: new Date(),
       });
+      
       await fetchOrders();
     } catch (error) {
       setError("Failed to update order status. Please try again.");
@@ -188,6 +207,7 @@ const OrdersTable = () => {
       setLoading(false);
     }
   };
+  
 
   const handleRowClick = (order) => {
     setSelectedOrder(order);
@@ -252,7 +272,11 @@ const OrdersTable = () => {
 
   return (
     <section className="bg-white rounded-2xl shadow-feat w-full mx-auto">
-      {error && <div className="p-4 text-red-500">{error}</div>}
+      {error && (
+        <div className="p-4 text-red-500 bg-red-50 m-4 rounded-lg">
+          {error}
+        </div>
+      )}
       {loading ? (
         <div className="p-8 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto"></div>
@@ -339,16 +363,17 @@ const OrdersTable = () => {
 
                 {/* Order Details Grid */}
                 <div className="grid grid-cols-2 gap-3">
-                  {/* Orders Column */}
-                  <div className="bg-[#FFF8E6] rounded-lg p-2 shadow-sm">
-                    <h4 className="text-sm font-bold mb-1">Order(s)</h4>
-                    <div className="text-sm">{selectedOrder.order_name}</div>
-                  </div>
-
-                  {/* Quantity Column */}
-                  <div className="bg-[#FFF8E6] rounded-lg p-2 shadow-sm">
-                    <h4 className="text-sm font-bold mb-1">Quantity</h4>
-                    <div className="text-sm">x{selectedOrder.no_order}</div>
+                  {/* Orders Column with Individual Quantities */}
+                  <div className="bg-[#FFF8E6] rounded-lg p-2 shadow-sm col-span-2">
+                    <h4 className="text-sm font-bold mb-2">Order Details</h4>
+                    <div className="space-y-1">
+                      {selectedOrder.items && selectedOrder.items.map((item, index) => (
+                        <div key={index} className="text-sm flex justify-between">
+                          <span>{item.title === "Meal" ? "Katsu" : item.title}:</span>
+                          <span>x{item.quantity}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Amount Column */}
