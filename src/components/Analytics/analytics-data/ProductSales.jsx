@@ -27,8 +27,8 @@ const TOP_SELLING_LABEL = "Week 1 - 4 overall top selling product";
 
 // Add constants for product names
 const PRODUCTS = {
-  CLASSIC: 'Classic Katsu',
-  SPICY: 'Spicy Katsu'
+  CLASSIC: 'Katsu',           // Changed from 'Classic Katsu' to 'Katsu'
+  SPICY: 'Spicy Katsu'        // This one matches exactly
 };
 
 // Memoized Card Components
@@ -352,29 +352,38 @@ const ProductSales = () => {
         snapshot.forEach((doc) => {
           const data = doc.data();
           if (data.order_status === 'Delivered' && data.items) {
+            // Debug log to see all items in each order
+            console.log('Order Items:', data.items.map(item => ({
+              title: item.title,
+              quantity: item.quantity,
+              subtotal: item.subtotal
+            })));
+
             const orderDate = data.order_date.toDate();
             const weekNum = getWeekNumber(orderDate);
             
             weekTotals[weekNum] += data.order_total;
             totalMonthSales += data.order_total;
 
-            // Process items array
+            // Update the item checking logic with exact matching
             data.items.forEach(item => {
-              // Check item title for product type
-              if (item.title === "Katsu") {
-                productSales[PRODUCTS.CLASSIC] += item.subtotal;
+              // Use exact matching against the database title field
+              if (item.title === PRODUCTS.CLASSIC) {
+                productSales[PRODUCTS.CLASSIC] += item.subtotal || (item.price * item.quantity);
                 productQty[PRODUCTS.CLASSIC] += item.quantity;
-                productWeekSales[weekNum][PRODUCTS.CLASSIC] += item.subtotal;
-              } else if (item.title === "Spicy Katsu") {
-                productSales[PRODUCTS.SPICY] += item.subtotal;
+                productWeekSales[weekNum][PRODUCTS.CLASSIC] += item.subtotal || (item.price * item.quantity);
+              } else if (item.title === PRODUCTS.SPICY) {
+                productSales[PRODUCTS.SPICY] += item.subtotal || (item.price * item.quantity);
                 productQty[PRODUCTS.SPICY] += item.quantity;
-                productWeekSales[weekNum][PRODUCTS.SPICY] += item.subtotal;
+                productWeekSales[weekNum][PRODUCTS.SPICY] += item.subtotal || (item.price * item.quantity);
               }
             });
-            
-            sales.push(data);
           }
         });
+
+        // Add console logs for debugging
+        console.log('Weekly Product Sales:', productWeekSales);
+        console.log('Product Names in Orders:', new Set([...snapshot.docs.flatMap(doc => doc.data().items.map(item => item.title))]));
 
         // Sort products by sales volume
         const sortedProducts = Object.entries(productSales)
