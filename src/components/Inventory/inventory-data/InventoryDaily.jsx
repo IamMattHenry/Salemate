@@ -41,7 +41,7 @@ const InventoryDaily = () => {
     const today = new Date();
     
     return lastUpdate.getDate() !== today.getDate() ||
-           lastUpdate.getMonth() !== today.getMonth() ||
+           lastUpdate.getMonth() !== today.getMonth() ||  
            lastUpdate.getFullYear() !== today.getFullYear();
   };
 
