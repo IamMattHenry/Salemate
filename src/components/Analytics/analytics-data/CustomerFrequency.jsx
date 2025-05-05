@@ -46,7 +46,8 @@ const CustomerFrequency = () => {
       September: 0, October: 0, November: 0, December: 0
     },
     monthlyNewCustomers: {},
-    monthlyReturningCustomers: {}
+    monthlyReturningCustomers: {},
+    loyalCustomers: [] // Add this
   });
   const [loading, setLoading] = useState(true);
   const db = getFirestore(firebaseApp);
@@ -141,6 +142,37 @@ const CustomerFrequency = () => {
           }
         });
 
+        // Track monthly orders per customer
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth();
+        const currentYear = currentDate.getFullYear();
+        
+        const monthlyCustomerOrders = new Map();
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const orderDate = new Date(data.order_date.seconds * 1000);
+          
+          // Only count orders from current month
+          if (orderDate.getMonth() === currentMonth && 
+              orderDate.getFullYear() === currentYear) {
+            const recipient = data.recipient || '';
+            if (recipient) {
+              const currentCount = monthlyCustomerOrders.get(recipient) || 0;
+              monthlyCustomerOrders.set(recipient, currentCount + 1);
+            }
+          }
+        });
+
+        // Filter loyal customers (5+ orders this month)
+        const loyalCustomers = Array.from(monthlyCustomerOrders.entries())
+          .filter(([_, count]) => count >= 5)
+          .map(([name, orderCount]) => ({
+            name,
+            orderCount
+          }))
+          .sort((a, b) => b.orderCount - a.orderCount);
+
         // Update state with all metrics
         setCustomerMetrics({
           newCustomers: newCustomersCount,
@@ -150,7 +182,8 @@ const CustomerFrequency = () => {
           elevenPlus: elevenPlusCount,
           monthlyTotals,
           monthlyNewCustomers,
-          monthlyReturningCustomers
+          monthlyReturningCustomers,
+          loyalCustomers // Add this
         });
 
         setLoading(false);
@@ -289,48 +322,29 @@ const CustomerFrequency = () => {
     }
   };
 
+  // Update the chart section in the return statement
   return (
     <div className="bg-white rounded-2xl shadow-feat w-full mx-auto block pb-5">
       <AnalyticsDataHeader sectionHeader={sectionHeader} />
-      <div className="mt-4 mx-7 w-auto">
-        <div className="grid grid-rows-2 grid-cols-[40%_1fr] gap-4">
+      {/* Make grid responsive */}
+      <div className="mt-4 mx-3 md:mx-7 w-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <CustomerLoyaltyMetrics metrics={customerMetrics} />
-          {/* Monthly totals section */}
-          <Card className="row-span-2 bg-yellowsm/20 shadow-lg">
-            <div className="text-lg font-medium text-left mb-2 uppercase">
-              Total Customer (Monthly)
-            </div>
-            <div className="flex justify-between w-full my-4 pl-[25px]"> {/* Changed from pl-[35px] to pl-[25px] */}
-              {/* Left column */}
-              <div className="w-[48%] space-y-2">
-                {leftColumnMonths.map((month) => (
-                  <MonthInput 
-                    key={month} 
-                    label={month} 
-                    value={customerMetrics.monthlyTotals[month]} 
-                  />
-                ))}
-              </div>
-              {/* Right column */}
-              <div className="w-[48%] space-y-2">
-                {rightColumnMonths.map((month) => (
-                  <MonthInput 
-                    key={month} 
-                    label={month} 
-                    value={customerMetrics.monthlyTotals[month]} 
-                  />
-                ))}
-              </div>
-            </div>
-          </Card>
           <CustomerSegments metrics={customerMetrics} />
         </div>
       </div>
 
-      {/* Add this after the grid */}
-      <div className="mt-6 mx-7 bg-white rounded-xl shadow-md p-4">
-        <div style={{ height: '300px' }}>
-          <Line data={chartData} options={chartOptions} />
+      {/* Update Loyal Customers section */}
+      <div className="mt-6 mx-3 md:mx-7">
+        <LoyalCustomers customers={customerMetrics.loyalCustomers || []} />
+      </div>
+
+      {/* Update Chart section */}
+      <div className="mt-6 mx-3 md:mx-7 bg-white rounded-xl shadow-md p-4">
+        <div className="min-w-[320px] md:min-w-[800px]">
+          <div className="h-[250px] md:h-[300px]">
+            <Line data={chartData} options={chartOptions} />
+          </div>
         </div>
       </div>
     </div>
@@ -339,91 +353,128 @@ const CustomerFrequency = () => {
 
 // Update the Card component
 const Card = ({ children, className = "" }) => (
-  <div className={`w-full rounded-2xl p-6 ${className}`}>
+  <div className={`w-full rounded-2xl p-6 md:p-8 backdrop-blur-sm ${className}`}>
     {children}
-  </div>
-);
-
-// Update the months array to be in two separate columns
-const leftColumnMonths = ['January', 'February', 'March', 'April', 'May', 'June'];
-const rightColumnMonths = ['July', 'August', 'September', 'October', 'November', 'December'];
-
-// Update the MonthInput component
-const MonthInput = ({ label, value }) => (
-  <div className="flex items-center w-full">
-    <div className="text-sm font-medium w-28 text-left">
-      <span>{label}</span>
-    </div>
-    <input
-      type="text"
-      disabled
-      value={value}
-      className="bg-[#f5f4f4] w-20 px-2 py-1 border border-gray-400 text-sm rounded text-center ml-auto"
-    />
   </div>
 );
 
 // Update the CustomerLoyaltyMetrics component
 const CustomerLoyaltyMetrics = ({ metrics }) => (
-  <Card className="bg-yellowsm/20 shadow-lg">
-    <div className="text-xl font-medium text-left mb-4">
+  <Card className="bg-gradient-to-br from-yellowsm/10 to-yellowsm/20 shadow-lg hover:shadow-xl transition-all duration-300">
+    <div className="text-lg md:text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+      <span className="bg-yellowsm/20 p-2 rounded-lg">📊</span>
       CUSTOMER LOYALTY METRICS
     </div>
-    <div className="flex justify-between w-full items-center mb-3">
-      <span>New Customers:</span>
-      <input
-        type="text"
-        readOnly
-        value={metrics.newCustomers || 0}
-        className="bg-[#f5f4f4] px-4 py-1.5 border border-gray-300 rounded-md w-32"
-      />
-    </div>
-    <div className="flex justify-between w-full items-center">
-      <span>Returning Customers:</span>
-      <input
-        type="text"
-        readOnly
-        value={metrics.returningCustomers || 0}
-        className="bg-[#f5f4f4] px-4 py-1.5 border border-gray-300 rounded-md w-32"
-      />
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between w-full items-start sm:items-center gap-3">
+        <span className="text-sm md:text-base font-medium text-gray-700">New Customers:</span>
+        <input
+          type="text"
+          readOnly
+          value={metrics.newCustomers || 0}
+          className="bg-white px-4 py-2 border border-yellowsm/30 rounded-lg w-full sm:w-32 text-center text-sm md:text-base font-semibold text-yellowsm shadow-sm focus:ring-2 focus:ring-yellowsm/20 transition-all duration-200"
+        />
+      </div>
+      <div className="flex flex-col sm:flex-row justify-between w-full items-start sm:items-center gap-3">
+        <span className="text-sm md:text-base font-medium text-gray-700">Returning Customers:</span>
+        <input
+          type="text"
+          readOnly
+          value={metrics.returningCustomers || 0}
+          className="bg-white px-4 py-2 border border-yellowsm/30 rounded-lg w-full sm:w-32 text-center text-sm md:text-base font-semibold text-yellowsm shadow-sm focus:ring-2 focus:ring-yellowsm/20 transition-all duration-200"
+        />
+      </div>
     </div>
   </Card>
 );
 
 // Update the CustomerSegments component
 const CustomerSegments = ({ metrics }) => (
-  <Card className="bg-yellowsm/20 shadow-lg">
-    <div className="text-xl font-medium text-left mb-4">
-      CUSTOMER SEGMENTS AND AVERAGE ORDER VALUE
+  <Card className="bg-gradient-to-br from-yellowsm/10 to-yellowsm/20 shadow-lg hover:shadow-xl transition-all duration-300">
+    <div className="text-lg md:text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+      <span className="bg-yellowsm/20 p-2 rounded-lg">👥</span>
+      CUSTOMER SEGMENTS
     </div>
-    <div className="flex justify-between w-full items-center mb-3">
-      <span>One Time Customer:</span>
-      <input
-        type="text"
-        readOnly
-        value={metrics.oneTime || 0}
-        className="bg-[#f5f4f4] px-4 py-1.5 border border-gray-300 rounded-md w-32"
-      />
-    </div>
-    <div className="flex justify-between w-full items-center mb-3">
-      <span>2-10 Time Customers:</span>
-      <input
-        type="text"
-        readOnly
-        value={metrics.twoToTen || 0}
-        className="bg-[#f5f4f4] px-4 py-1.5 border border-gray-300 rounded-md w-32"
-      />
-    </div>
-    <div className="flex justify-between w-full items-center">
-      <span>11+ Time Customers:</span>
-      <input
-        type="text"
-        readOnly
-        value={metrics.elevenPlus || 0}
-        className="bg-[#f5f4f4] px-4 py-1.5 border border-gray-300 rounded-md w-32"
-      />
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between w-full items-start sm:items-center gap-3">
+        <span className="text-sm md:text-base font-medium text-gray-700">One Time Customer:</span>
+        <input
+          type="text"
+          readOnly
+          value={metrics.oneTime || 0}
+          className="bg-white px-4 py-2 border border-yellowsm/30 rounded-lg w-full sm:w-32 text-center text-sm md:text-base font-semibold text-yellowsm shadow-sm focus:ring-2 focus:ring-yellowsm/20 transition-all duration-200"
+        />
+      </div>
+      <div className="flex flex-col sm:flex-row justify-between w-full items-start sm:items-center gap-3">
+        <span className="text-sm md:text-base font-medium text-gray-700">2-10 Time Customers:</span>
+        <input
+          type="text"
+          readOnly
+          value={metrics.twoToTen || 0}
+          className="bg-white px-4 py-2 border border-yellowsm/30 rounded-lg w-full sm:w-32 text-center text-sm md:text-base font-semibold text-yellowsm shadow-sm focus:ring-2 focus:ring-yellowsm/20 transition-all duration-200"
+        />
+      </div>
+      <div className="flex flex-col sm:flex-row justify-between w-full items-start sm:items-center gap-3">
+        <span className="text-sm md:text-base font-medium text-gray-700">11+ Time Customers:</span>
+        <input
+          type="text"
+          readOnly
+          value={metrics.elevenPlus || 0}
+          className="bg-white px-4 py-2 border border-yellowsm/30 rounded-lg w-full sm:w-32 text-center text-sm md:text-base font-semibold text-yellowsm shadow-sm focus:ring-2 focus:ring-yellowsm/20 transition-all duration-200"
+        />
+      </div>
     </div>
   </Card>
+);
+
+// Update the LoyalCustomers component
+const LoyalCustomers = ({ customers }) => (
+  <div className="bg-gradient-to-br from-amber-50/80 to-yellowsm/20 rounded-xl shadow-lg p-4 md:p-6">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-4 md:mb-6">
+      <div className="text-lg md:text-xl font-bold text-gray-800">👑 LOYAL CUSTOMERS THIS MONTH</div>
+      <div className="text-sm text-amber-600 bg-amber-100 px-2 py-1 rounded-full">
+        {customers.length} customers
+      </div>
+    </div>
+    <div className="overflow-auto max-h-[250px] scrollbar-thin scrollbar-thumb-amber-200 scrollbar-track-transparent pr-2">
+      {customers.length > 0 ? (
+        <div className="space-y-3">
+          {customers.map((customer, index) => (
+            <div 
+              key={index}
+              className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-3 md:p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-amber-100/50"
+            >
+              <div className="flex items-center gap-3 md:gap-4 w-full sm:w-auto">
+                <div className="bg-amber-100 rounded-full p-2 text-amber-700 text-sm">
+                  #{index + 1}
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-800 text-sm md:text-base">{customer.name}</div>
+                  <div className="text-xs md:text-sm text-amber-600 font-medium">
+                    {customer.orderCount} orders this month
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+                <div className="text-amber-600 font-medium bg-amber-50 px-2 md:px-3 py-1 rounded-full text-xs md:text-sm">
+                  Loyal Customer
+                </div>
+                <div className="text-amber-500 text-sm md:text-base">
+                  ★★★★★
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center text-gray-500 py-6 md:py-8 bg-white/50 rounded-xl border border-dashed border-amber-200">
+          <div className="text-3xl md:text-4xl mb-2">👥</div>
+          <div className="font-medium text-sm md:text-base">No loyal customers this month yet</div>
+          <div className="text-xs md:text-sm text-gray-400">Customers with 5+ orders will appear here</div>
+        </div>
+      )}
+    </div>
+  </div>
 );
 
 export default CustomerFrequency;

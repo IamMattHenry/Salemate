@@ -33,63 +33,88 @@ const PRODUCTS = {
 
 // Memoized Card Components
 const Card = memo(({ label, subLabel, amount }) => (
-  <div className="bg-yellowsm/20 h-40 w-full rounded-xl shadow-md flex flex-row items-center justify-between font-lato px-5">
-    <div>
-      <div>
-        <div className="text-xl font-medium text-left">{label}</div>
-        <div className="text-[1rem] text-gray-600 mb-5 -mt-2 text-left">
-          {subLabel}
+  <div className="bg-gradient-to-br from-yellowsm/10 to-yellowsm/20 h-32 w-full rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-4">
+    <div className="h-full flex flex-col justify-between">
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          <span className="bg-yellowsm/20 p-1.5 rounded-lg text-sm">📅</span>
+          <span className="text-lg font-bold text-gray-800">{label}</span>
         </div>
+        <div className="text-sm text-gray-600">{subLabel}</div>
       </div>
-      <div className="text-xl font-medium">{amount}</div>
+      <div className="text-2xl font-bold text-yellowsm text-right">{amount}</div>
     </div>
   </div>
 ));
 
 const CardOverallProf = memo(({ label, subLabel, amount }) => (
-  <div className="bg-yellowsm/20 w-full rounded-xl shadow-md flex flex-row items-center justify-between font-lato px-5 h-40">
-    <div>
-      <div>
-        <div className="text-xl font-medium text-left">{label}</div>
-        <div className="text-[1rem] text-gray-600 mb-5 -mt-2 text-left">
-          {subLabel}
+  <div className="bg-gradient-to-br from-amber-50 to-yellowsm/20 w-full rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6">
+    <div className="h-full flex flex-col justify-between">
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="bg-yellowsm/20 p-2 rounded-lg">💰</span>
+          <span className="text-lg md:text-xl font-bold text-gray-800">{label}</span>
+        </div>
+        <div className="text-sm text-gray-600">{subLabel}</div> 
+      </div>
+      <div className="mt-4">
+        <div className="text-4xl font-bold text-yellowsm text-right">{amount}</div>
+        <div className="text-sm text-gray-600 text-right mt-1">Total Revenue</div>
+        <div className="mt-4 pt-4 border-t border-gray-100">
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-gray-600">Average Weekly Sales:</span>
+            <span className="font-semibold text-gray-800">₱{(parseInt(amount.replace(/[₱,]/g, '')) / 4).toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between items-center text-sm mt-2">
+            <span className="text-gray-600">Active Weeks:</span>
+            <span className="font-semibold text-gray-800">4 weeks</span>
+          </div>
         </div>
       </div>
-      <div className="text-xl font-medium">{amount}</div>
     </div>
   </div>
 ));
 
 const TopSellingCard = memo(({ label, subLabel, products, quantities }) => {
-  // Find the top selling product by quantity
   const topSellingProduct = Object.entries(quantities)
     .sort(([,a], [,b]) => b - a)[0]?.[0];
 
   return (
-    <div className="bg-yellowsm/20 w-full rounded-xl shadow-md font-lato p-5 h-40 overflow-y-auto">
-      <div className="text-xl font-medium mb-1">{label}</div>
-      <div className="text-sm text-gray-600 mb-3">{subLabel}</div>
-      <div className="space-y-2">
+    <div className="bg-gradient-to-br from-amber-50 to-yellowsm/20 w-full rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6">
+      <div className="space-y-2 mb-4">
+        <div className="flex items-center gap-2">
+          <span className="bg-yellowsm/20 p-2 rounded-lg">🏆</span>
+          <span className="text-lg md:text-xl font-bold text-gray-800">{label}</span>
+        </div>
+        <div className="text-sm text-gray-600">{subLabel}</div>
+      </div>
+      <div className="space-y-3">
         {Object.entries(products).map(([name, amount]) => (
           <div 
             key={name} 
-            className={`flex justify-between items-start p-2 rounded-lg
-              ${name === topSellingProduct ? 'bg-amber-50' : ''}`}
+            className={`flex justify-between items-start p-3 rounded-lg transition-all duration-200
+              ${name === topSellingProduct 
+                ? 'bg-gradient-to-r from-amber-50 to-amber-100/30 shadow-sm' 
+                : 'hover:bg-amber-50/30'}`}
           >
-            <div>
+            <div className="flex-1">
               <div className="flex items-center gap-2">
-                <span className={`${name === topSellingProduct ? 'font-bold' : ''}`}>
+                <span className={`${name === topSellingProduct ? 'font-bold text-amber-700' : 'text-gray-700'}`}>
                   {name}
                 </span>
                 {name === topSellingProduct && (
-                  <span className="text-amber-600 text-sm">(Best Seller)</span>
+                  <span className="text-amber-600 text-xs px-2 py-1 bg-amber-100 rounded-full font-medium">
+                    Best Seller
+                  </span>
                 )}
               </div>
-              <div className="text-gray-600 text-sm">
+              <div className="text-gray-600 text-sm mt-1">
                 Sold: {quantities[name] || 0}x
               </div>
             </div>
-            <div className={`${name === topSellingProduct ? 'text-amber-700 font-bold' : ''}`}>
+            <div className={`${name === topSellingProduct 
+              ? 'text-amber-700 font-bold text-xl' 
+              : 'text-gray-700'} text-right ml-4`}>
               ₱{amount.toLocaleString()}
             </div>
           </div>
@@ -100,9 +125,15 @@ const TopSellingCard = memo(({ label, subLabel, products, quantities }) => {
 });
 
 const SalesBarChart = memo(({ data }) => (
-  <div className="bg-yellowsm/20 w-full rounded-xl shadow-md p-5 h-[400px]">
-    <div className="text-xl font-medium mb-3">Weekly Sales Breakdown</div>
-    <ResponsiveContainer width="100%" height="100%">
+  <div className="bg-gradient-to-br from-yellowsm/10 to-yellowsm/20 w-full rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6">
+    <div className="flex items-center gap-2 mb-6">
+      <span className="bg-yellowsm/20 p-2 rounded-lg">📈</span>
+      <div>
+        <div className="text-xl font-bold text-gray-800">Weekly Sales Breakdown</div>
+        <div className="text-sm text-gray-600">Revenue performance per week</div>
+      </div>
+    </div>
+    <ResponsiveContainer width="100%" height={350}>
       <BarChart
         data={data}
         margin={{
@@ -114,53 +145,53 @@ const SalesBarChart = memo(({ data }) => (
       >
         <defs>
           <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#93C5FD" stopOpacity={0.8}/>
-            <stop offset="95%" stopColor="#93C5FD" stopOpacity={0.2}/>
+            <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.8}/>
+            <stop offset="95%" stopColor="#F59E0B" stopOpacity={0.2}/>
           </linearGradient>
         </defs>
         <CartesianGrid 
           strokeDasharray="3 3" 
           vertical={false}
           stroke="#E5E7EB"
+          opacity={0.5}
         />
         <XAxis 
           dataKey="name" 
           axisLine={false}
           tickLine={false}
-          tick={{ fill: '#6B7280', fontSize: 12 }}
+          tick={{ fill: '#6B7280', fontSize: 12, fontWeight: 500 }}
+          dy={10}
         />
         <YAxis 
           axisLine={false}
           tickLine={false}
           tick={{ fill: '#6B7280', fontSize: 12 }}
           tickFormatter={(value) => `₱${value.toLocaleString()}`}
+          dx={-10}
         />
         <Tooltip
-          cursor={false}
+          cursor={{ fill: 'rgba(245, 158, 11, 0.1)' }}
           content={({ active, payload }) => {
             if (active && payload && payload.length) {
               const data = payload[0].payload;
               return (
-                <div className="bg-white p-4 shadow-lg rounded-lg border border-gray-100">
-                  <div className="font-bold text-gray-700 mb-2">
-                    {data.name} Sales
+                <div className="bg-white p-4 shadow-lg rounded-lg border border-yellowsm/20">
+                  <div className="font-bold text-gray-800 mb-3 pb-2 border-b border-gray-100">
+                    {data.name} Performance
                   </div>
                   <div className="space-y-2">
-                    {/* Classic Katsu Sales */}
                     <div className="flex items-center justify-between gap-4">
                       <div className="text-gray-600">Classic Katsu:</div>
-                      <div className="font-medium">₱{data[PRODUCTS.CLASSIC].toLocaleString()}</div>
+                      <div className="font-semibold text-gray-800">₱{data[PRODUCTS.CLASSIC].toLocaleString()}</div>
                     </div>
-                    {/* Spicy Katsu Sales */}
                     <div className="flex items-center justify-between gap-4">
                       <div className="text-gray-600">Spicy Katsu:</div>
-                      <div className="font-medium">₱{data[PRODUCTS.SPICY].toLocaleString()}</div>
+                      <div className="font-semibold text-gray-800">₱{data[PRODUCTS.SPICY].toLocaleString()}</div>
                     </div>
-                    {/* Total Sales */}
                     <div className="pt-2 mt-2 border-t border-gray-100">
                       <div className="flex items-center justify-between gap-4">
-                        <div className="font-bold text-gray-700">Total Sales:</div>
-                        <div className="font-bold text-blue-600">₱{data.sales.toLocaleString()}</div>
+                        <div className="font-bold text-gray-800">Total Sales:</div>
+                        <div className="font-bold text-yellowsm">₱{data.sales.toLocaleString()}</div>
                       </div>
                     </div>
                   </div>
@@ -173,13 +204,14 @@ const SalesBarChart = memo(({ data }) => (
         <Bar 
           dataKey="sales" 
           fill="url(#salesGradient)"
-          radius={[4, 4, 0, 0]}
-          maxBarSize={50}
+          radius={[6, 6, 0, 0]}
+          maxBarSize={60}
         >
           {data.map((entry, index) => (
             <Cell 
               key={`cell-${index}`}
               fill={entry.sales > 0 ? 'url(#salesGradient)' : '#F3F4F6'}
+              className="hover:opacity-80 transition-opacity duration-200"
             />
           ))}
         </Bar>
@@ -417,45 +449,19 @@ const ProductSales = () => {
   return (
     <section className="bg-white rounded-2xl shadow-feat w-full mx-auto block">
       <AnalyticsDataHeader sectionHeader={sectionHeader} />
-      <div className="my-5 mx-7 w-auto">
-        <div className="grid grid-cols-10 gap-4 mb-4">
-          <div className="col-span-6 grid grid-cols-2 gap-4">
-            <Card 
-              label={WEEK_LABELS.WEEK_1}
-              subLabel={SUB_LABEL}
-              amount={`₱${weeklyTotals[0].toLocaleString()}`} 
-            />
-            <Card 
-              label={WEEK_LABELS.WEEK_2}
-              subLabel={SUB_LABEL}
-              amount={`₱${weeklyTotals[1].toLocaleString()}`} 
-            />
-          </div>
-          <div className="col-span-4 row-span-2 grid grid-cols-1 gap-4">
-            <CardOverallProf 
-              label={`${currentMonth} Overall Profit`} 
-              subLabel="Week 1 - 4 total sale" 
-              amount={`₱${monthlyTotal.toLocaleString()}`} 
-            />
-            <TopSellingCard
-              label={`${currentMonth} Top Selling Product`}
-              subLabel={TOP_SELLING_LABEL}
-              products={topSellingProducts}
-              quantities={productQuantities}
-            />
-          </div>
-          <div className="col-span-6 grid grid-cols-2 gap-4">
-            <Card 
-              label={WEEK_LABELS.WEEK_3}
-              subLabel={SUB_LABEL}
-              amount={`₱${weeklyTotals[2].toLocaleString()}`} 
-            />
-            <Card 
-              label={WEEK_LABELS.WEEK_4}
-              subLabel={SUB_LABEL}
-              amount={`₱${weeklyTotals[3].toLocaleString()}`} 
-            />
-          </div>
+      <div className="my-4 mx-7 w-auto">
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <CardOverallProf 
+            label={`${currentMonth} Overall Profit`} 
+            subLabel="Week 1 - 4 total sale" 
+            amount={`₱${monthlyTotal.toLocaleString()}`} 
+          />
+          <TopSellingCard
+            label={`${currentMonth} Top Selling Product`}
+            subLabel={TOP_SELLING_LABEL}
+            products={topSellingProducts}
+            quantities={productQuantities}
+          />
         </div>
         <SalesBarChart data={chartData} />
       </div>
