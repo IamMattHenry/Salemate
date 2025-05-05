@@ -13,7 +13,7 @@ const NavTabs = ({
   const location = useLocation();
 
   return (
-    <div className="w-full grid grid-cols-[60%_1fr] h-auto mb-3">
+    <div className="w-full flex justify-between items-center mb-3">
       <div className="font-lato font-medium flex justify-start items-center space-x-12">
         {links.map((link) => (
           <NavLink
@@ -52,45 +52,18 @@ const NavTabs = ({
           </NavLink>
         ))}
       </div>
-      <div>
-        <div className="flex justify-end items-center gap-3 sm:gap-5 w-full relative">
-          {searchProps && (
-            <div className="relative w-full sm:max-w-sm md:w-2/3 ml-10">
-              <input
-                type="text"
-                placeholder={searchProps.placeholder}
-                onChange={(e) => onSearch(e.target.value)}
-                className="font-lato bg-white border border-gray-500 h-9 pl-3 rounded-2xl text-sm placeholder:text-gray-500 w-60 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
-              />
-              <searchProps.icon
-                className="absolute ml-52 top-1/2 transform -translate-y-1/2 size-4 text-dark pointer-events-none"
-                aria-hidden="true"
-              />
-            </div>
-          )}
 
-          {saveButton && (
-              <button
-                type="button"
-                className="bg-[#FFCF50] border border-[#D4A734] w-30 h-9 text-dark-600 font-medium py-1 rounded-4xl flex items-center justify-center cursor-pointer"
-                onClick={saveButton.onClick}
-              >
-                <span className="text-sm">{saveButton.label}</span>
-                <saveButton.icon className="text-lg" />
-              </button>
-            )}
-
-          {actionButton && (
-            <button
-              type="button"
-              className={`text-dark-600 p-1.5 border border-gray-600 bg-white rounded-full cursor-pointer hover:bg-gray-100 transition-colors shrink-0 ${actionButton.buttonClassName || ''}`}
-              onClick={actionButton.onClick}
-              aria-label={actionButton.label || "Action"}
-            >
-              <actionButton.icon className="text-2xl" aria-hidden="true" />
-            </button>
-          )}
-        </div>
+      <div className="flex items-center gap-3">
+        {actionButton && (
+          <button
+            onClick={actionButton.onClick}
+            className="flex items-center gap-2 bg-[#FFCF50] hover:bg-[#e6bb48] text-black px-4 py-2 rounded-full font-medium text-sm transition-all duration-200"
+            aria-label={actionButton.label}
+          >
+            {actionButton.label}
+            <actionButton.icon className="size-4" />
+          </button>
+        )}
       </div>
     </div>
   );
