@@ -23,6 +23,7 @@ const OrdersTable = () => {
   const { modal, toggleModal } = UseModal();
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [sortOrder, setSortOrder] = useState("timestamp"); // Add sort state, default to timestamp
 
   const db = getFirestore(firebaseApp);
 
@@ -83,7 +84,7 @@ const OrdersTable = () => {
     });
   };
 
-  // Modify the fetchOrders function to handle multiple items
+  // Fetch orders with support for both single items and multiple items
   const fetchOrders = async () => {
     setLoading(true);
     setError(null);
@@ -97,15 +98,16 @@ const OrdersTable = () => {
           const data = doc.data();
           const orderDate = new Date(data.order_date.seconds * 1000);
           
-          // Format order names from items array
+          // Handle order name formatting based on whether we have items array or just order_name
           let orderName = '';
           if (data.items && data.items.length > 0) {
+            // For orders with items array (new format)
             orderName = data.items
               .map(item => item.title === "Meal" ? "Katsu" : item.title)
               .filter((value, index, self) => self.indexOf(value) === index) // Remove duplicates
               .join(' / ');
           } else {
-            // Fallback for legacy data
+            // For legacy data with just order_name
             orderName = data.order_name === "Meal" ? "Katsu" : data.order_name;
           }
 
@@ -126,8 +128,9 @@ const OrdersTable = () => {
             mop: data.mop || 'Cash',
             quantity: data.items
               ? data.items.reduce((total, item) => total + (item.quantity || 0), 0)
-              : 0,
+              : (data.no_order || 0), // Support both new and old formats
             timestamp: data.order_date.seconds,
+            order_id_num: parseInt(data.order_id) || 0, // For sorting by order ID
           };
         })
         .filter(order => {
@@ -136,7 +139,16 @@ const OrdersTable = () => {
           return orderDate.getTime() === today.getTime();
         });
 
-      const sortedOrders = ordersList.sort((a, b) => b.timestamp - a.timestamp);
+      // Sort orders based on current sort preference
+      let sortedOrders;
+      if (sortOrder === "timestamp") {
+        // Sort by timestamp (newest first)
+        sortedOrders = ordersList.sort((a, b) => b.timestamp - a.timestamp);
+      } else {
+        // Sort by order_id (lowest to highest)
+        sortedOrders = ordersList.sort((a, b) => a.order_id_num - b.order_id_num);
+      }
+      
       setOrders(sortedOrders);
     } catch (error) {
       setError(error.message);
@@ -144,6 +156,22 @@ const OrdersTable = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Toggle between sorting by timestamp and order ID
+  const toggleSortOrder = () => {
+    const newSortOrder = sortOrder === "timestamp" ? "order_id" : "timestamp";
+    setSortOrder(newSortOrder);
+    
+    // Re-sort the current orders
+    let sortedOrders;
+    if (newSortOrder === "timestamp") {
+      sortedOrders = [...orders].sort((a, b) => b.timestamp - a.timestamp);
+    } else {
+      sortedOrders = [...orders].sort((a, b) => a.order_id_num - b.order_id_num);
+    }
+    
+    setOrders(sortedOrders);
   };
 
   useEffect(() => {
@@ -185,9 +213,9 @@ const OrdersTable = () => {
       const currentOrder = orderSnapshot.data();
   
       // Check if all items in the order are ready before marking as Delivered
-      if (newStatus === "Delivered") {
+      if (newStatus === "Delivered" && currentOrder.items) {
         // If any items are still preparing, prevent status change
-        if (currentOrder.items?.some(item => item.status === "Preparing")) {
+        if (currentOrder.items.some(item => item.status === "Preparing")) {
           setError("Cannot mark as delivered - some items are still being prepared");
           return;
         }
@@ -207,7 +235,6 @@ const OrdersTable = () => {
       setLoading(false);
     }
   };
-  
 
   const handleRowClick = (order) => {
     setSelectedOrder(order);
@@ -277,6 +304,15 @@ const OrdersTable = () => {
           {error}
         </div>
       )}
+      <div className="flex justify-between items-center p-4">
+        <h2 className="text-lg font-bold">Orders</h2>
+        <button 
+          onClick={toggleSortOrder} 
+          className="text-sm px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+        >
+          Sort by: {sortOrder === "timestamp" ? "Newest First" : "Order ID"}
+        </button>
+      </div>
       {loading ? (
         <div className="p-8 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto"></div>
@@ -367,12 +403,21 @@ const OrdersTable = () => {
                   <div className="bg-[#FFF8E6] rounded-lg p-2 shadow-sm col-span-2">
                     <h4 className="text-sm font-bold mb-2">Order Details</h4>
                     <div className="space-y-1">
-                      {selectedOrder.items && selectedOrder.items.map((item, index) => (
-                        <div key={index} className="text-sm flex justify-between">
-                          <span>{item.title === "Meal" ? "Katsu" : item.title}:</span>
-                          <span>x{item.quantity}</span>
+                      {selectedOrder.items && selectedOrder.items.length > 0 ? (
+                        // Display individual items if available
+                        selectedOrder.items.map((item, index) => (
+                          <div key={index} className="text-sm flex justify-between">
+                            <span>{item.title === "Meal" ? "Katsu" : item.title}:</span>
+                            <span>x{item.quantity}</span>
+                          </div>
+                        ))
+                      ) : (
+                        // Fallback to legacy format
+                        <div className="text-sm flex justify-between">
+                          <span>{selectedOrder.order_name}:</span>
+                          <span>x{selectedOrder.no_order || 1}</span>
                         </div>
-                      ))}
+                      )}
                     </div>
                   </div>
 

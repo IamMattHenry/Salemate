@@ -18,7 +18,7 @@ const SavedHistory = () => {
         collection(db, "saved_history"),
         orderBy("dateSaved", "desc")
       );
-      
+
       const savedSnapshot = await getDocs(savedQuery);
       const histories = savedSnapshot.docs.map(doc => ({
         id: doc.id,
@@ -40,12 +40,12 @@ const SavedHistory = () => {
     setLoading(true);
     try {
       const doc = new jsPDF();
-      
+
       // Add title
       doc.setFontSize(20);
       doc.setFont(undefined, 'bold');
       doc.text("Monthly Transaction Report", 14, 15);
-      
+
       doc.setFontSize(12);
       doc.setFont(undefined, 'normal');
       doc.text(`Period: ${monthYear}`, 14, 25);
@@ -120,7 +120,7 @@ const SavedHistory = () => {
         collection(db, "order_transaction"),
         orderBy("order_date", "desc")
       );
-      
+
       const transactionSnapshot = await getDocs(transactionQuery);
       const allTransactions = transactionSnapshot.docs.map(doc => ({
         id: doc.id,
@@ -129,10 +129,18 @@ const SavedHistory = () => {
 
       // Filter for the specific month/year
       const [month, year] = monthYear.split(" ");
-      return allTransactions.filter(t => {
+      const filteredTransactions = allTransactions.filter(t => {
         const orderDate = new Date(t.order_date.seconds * 1000);
         return orderDate.toLocaleString('en-US', { month: 'long' }) === month &&
                orderDate.getFullYear().toString() === year;
+      });
+
+      // Sort by order_id in ascending order (lowest to highest)
+      return filteredTransactions.sort((a, b) => {
+        // Convert order_id to numbers for proper numeric sorting
+        const orderIdA = parseInt(a.order_id) || 0;
+        const orderIdB = parseInt(b.order_id) || 0;
+        return orderIdA - orderIdB; // Ascending order
       });
     } catch (error) {
       console.error("Error getting fresh transactions:", error);
@@ -146,13 +154,13 @@ const SavedHistory = () => {
     try {
       // Get fresh transactions first
       const freshTransactions = await getFreshTransactions(history.monthYear);
-      
+
       // Update the record with fresh transactions
       const monthCheckQuery = query(
         collection(db, "saved_history"),
         orderBy("dateSaved", "desc")
       );
-      
+
       const monthCheckSnapshot = await getDocs(monthCheckQuery);
       const existingRecord = monthCheckSnapshot.docs.find(doc => doc.id === history.id);
 
@@ -165,7 +173,7 @@ const SavedHistory = () => {
 
       // Generate PDF with fresh transactions
       await generatePDF(history.monthYear, freshTransactions);
-      
+
       // Refresh the list
       await fetchSavedHistories();
     } catch (error) {
@@ -179,9 +187,9 @@ const SavedHistory = () => {
   const checkAndSaveCurrentMonth = async () => {
     try {
       const currentDate = new Date();
-      const currentMonthYear = currentDate.toLocaleDateString('en-US', { 
+      const currentMonthYear = currentDate.toLocaleDateString('en-US', {
         month: 'long',
-        year: 'numeric' 
+        year: 'numeric'
       });
 
       // Check if we already have a save for this month
@@ -196,9 +204,9 @@ const SavedHistory = () => {
 
       if (lastSave) {
         const lastSaveDate = new Date(lastSave.dateSaved.seconds * 1000);
-        
+
         // If last save was in a different month, create new save
-        if (lastSaveDate.getMonth() !== currentDate.getMonth() || 
+        if (lastSaveDate.getMonth() !== currentDate.getMonth() ||
             lastSaveDate.getFullYear() !== currentDate.getFullYear()) {
           await createNewMonthlySave(currentMonthYear);
         }
@@ -218,13 +226,13 @@ const SavedHistory = () => {
         collection(db, "saved_history"),
         orderBy("dateSaved", "desc")
       );
-      
+
       const monthCheckSnapshot = await getDocs(monthCheckQuery);
       const existingRecord = monthCheckSnapshot.docs.find(doc => {
         const data = doc.data();
         const savedDate = new Date(data.dateSaved.seconds * 1000);
         const currentDate = new Date();
-        return savedDate.getMonth() === currentDate.getMonth() && 
+        return savedDate.getMonth() === currentDate.getMonth() &&
                savedDate.getFullYear() === currentDate.getFullYear();
       });
 
@@ -233,9 +241,9 @@ const SavedHistory = () => {
         collection(db, "order_transaction"),
         orderBy("order_date", "desc")
       );
-      
+
       const transactionSnapshot = await getDocs(transactionQuery);
-      const currentTransactions = transactionSnapshot.docs
+      let currentTransactions = transactionSnapshot.docs
         .map(doc => ({
           id: doc.id,
           ...doc.data()
@@ -243,9 +251,17 @@ const SavedHistory = () => {
         .filter(t => {
           const orderDate = new Date(t.order_date.seconds * 1000);
           const currentDate = new Date();
-          return orderDate.getMonth() === currentDate.getMonth() && 
+          return orderDate.getMonth() === currentDate.getMonth() &&
                  orderDate.getFullYear() === currentDate.getFullYear();
         });
+
+      // Sort by order_id in ascending order (lowest to highest)
+      currentTransactions = currentTransactions.sort((a, b) => {
+        // Convert order_id to numbers for proper numeric sorting
+        const orderIdA = parseInt(a.order_id) || 0;
+        const orderIdB = parseInt(b.order_id) || 0;
+        return orderIdA - orderIdB; // Ascending order
+      });
 
       if (currentTransactions.length > 0) {
         if (existingRecord) {
@@ -277,17 +293,17 @@ const SavedHistory = () => {
     setLoading(true);
     try {
       const currentDate = new Date();
-      const currentMonthYear = currentDate.toLocaleDateString('en-US', { 
+      const currentMonthYear = currentDate.toLocaleDateString('en-US', {
         month: 'long',
-        year: 'numeric' 
+        year: 'numeric'
       });
 
       // Get fresh transactions
       const freshTransactions = await getFreshTransactions(currentMonthYear);
-      
+
       // Update or create record
       await createNewMonthlySave(currentMonthYear, freshTransactions);
-      
+
       // Refresh the list
       await fetchSavedHistories();
     } catch (error) {
@@ -330,7 +346,7 @@ const SavedHistory = () => {
                     onClick={() => handleRowClick(history)}
                     className="text-amber-600 hover:text-amber-700 transition-colors cursor-pointer"
                     title="Download PDF"
-                  > 
+                  >
                     <LuDownload size={20} />
                   </button>
                 </td>

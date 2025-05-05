@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import DashboardCategory from "./DashboardCategory";
 import ProductList from "./ProductList";
 import DashboardOrder from "./DashboardOrder";
@@ -6,7 +6,7 @@ import DashboardOrder from "./DashboardOrder";
 // Initial products data
 const initialProducts = [
   {
-    id: 1,  
+    id: 1,
     title: "Katsu",
     description: "Katsu with rice (not spicy)",
     price: "60",
@@ -40,15 +40,11 @@ const DashboardPanel = () => {
     setOrderList((prevOrderList) => {
       // Check if the product is already in the order list
       const existingItemIndex = prevOrderList.findIndex(item => item.id === product.id);
-      
+
       if (existingItemIndex !== -1) {
-        // If product already exists, increase quantity
-        const updatedList = [...prevOrderList];
-        updatedList[existingItemIndex] = {
-          ...updatedList[existingItemIndex],
-          quantity: (updatedList[existingItemIndex].quantity || 1) + 1
-        };
-        return updatedList;
+        // If product already exists, don't add it again or increase quantity
+        // Just return the current list unchanged
+        return prevOrderList;
       } else {
         // If product doesn't exist, add it with quantity 1
         return [...prevOrderList, { ...product, quantity: 1 }];
@@ -74,9 +70,9 @@ const DashboardPanel = () => {
         <div>
           <DashboardCategory setSelectedCategory={setSelectedCategory} />
         </div>
-        <ProductList 
-          products={filteredProducts} 
-          addToOrderList={addToOrderList} 
+        <ProductList
+          products={filteredProducts}
+          addToOrderList={addToOrderList}
           updateProducts={updateProducts}
         />
       </div>
