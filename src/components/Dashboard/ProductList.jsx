@@ -20,18 +20,85 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false); // State for edit modal visibility
   const [currentProduct, setCurrentProduct] = useState(null); // State for the product being edited
 
+  // State for validation errors
+  const [validationErrors, setValidationErrors] = useState({
+    name: "",
+    description: "",
+    price: "",
+    picture: "",
+    category: ""
+  });
+
+  // Validate form fields
+  const validateForm = () => {
+    const errors = {
+      name: "",
+      description: "",
+      price: "",
+      picture: "",
+      category: ""
+    };
+
+    let isValid = true;
+
+    // Validate name
+    if (!name.trim()) {
+      errors.name = "Name is required";
+      isValid = false;
+    }
+
+    // Validate description
+    if (!description.trim()) {
+      errors.description = "Description is required";
+      isValid = false;
+    }
+
+    // Validate price
+    if (!price.trim()) {
+      errors.price = "Price is required";
+      isValid = false;
+    } else if (isNaN(parseFloat(price))) {
+      errors.price = "Price must be a number";
+      isValid = false;
+    }
+
+    // Validate picture
+    if (!picture) {
+      errors.picture = "Picture is required";
+      isValid = false;
+    }
+
+    // Validate category
+    if (!category) {
+      errors.category = "Category is required";
+      isValid = false;
+    }
+
+    setValidationErrors(errors);
+    return isValid;
+  };
+
   const handlePictureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
         setPicture(reader.result); // Set the picture URL
+        // Clear picture validation error if it exists
+        if (validationErrors.picture) {
+          setValidationErrors({...validationErrors, picture: ""});
+        }
       };
       reader.readAsDataURL(file);
     }
   };
 
   const handleAddProduct = () => {
+    // Validate the form first
+    if (!validateForm()) {
+      return; // Stop if validation fails
+    }
+
     // Get all existing products from parent component by calling updateProducts with a callback
     if (updateProducts) {
       updateProducts((currentProducts) => {
@@ -42,26 +109,35 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
           title: name, // Use the name from state
           description: description, // Use the description from state
           price: price, // Use the price from state
-          url: picture || "https://via.placeholder.com/150", // Use the uploaded picture URL or a placeholder
+          url: picture, // Use the uploaded picture URL
           category: category, // Use the selected category
         };
-        
+
         // Add the new product to the parent's product list
         const updatedProducts = [...currentProducts, newProduct];
-        
+
         // Close the "Add Item" modal
         toggleModal();
-        
+
         // Show the success modal
         showSuccessModal();
-        
+
         // Reset the input fields
         setName("");
         setDescription("");
         setPrice("");
         setPicture("");
         setCategory("");
-        
+
+        // Reset validation errors
+        setValidationErrors({
+          name: "",
+          description: "",
+          price: "",
+          picture: "",
+          category: ""
+        });
+
         return updatedProducts;
       });
     }
@@ -193,12 +269,20 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
                       <input
                         type="text"
                         placeholder="Type description"
-                        className="font-lato border-[1px] border-gray-500 pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-[1rem] placeholder:text-gray-500 min-w-[20rem] bg-gray-300 shadow"
+                        className={`font-lato border-[1px] ${validationErrors.description ? 'border-red-500' : 'border-gray-500'} pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-[1rem] placeholder:text-gray-500 min-w-[20rem] bg-gray-300 shadow`}
                         value={description} // Bind to state
-                        onChange={(e) => setDescription(e.target.value)} // Update state on change
+                        onChange={(e) => {
+                          setDescription(e.target.value);
+                          if (validationErrors.description) {
+                            setValidationErrors({...validationErrors, description: ""});
+                          }
+                        }} // Update state on change
                       />
                       <FaEdit className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-[1rem]" />
                     </div>
+                    {validationErrors.description && (
+                      <p className="text-red-500 text-xs mt-1">{validationErrors.description}</p>
+                    )}
                   </div>
                   {/* Name Field */}
                   <span className="text-lg">Name:</span>
@@ -207,12 +291,20 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
                       <input
                         type="text"
                         placeholder="Type any item name"
-                        className="font-lato border-[1px] border-gray-500 pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-[1rem] placeholder:text-gray-500 w-full bg-gray-300 shadow"
+                        className={`font-lato border-[1px] ${validationErrors.name ? 'border-red-500' : 'border-gray-500'} pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-[1rem] placeholder:text-gray-500 w-full bg-gray-300 shadow`}
                         value={name} // Bind to state
-                        onChange={(e) => setName(e.target.value)} // Update state on change
+                        onChange={(e) => {
+                          setName(e.target.value);
+                          if (validationErrors.name) {
+                            setValidationErrors({...validationErrors, name: ""});
+                          }
+                        }} // Update state on change
                       />
                       <FaEdit className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-[1rem]" />
                     </div>
+                    {validationErrors.name && (
+                      <p className="text-red-500 text-xs mt-1">{validationErrors.name}</p>
+                    )}
                   </div>
                   {/* Price Field */}
                   <span className="text-lg">Price:</span>
@@ -221,12 +313,20 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
                       <input
                         type="text"
                         placeholder="Type item price"
-                        className="font-lato border-[1px] border-gray-500 pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-[1rem] placeholder:text-gray-500 w-full bg-gray-300 shadow"
+                        className={`font-lato border-[1px] ${validationErrors.price ? 'border-red-500' : 'border-gray-500'} pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-[1rem] placeholder:text-gray-500 w-full bg-gray-300 shadow`}
                         value={price} // Bind to state
-                        onChange={(e) => setPrice(e.target.value)} // Update state on change
+                        onChange={(e) => {
+                          setPrice(e.target.value);
+                          if (validationErrors.price) {
+                            setValidationErrors({...validationErrors, price: ""});
+                          }
+                        }} // Update state on change
                       />
                       <FaEdit className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-[1rem]" />
                     </div>
+                    {validationErrors.price && (
+                      <p className="text-red-500 text-xs mt-1">{validationErrors.price}</p>
+                    )}
                   </div>
 
                   {/* Picture Upload Field */}
@@ -236,10 +336,13 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
                       <input
                         type="file"
                         accept="image/*"
-                        className="font-lato border-[1px] border-gray-500 pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-[1rem] placeholder:text-gray-500 w-full bg-gray-300 shadow"
+                        className={`font-lato border-[1px] ${validationErrors.picture ? 'border-red-500' : 'border-gray-500'} pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-[1rem] placeholder:text-gray-500 w-full bg-gray-300 shadow`}
                         onChange={(e) => handlePictureUpload(e)}
                       />
                     </div>
+                    {validationErrors.picture && (
+                      <p className="text-red-500 text-xs mt-1">{validationErrors.picture}</p>
+                    )}
                   </div>
 
                   {/* Category Field */}
@@ -247,9 +350,14 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
                   <div>
                     <div className="relative w-full">
                       <select
-                        className="font-lato border-[1px] border-gray-500 pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-[1rem] w-full bg-gray-300 shadow"
+                        className={`font-lato border-[1px] ${validationErrors.category ? 'border-red-500' : 'border-gray-500'} pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-[1rem] w-full bg-gray-300 shadow`}
                         value={category} // Bind to state
-                        onChange={(e) => setCategory(e.target.value)} // Update state on change
+                        onChange={(e) => {
+                          setCategory(e.target.value);
+                          if (validationErrors.category) {
+                            setValidationErrors({...validationErrors, category: ""});
+                          }
+                        }} // Update state on change
                       >
                         <option value="" disabled>Select a category</option>
                         <option value="Drinks">Drinks</option>
@@ -258,6 +366,9 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
                         <option value="Snacks">Snacks</option>
                       </select>
                     </div>
+                    {validationErrors.category && (
+                      <p className="text-red-500 text-xs mt-1">{validationErrors.category}</p>
+                    )}
                   </div>
                 </div>
                 <div>
@@ -405,7 +516,7 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
           <IoIosSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm" />
         </div>
       </div>
-      
+
       <div className="grid grid-cols-3 mx-5 gap-4 mt-5 min-h-[10.25rem]">
         {filteredProducts.map((product) => (
           <div

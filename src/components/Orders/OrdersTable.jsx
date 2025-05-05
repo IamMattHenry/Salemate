@@ -94,7 +94,7 @@ const OrdersTable = () => {
         .map((doc) => {
           const data = doc.data();
           const orderDate = new Date(data.order_date.seconds * 1000);
-          
+
           // Format time with AM/PM
           const time = orderDate.toLocaleTimeString('en-US', {
             hour: '2-digit',
@@ -131,8 +131,13 @@ const OrdersTable = () => {
           return orderDate.getTime() === today.getTime();
         });
 
-      // Sort by timestamp in descending order (newest first)
-      const sortedOrders = ordersList.sort((a, b) => b.timestamp - a.timestamp);
+      // Sort by order_id in ascending order (lowest to highest)
+      const sortedOrders = ordersList.sort((a, b) => {
+        // Convert order_id to numbers for proper numeric sorting
+        const orderIdA = parseInt(a.order_id) || 0;
+        const orderIdB = parseInt(b.order_id) || 0;
+        return orderIdA - orderIdB; // Ascending order
+      });
       setOrders(sortedOrders);
     } catch (error) {
       setError(error.message);
@@ -319,10 +324,15 @@ const OrdersTable = () => {
               {/* Content */}
               <div className="p-3">
                 {/* Order Header */}
-                <div className="mb-4 space-y-0.5">
+                <div className="mb-4">
+                  {/* Order ID Section */}
+                  <div className="border-b pb-2 mb-2">
+                    <div className="font-bold font-lato text-xl">Order ID: {selectedOrder.order_id || "N/A"}</div>
+                  </div>
+
+                  {/* Order Details */}
                   <div className="flex justify-between text-sm">
                     <div>
-                      <div className="font-bold font-lato text-xl -mb-2">Order ID: {selectedOrder.order_id}</div>
                       <div className="-mb-1 font-semibold">Status: {selectedOrder.order_status}</div>
                       <div className="font-semibold">Recipient Name: {selectedOrder.recipient}</div>
                     </div>
