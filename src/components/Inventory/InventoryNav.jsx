@@ -1,73 +1,253 @@
-import React from "react";
-import { IoIosSearch, IoMdAddCircleOutline } from "react-icons/io";
+import React, { useState } from "react";
+import { IoMdAddCircleOutline } from "react-icons/io";
 import { LiaFileDownloadSolid } from "react-icons/lia";
 import { FaCheckCircle, FaBan } from "react-icons/fa";
 import { X } from "lucide-react";
 import NavTabs from "../common/NavTabs";
 import useModal from "../../hooks/Modal/UseModal";
 import { AnimatePresence, motion } from "framer-motion";
+import { addDoc, collection, getFirestore } from 'firebase/firestore';
+import firebaseApp from "../../firebaseConfig";
+import { useNavigate } from 'react-router-dom';
 
 const InventoryNav = () => {
-  const { modal, toggleModal } = useModal(); // success modal
+  const db = getFirestore(firebaseApp);
   const { modal: saveModal, toggleModal: toggleSaveModal } = useModal(); // add item modal
   const { modal: ItemAddedModal, toggleModal: toggleConfirmationModal } = useModal(); // item added modal
+  const navigate = useNavigate();
+
+  // Add state for form inputs
+  const [formInputs, setFormInputs] = useState({
+    rawMaterial: '',
+    purchased: '',
+    used: ''
+  });
+
+  // Add clerk name state
+  const [clerkName, setClerkName] = useState('');
+  const [clerkNameError, setClerkNameError] = useState(false);
+
+  // Add error state
+  const [formError, setFormError] = useState(false);
+
+  // Update the handleAddItem function to remove setTimeout
+  const handleAddItem = async (e) => {
+    e.preventDefault();
+    
+    try {
+      if (!formInputs.rawMaterial || !formInputs.purchased || !clerkName) {
+        setFormError(true);
+        if (!clerkName) setClerkNameError(true);
+        return;
+      }
+
+      // Calculate beginning inventory (same as purchased amount for new items)
+      const beginningInventory = Number(formInputs.purchased);
+
+      // Add to database with clerk name, timestamp, and beginning inventory
+      const newItem = {
+        raw_mats: formInputs.rawMaterial,
+        purchased: Number(formInputs.purchased),
+        used: formInputs.used ? Number(formInputs.used) : 0,
+        clerk_name: clerkName,
+        timestamp: new Date().toISOString(),
+        last_updated: new Date().toISOString(),
+        begin_inv: beginningInventory, // Add beginning inventory
+        ending_inv: beginningInventory - (formInputs.used ? Number(formInputs.used) : 0) // Calculate ending inventory
+      };
+
+      const docRef = await addDoc(collection(db, "inventory"), newItem);
+      
+      // Reset form states
+      setFormInputs({
+        rawMaterial: '',
+        purchased: '',
+        used: ''
+      });
+      setClerkName('');
+      setFormError(false);
+      setClerkNameError(false);
+      
+      // Close add item modal and show success modal
+      toggleSaveModal();
+      toggleConfirmationModal();
+
+    } catch (error) {
+      console.error("Error adding item:", error);
+      setFormError(true);
+    }
+  };
+
+  // Handle input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormInputs(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Clear error when user starts typing
+    if (formError) setFormError(false);
+  };
 
   const inventoryNavLinks = [
     { path: "/inventory/daily-inventory", label: "Daily Inventory" },
     { path: "/inventory/saved-history", label: "Saved History" },
   ];
 
-  const searchProps = {
-    placeholder: "Type name or date (mm/dd/yy)",
-    icon: IoIosSearch,
-  };
-
   const actionButton = {
-    icon: LiaFileDownloadSolid,
-    onClick: toggleModal,
-  };
-
-  const saveButton = {
     icon: IoMdAddCircleOutline,
     label: "Add Item",
     onClick: toggleSaveModal,
+    className: "flex items-center gap-2 bg-[#FFCF50] hover:bg-[#e6bb48] text-black px-4 py-2 rounded-full font-medium text-sm transition-all duration-200",
+    iconClassName: "size-4",
+    tooltipText: "Add Item"
   };
 
   return (
     <>
-      {/* ✅ Success Modal */}
-      {modal && (
+      {/* Add Item Modal */}
+      {saveModal && (
         <AnimatePresence>
           <motion.div
-            className="h-screen w-screen bg-black/25 flex justify-center items-center fixed top-0 left-0 bottom-0 right-0 z-50"
+            className="h-screen w-screen bg-black/40 backdrop-blur-[2px] flex justify-center items-center fixed top-0 left-0 bottom-0 right-0 z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className="bg-white h-auto w-[20rem] rounded-3xl font-lato"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
+              className="bg-white w-[32rem] rounded-3xl font-lato shadow-2xl"
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="w-full flex items-center justify-between p-6">
+                <h2 className="text-2xl font-bold text-black">Add Item</h2>
+                <button 
+                  className="hover:bg-gray-100 p-2 rounded-full transition-colors" 
+                  onClick={toggleSaveModal}
+                >
+                  <X className="size-5 text-gray-400"/>
+                </button>
+              </div>
+
+              <form className="flex flex-col space-y-6 px-6 pb-6" onSubmit={handleAddItem}>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Raw Materials</label>
+                  <input 
+                    type="text" 
+                    name="rawMaterial"
+                    value={formInputs.rawMaterial}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 border ${formError && !formInputs.rawMaterial ? 'border-red-500' : 'border-gray-200'} rounded-2xl text-sm focus:border-[#FFCF50] focus:ring-2 focus:ring-[#FFCF50]/20 transition-all outline-none placeholder:text-gray-400`}
+                    placeholder="Enter raw material name"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Purchased (g)</label>
+                    <input 
+                      type="number"
+                      name="purchased"
+                      value={formInputs.purchased}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 border ${formError && !formInputs.purchased ? 'border-red-500' : 'border-gray-200'} rounded-2xl text-sm focus:border-[#FFCF50] focus:ring-2 focus:ring-[#FFCF50]/20 transition-all outline-none placeholder:text-gray-400`}
+                      placeholder="Enter amount"
+                      required
+                      min="0"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Processed/Used (g) <span className="text-gray-400 text-xs">(Optional)</span>
+                    </label>
+                    <input 
+                      type="number"
+                      name="used"
+                      value={formInputs.used}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 border border-gray-200 rounded-2xl text-sm focus:border-[#FFCF50] focus:ring-2 focus:ring-[#FFCF50]/20 transition-all outline-none placeholder:text-gray-400`}
+                      placeholder="Enter amount"
+                      min="0"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Clerk Name</label>
+                  <input 
+                    type="text" 
+                    name="clerkName"
+                    value={clerkName}
+                    onChange={(e) => setClerkName(e.target.value)}
+                    className={`w-full px-4 py-3 border ${clerkNameError ? 'border-red-500' : 'border-gray-200'} rounded-2xl text-sm focus:border-[#FFCF50] focus:ring-2 focus:ring-[#FFCF50]/20 transition-all outline-none placeholder:text-gray-400`}
+                    placeholder="Enter clerk name"
+                    required
+                  />
+                </div>
+
+                {formError && (
+                  <p className="text-red-500 text-sm">Please fill in all fields</p>
+                )}
+
+                <div className="flex justify-end pt-4">
+                  <button
+                    type="submit"
+                    className="bg-[#FFCF50] text-black px-8 py-3 rounded-2xl font-medium text-sm hover:bg-[#e6bb48] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={formError}
+                  >
+                    Add Item
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>
+      )}
+
+      {/* ItemAddedModal */}
+      {ItemAddedModal && (
+        <AnimatePresence>
+          <motion.div
+            className="h-screen w-screen bg-black/25 backdrop-blur-[2px] flex justify-center items-center fixed top-0 left-0 bottom-0 right-0 z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+          >
+            <motion.div
+              className="bg-white h-auto w-[20rem] rounded-3xl font-lato shadow-2xl"
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 20 }}
               transition={{ duration: 0.2 }}
             >
               <div className="w-full rounded-t-3xl flex items-center justify-end text-gray-500 p-3">
-                <div className="cursor-pointer" onClick={toggleModal}>
-                  <X className="size-6 text-white" />
-                </div>
+                <button 
+                  onClick={toggleConfirmationModal}
+                  className="hover:bg-gray-100 p-2 rounded-full transition-colors"
+                >
+                  <X className="size-5" />
+                </button>
               </div>
-              <div className="flex w-full justify-center items-center flex-col h-64 space-y-3">
+              <div className="flex w-full justify-center items-center flex-col pb-8 space-y-4">
                 <FaCheckCircle className="size-14 text-[#0cd742]" />
-                <h3 className="font-bold text-2xl pt-1">Order History Saved!</h3>
-                <span className="text-[.8rem] text-center justify-center">
-                  Inventory document has been saved!<br />
-                  Click save history to see the document.
+                <h3 className="font-bold text-2xl pt-1 text-center">
+                  Item Successfully<br/> Added!
+                </h3>
+                <span className="text-[.8rem] text-center justify-center text-gray-500">
+                  Your item has been successfully<br/> added to the inventory!
                 </span>
                 <button
-                  className="bg-[#0cd742] shadow-[inset_3px_3px_5px_rgba(0,0,0,0.2)] text-white text-center py-1 mt-3 px-8.5 rounded-2xl text-[0.77rem] cursor-pointer hover:bg-black/70"
-                  type="button"
-                  onClick={toggleModal}
+                  onClick={() => {
+                    toggleConfirmationModal();
+                    navigate('/inventory/daily-inventory');
+                  }}
+                  className="bg-[#0cd742] hover:bg-[#0bb93a] text-white px-8 py-2.5 rounded-2xl text-sm font-medium transition-colors mt-2"
                 >
                   Done
                 </button>
@@ -76,164 +256,8 @@ const InventoryNav = () => {
           </motion.div>
         </AnimatePresence>
       )}
-
-      {/* ❌ Error Modal Placeholder */}
-      {false && (
-        <AnimatePresence>
-          <motion.div
-            className="h-screen w-screen bg-black/25 flex justify-center items-center fixed top-0 left-0 bottom-0 right-0 z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <motion.div
-              className="bg-white h-auto w-[20rem] rounded-3xl font-lato"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="w-full rounded-t-3xl flex items-center justify-end text-gray-500 p-3">
-                <div className="cursor-pointer" onClick={toggleModal}>
-                  <X className="size-6 text-white" />
-                </div>
-              </div>
-              <div className="flex w-full justify-center items-center flex-col h-64 space-y-3">
-                <FaBan className="size-14 text-red-500" />
-                <h3 className="font-bold text-2xl pt-1">Can’t Save</h3>
-                <span className="text-[.8rem] text-center px-4">
-                  You can only save one time. Please see the saved report on
-                  saved history.
-                </span>
-                <button
-                  className="bg-red-500 text-white text-center py-1 mt-3 px-8.5 rounded-2xl text-[0.77rem] cursor-pointer hover:bg-black/70"
-                  type="button"
-                  onClick={toggleModal}
-                >
-                  Exit
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        </AnimatePresence>
-      )}
-
-      {/* ✅ Add Item Modal */}
-      {saveModal && (
-        <AnimatePresence>
-          <motion.div
-            className="h-screen w-screen bg-black/25 flex justify-center items-center fixed top-0 left-0 bottom-0 right-0 z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <motion.div
-              className="bg-white h-[18rem] w-[75rem] rounded-3xl font-lato p-3"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="w-full flex items-center justify-between text-gray-500 mb-4">
-                <h2 className="text-[35px] font-bold text-black pt-3 pl-5">Adding Item in Inventory</h2>
-                <div className="mr-2 mb-6 bg-red-500 rounded cursor-pointer" onClick={toggleSaveModal}>
-                  <X className="size-6 text-white"/>
-                </div>
-              </div>
-
-              <form className="grid items-center grid-cols-6 w-full">
-                <div className="pl-7">
-                  <h2 className="font-league spartan font-semibold text-[23px] pb-3 pl-2">Raw Materials</h2>
-                <input type="text" placeholder="" className="w-40 px-3 py-2 border rounded-lg text-sm" />
-                  <h2 className="font-lato italic text-gray-500 text-[10px] pt-2 tracking-tighter">Type letters from a-z (special characters are not allowed)</h2>
-                </div>
-                <div className="ml-10">
-                <h2 className="font-league spartan font-semibold text-[23px] pb-3 -pl-2">Purchased</h2>
-                <input type="number" placeholder="" className="w-25 px-3 py-2 border rounded-lg text-sm" />
-                <h2 className="font-lato italic text-gray-500 text-[10px] pt-2 tracking-tighter">If purchased in grams, type g<br/> after the number.</h2>
-                </div>
-                <div className="-ml-2 -mt-5">
-                <h2 className="font-league spartan font-semibold text-[23px] pb-3">Processed/Used</h2>
-                <input type="number" placeholder="" className="w-42 px-3 py-2 border rounded-lg text-sm" />
-                <h2 className="font-lato italic text-gray-500 text-[10px] pt-2 tracking-tighter">If purchased in grams, type g after the number.</h2>
-                </div>
-                <div className="ml-1 -mt-5">
-                <h2 className="font-league spartan font-semibold text-[23px] text-[gray] pb-3">Waste</h2>
-                <input type="number" placeholder="" className="w-30 px-3 py-2 border rounded-lg text-sm bg-gray-300 border-gray-400 cursor-not-allowed" readOnly />
-                <h2 className="font-lato italic text-gray-500 text-[10px] pt-2 tracking-tighter">Type g after the number if grams.</h2>
-                </div>
-                <div className="-ml-10 -mt-5">
-                <h2 className="font-league spartan font-semibold text-[23px] text-[gray] -mr-10 pb-3">Beginning Inventory</h2>
-                <input type="number" placeholder="" className="w-47 px-3 py-2 border rounded-lg text-sm bg-gray-300 border-gray-400 cursor-not-allowed" readOnly />
-                <h2 className="font-lato italic text-gray-500 text-[10px] pt-2 tracking-tighter">Type g after the number if grams.</h2>
-                </div>
-                <div className="-mt-10">
-                <h2 className="font-league spartan font-semibold text-[23px] text-[gray] pb-3">Ending Inventory</h2>
-                <input type="number" placeholder="" className="w-40 px-3 py-2 border rounded-lg text-sm bg-gray-300 border-gray-400 cursor-not-allowed" readOnly />
-                </div>
-              </form>
-                <div className="ml-260">
-                <button
-                className="bg-[#FFCF50] text-black text-center h-9 w-27 py-1 mt-3 px-8.5 rounded-2xl font-league spartan font-semibold text-[0.90rem] cursor-pointer hover:bg-black/70"
-                type="button"
-                onClick={toggleConfirmationModal}
-              >
-                Enter
-              </button>
-                </div>
-
-            </motion.div>
-          </motion.div>
-        </AnimatePresence>
-      )}
-
-      {/* ✅ ItemAddedModal */}
-      {ItemAddedModal && (
-        <AnimatePresence>
-        <motion.div
-          className="h-screen w-screen bg-black/25 flex justify-center items-center fixed top-0 left-0 bottom-0 right-0 z-50"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <motion.div
-            className="bg-white h-auto w-[20rem] rounded-3xl font-lato"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="w-full rounded-t-3xl flex items-center justify-end text-gray-500 p-3">
-              <div className="cursor-pointer" onClick={toggleConfirmationModal}>
-                <X className="size-6 text-white" />
-              </div>
-            </div>
-            <div className="flex w-full justify-center items-center flex-col h-64 space-y-3">
-              <FaCheckCircle className="size-14 text-[#0cd742]" />
-              <h3 className="font-bold text-2xl pt-1 text-center">Item Successfully<br/> Added!</h3>
-              <span className="text-[.8rem] text-center justify-center">
-              Your item has been successfully<br/> added to the inventory!
-              </span>
-              <button
-                className="bg-[#0cd742] shadow-[inset_3px_3px_5px_rgba(0,0,0,0.2)] text-white text-center py-1 mt-3 px-8.5 rounded-2xl text-[0.77rem] cursor-pointer hover:bg-black/70"
-                type="button"
-                onClick={toggleConfirmationModal}
-              >
-                Done
-              </button>
-            </div>
-          </motion.div>
-        </motion.div>
-      </AnimatePresence>
-      )}
-
       <NavTabs
         links={inventoryNavLinks}
-        searchProps={searchProps}
-        saveButton={saveButton}
         actionButton={actionButton}
       />
     </>

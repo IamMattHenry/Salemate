@@ -5,13 +5,13 @@ import { HomeRoutes } from "../../components/Home/HomeRoutes";
 function PrivacyPolicy() {
   return (
     <div>
-      <div className="min-w-auto md:w-10/12 flex mx-auto md:flex-row justify-between items-center px-12 mt-10 mb-14">
+      <div className="min-w-auto md:w-10/12 flex mx-auto md:flex-row justify-between items-center px-12 min-h-10/12 mb-40">
         <div className="flex flex-col lg:flex-col w-[50%] md:w-[40%] flex-start">
-          <h1 className="font-lato font-semibold text-2xl md:text-7xl">
+          <h1 className="font-lato font-semibold text-2xl md:text-6xl">
             Privacy Policy
             <br />
           </h1>
-          <span className="mt-5 font-lato text-[23px] text-justify">
+          <span className="mt-5 font-latrue text-[1.3rem] text-justify">
             Salemate is committed to protecting your privacy. This Privacy
             Policy explains how we collect, use, and share information when you
             use our web application
@@ -24,9 +24,9 @@ function PrivacyPolicy() {
       </div>
       {/* I-WRAP NINYO DITO YUNG HOMEROUTES, AT HOMEPANEL TULAD NG NASA BABA: */}
       <div className="relative">
-        <HomeRoutes />
+        <HomeRoutes className="-mt-25"/>
         <HomePanel>
-          <div className="w-full pt-12"> {/* PADDING ADJUST NINYO PARA MA ADJUST YUNG POSITION NG HOME PANEL SA HOMEROUTES */}
+          <div className="w-full"> {/* PADDING ADJUST NINYO PARA MA ADJUST YUNG POSITION NG HOME PANEL SA HOMEROUTES */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full text-justify">
               <div className="bg-white flex flex-col items-center shadow-feat rounded-2xl py-12 overflow-auto">
                 <svg

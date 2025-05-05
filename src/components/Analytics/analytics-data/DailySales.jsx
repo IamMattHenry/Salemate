@@ -37,12 +37,12 @@ const DailySales = () => {
         endOfDay.setHours(23, 59, 59, 999);
 
         const ordersRef = collection(db, 'order_transaction');
+        // Get all orders for today first
         const dailyQuery = query(
           ordersRef,
           where('order_date', '>=', Timestamp.fromDate(startOfDay)),
           where('order_date', '<=', Timestamp.fromDate(endOfDay)),
-          orderBy('order_date', 'desc'), // Sort by date in descending order
-          limit(5) // Limit to 5 most recent orders
+          orderBy('order_date', 'desc')
         );
 
         const querySnapshot = await getDocs(dailyQuery);
@@ -50,32 +50,36 @@ const DailySales = () => {
         let totalCashSales = 0;
         let totalOnlineSales = 0;
         
+        // Only process delivered orders
         querySnapshot.forEach((doc) => {
           const data = doc.data();
-          // Calculate totals based on mode of payment
-          if (data.mop === "Online") {
-            totalOnlineSales += data.order_total;
-          } else {
-            totalCashSales += data.order_total;
-          }
+          // Only include if status is "Delivered"
+          if (data.order_status === "Delivered") {
+            if (data.mop === "Online") {
+              totalOnlineSales += data.order_total;
+            } else {
+              totalCashSales += data.order_total;
+            }
 
-          sales.push({
-            quantity: data.no_order, // Changed from order_name to no_order
-            recipient: data.recipient,
-            amount: data.order_total,
-            time: new Date(data.order_date.toDate()).toLocaleTimeString('en-US', {
-              hour: 'numeric',
-              minute: '2-digit',
-              hour12: true
-            }),
-            mop: data.mop,
-            status: data.order_status
-          });
+            sales.push({
+              quantity: data.no_order,
+              recipient: data.recipient,
+              amount: data.order_total,
+              time: new Date(data.order_date.toDate()).toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+              }),
+              mop: data.mop,
+              status: data.order_status
+            });
+          }
         });
 
-        // Update state with all the data
-        setSalesData(sales);
-        // You can add additional state for the totals if needed
+        // Get only the 5 most recent delivered orders
+        const recentSales = sales.slice(0, 5);
+
+        setSalesData(recentSales);
         setTotalOnline(totalOnlineSales);
         setTotalCash(totalCashSales);
         
@@ -97,7 +101,7 @@ const DailySales = () => {
     <section className="bg-white rounded-2xl shadow-feat w-full mx-auto block pb-5">
       <AnalyticsDataHeader sectionHeader={sectionHeader} />
       <div className="mt-7 mx-7 w-auto">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <Card
             icon={<BsCash />}
             label="Total Sales: "
@@ -121,34 +125,55 @@ const DailySales = () => {
             amount={salesData.length}
           />
         </div>
-        <div className="overflow-x-auto rounded-xl shadow-md font-lato">
-          <table className="min-w-full bg-yellowsm/20 text-center overflow-scroll">
-            <thead>
-              <tr className="text-[1rem] leading-normal border-b-[0.5px] border-b-yellowsm/50">
-                <th className="py-3 px-6 text-center">Quantity</th>
-                <th className="py-3 px-6 text-center">Recipient</th>
-                <th className="py-3 px-6 text-center">Amount</th>
-                <th className="py-3 px-6 text-center">Time</th>
-                <th className="py-3 px-6 text-center">MOP</th>
-                <th className="py-3 px-6 text-center">Status</th>
-              </tr>
-            </thead>
-            <tbody className="text-sm">
-              {salesData.map((sale, index) => (
-                <tr
-                  key={index}
-                  className="hover:bg-yellowsm/30 text-[1rem] border-b-[0.5px] border-b-yellowsm/50"
-                >
-                  <td className="py-3 px-6 text-center">{sale.quantity}x</td>
-                  <td className="py-3 px-6 text-center">{sale.recipient}</td>
-                  <td className="py-3 px-6 text-center">₱{sale.amount}</td>
-                  <td className="py-3 px-6 text-center">{sale.time}</td>
-                  <td className="py-3 px-6 text-center">{sale.mop}</td>
-                  <td className="py-3 px-6 text-center">{sale.status}</td>
+        <div className="rounded-xl shadow-lg overflow-hidden border border-yellowsm/20">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-yellowsm/20">
+              <thead className="bg-gradient-to-r from-amber-50/80 to-yellowsm/20">
+                <tr>
+                  <th className="px-6 py-4 text-sm font-semibold text-gray-800 text-center">Quantity</th>
+                  <th className="px-6 py-4 text-sm font-semibold text-gray-800 text-center">Recipient</th>
+                  <th className="px-6 py-4 text-sm font-semibold text-gray-800 text-center">Amount</th>
+                  <th className="px-6 py-4 text-sm font-semibold text-gray-800 text-center">Time</th>
+                  <th className="px-6 py-4 text-sm font-semibold text-gray-800 text-center">MOP</th>
+                  <th className="px-6 py-4 text-sm font-semibold text-gray-800 text-center">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-yellowsm/10">
+                {salesData.map((sale, index) => (
+                  <tr
+                    key={index}
+                    className="hover:bg-amber-50 transition-colors duration-150"
+                  >
+                    <td className="px-6 py-4 text-sm text-gray-700 text-center w-24">
+                      {sale.quantity}x
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700 text-center w-64">
+                      {sale.recipient}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-medium text-amber-700 text-center w-32">
+                      ₱{sale.amount}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700 text-center w-32">
+                      {sale.time}
+                    </td>
+                    <td className="px-6 py-4 text-center w-32">
+                      <span className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-medium min-w-[80px]
+                        ${sale.mop === 'Online' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-blue-100 text-blue-800'}`}>
+                        {sale.mop}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center w-32">
+                      <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-medium min-w-[80px] bg-amber-100 text-amber-800">
+                        {sale.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>
@@ -156,14 +181,24 @@ const DailySales = () => {
 };
 
 const Card = ({ icon, label, subLabel, amount }) => (
-  <div className="bg-yellowsm/20 h-35 w-full rounded-xl shadow-lg flex flex-row items-center justify-between font-lato px-5">
-    <div>
-      <div className="text-lg font-medium text-left">{label}</div>
-      <div className="text-sm text-gray-600 -mt-2 mb-5 text-left">{subLabel}</div>
-      <div className="text-xl font-medium">{amount}</div>
-    </div>
-    <div>
-      <div className="text-2xl mb-2">{icon}</div>
+  <div className="bg-gradient-to-br from-amber-50 to-yellowsm/20 w-full rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6">
+    <div className="flex justify-between items-start gap-4">
+      <div className="space-y-4">
+        <div>
+          <h3 className="text-base font-bold text-gray-800">{label}</h3>
+          {subLabel && (
+            <p className="text-sm text-gray-600 mt-0.5">{subLabel}</p>
+          )}
+        </div>
+        <div className="text-2xl font-bold text-amber-700">
+          {amount}
+        </div>
+      </div>
+      <div className="bg-yellowsm/20 p-3 rounded-xl">
+        <span className="text-2xl text-amber-700">
+          {icon}
+        </span>
+      </div>
     </div>
   </div>
 );

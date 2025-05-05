@@ -8,6 +8,7 @@ import {
   doc,
   updateDoc,
   getFirestore,
+  getDoc,
 } from "firebase/firestore";
 import UseModal from "../../hooks/Modal/UseModal";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,6 +23,7 @@ const OrdersTable = () => {
   const { modal, toggleModal } = UseModal();
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [sortOrder, setSortOrder] = useState("timestamp"); // Add sort state, default to timestamp
 
   const db = getFirestore(firebaseApp);
 
@@ -82,47 +84,53 @@ const OrdersTable = () => {
     });
   };
 
+  // Fetch orders with support for both single items and multiple items
   const fetchOrders = async () => {
     setLoading(true);
     setError(null);
     try {
       const querySnapshot = await getDocs(collection(db, "order_transaction"));
       const today = new Date();
-      today.setHours(0, 0, 0, 0); // Start of today
+      today.setHours(0, 0, 0, 0);
 
       const ordersList = querySnapshot.docs
         .map((doc) => {
           const data = doc.data();
           const orderDate = new Date(data.order_date.seconds * 1000);
-
-          // Format time with AM/PM
-          const time = orderDate.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-          });
-
-          // Replace "Meal" with "Katsu"
-          let orderName = data.order_name;
-          if (orderName === "Meal") {
-            orderName = "Katsu";
+          
+          // Handle order name formatting based on whether we have items array or just order_name
+          let orderName = '';
+          if (data.items && data.items.length > 0) {
+            // For orders with items array (new format)
+            orderName = data.items
+              .map(item => item.title === "Meal" ? "Katsu" : item.title)
+              .filter((value, index, self) => self.indexOf(value) === index) // Remove duplicates
+              .join(' / ');
+          } else {
+            // For legacy data with just order_name
+            orderName = data.order_name === "Meal" ? "Katsu" : data.order_name;
           }
 
           return {
             id: doc.id,
             ...data,
-            order_name: orderName, // Update the order name
-            time: time,
+            order_name: orderName,
+            time: orderDate.toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            }),
             date: orderDate.toLocaleDateString("en-US", {
               month: "long",
               day: "numeric",
               year: "numeric",
             }),
-            mop: data.mop || 'Cash', // Add MOP with fallback
+            mop: data.mop || 'Cash',
             quantity: data.items
               ? data.items.reduce((total, item) => total + (item.quantity || 0), 0)
-              : 0, // Calculate total quantity from items array
+              : (data.no_order || 0), // Support both new and old formats
             timestamp: data.order_date.seconds,
+            order_id_num: parseInt(data.order_id) || 0, // For sorting by order ID
           };
         })
         .filter(order => {
@@ -131,13 +139,16 @@ const OrdersTable = () => {
           return orderDate.getTime() === today.getTime();
         });
 
-      // Sort by order_id in ascending order (lowest to highest)
-      const sortedOrders = ordersList.sort((a, b) => {
-        // Convert order_id to numbers for proper numeric sorting
-        const orderIdA = parseInt(a.order_id) || 0;
-        const orderIdB = parseInt(b.order_id) || 0;
-        return orderIdA - orderIdB; // Ascending order
-      });
+      // Sort orders based on current sort preference
+      let sortedOrders;
+      if (sortOrder === "timestamp") {
+        // Sort by timestamp (newest first)
+        sortedOrders = ordersList.sort((a, b) => b.timestamp - a.timestamp);
+      } else {
+        // Sort by order_id (lowest to highest)
+        sortedOrders = ordersList.sort((a, b) => a.order_id_num - b.order_id_num);
+      }
+      
       setOrders(sortedOrders);
     } catch (error) {
       setError(error.message);
@@ -145,6 +156,22 @@ const OrdersTable = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Toggle between sorting by timestamp and order ID
+  const toggleSortOrder = () => {
+    const newSortOrder = sortOrder === "timestamp" ? "order_id" : "timestamp";
+    setSortOrder(newSortOrder);
+    
+    // Re-sort the current orders
+    let sortedOrders;
+    if (newSortOrder === "timestamp") {
+      sortedOrders = [...orders].sort((a, b) => b.timestamp - a.timestamp);
+    } else {
+      sortedOrders = [...orders].sort((a, b) => a.order_id_num - b.order_id_num);
+    }
+    
+    setOrders(sortedOrders);
   };
 
   useEffect(() => {
@@ -180,11 +207,26 @@ const OrdersTable = () => {
   const handleStatusChange = async (orderId, newStatus) => {
     setLoading(true);
     try {
+      // Get the current order
       const orderRef = doc(db, "order_transaction", orderId);
+      const orderSnapshot = await getDoc(orderRef);
+      const currentOrder = orderSnapshot.data();
+  
+      // Check if all items in the order are ready before marking as Delivered
+      if (newStatus === "Delivered" && currentOrder.items) {
+        // If any items are still preparing, prevent status change
+        if (currentOrder.items.some(item => item.status === "Preparing")) {
+          setError("Cannot mark as delivered - some items are still being prepared");
+          return;
+        }
+      }
+  
+      // If all checks pass, update the order status
       await updateDoc(orderRef, {
         order_status: newStatus,
         updated_at: new Date(),
       });
+      
       await fetchOrders();
     } catch (error) {
       setError("Failed to update order status. Please try again.");
@@ -257,7 +299,20 @@ const OrdersTable = () => {
 
   return (
     <section className="bg-white rounded-2xl shadow-feat w-full mx-auto">
-      {error && <div className="p-4 text-red-500">{error}</div>}
+      {error && (
+        <div className="p-4 text-red-500 bg-red-50 m-4 rounded-lg">
+          {error}
+        </div>
+      )}
+      <div className="flex justify-between items-center p-4">
+        <h2 className="text-lg font-bold">Orders</h2>
+        <button 
+          onClick={toggleSortOrder} 
+          className="text-sm px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+        >
+          Sort by: {sortOrder === "timestamp" ? "Newest First" : "Order ID"}
+        </button>
+      </div>
       {loading ? (
         <div className="p-8 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto"></div>
@@ -324,15 +379,10 @@ const OrdersTable = () => {
               {/* Content */}
               <div className="p-3">
                 {/* Order Header */}
-                <div className="mb-4">
-                  {/* Order ID Section */}
-                  <div className="border-b pb-2 mb-2">
-                    <div className="font-bold font-lato text-xl">Order ID: {selectedOrder.order_id || "N/A"}</div>
-                  </div>
-
-                  {/* Order Details */}
+                <div className="mb-4 space-y-0.5">
                   <div className="flex justify-between text-sm">
                     <div>
+                      <div className="font-bold font-lato text-xl -mb-2">Order ID: {selectedOrder.order_id}</div>
                       <div className="-mb-1 font-semibold">Status: {selectedOrder.order_status}</div>
                       <div className="font-semibold">Recipient Name: {selectedOrder.recipient}</div>
                     </div>
@@ -349,16 +399,26 @@ const OrdersTable = () => {
 
                 {/* Order Details Grid */}
                 <div className="grid grid-cols-2 gap-3">
-                  {/* Orders Column */}
-                  <div className="bg-[#FFF8E6] rounded-lg p-2 shadow-sm">
-                    <h4 className="text-sm font-bold mb-1">Order(s)</h4>
-                    <div className="text-sm">{selectedOrder.order_name}</div>
-                  </div>
-
-                  {/* Quantity Column */}
-                  <div className="bg-[#FFF8E6] rounded-lg p-2 shadow-sm">
-                    <h4 className="text-sm font-bold mb-1">Quantity</h4>
-                    <div className="text-sm">x{selectedOrder.no_order}</div>
+                  {/* Orders Column with Individual Quantities */}
+                  <div className="bg-[#FFF8E6] rounded-lg p-2 shadow-sm col-span-2">
+                    <h4 className="text-sm font-bold mb-2">Order Details</h4>
+                    <div className="space-y-1">
+                      {selectedOrder.items && selectedOrder.items.length > 0 ? (
+                        // Display individual items if available
+                        selectedOrder.items.map((item, index) => (
+                          <div key={index} className="text-sm flex justify-between">
+                            <span>{item.title === "Meal" ? "Katsu" : item.title}:</span>
+                            <span>x{item.quantity}</span>
+                          </div>
+                        ))
+                      ) : (
+                        // Fallback to legacy format
+                        <div className="text-sm flex justify-between">
+                          <span>{selectedOrder.order_name}:</span>
+                          <span>x{selectedOrder.no_order || 1}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Amount Column */}
