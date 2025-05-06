@@ -6,6 +6,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import { SidebarProvider } from "./context/SidebarContext";
 import HomeLayout from "./layouts/HomeLayout";
 import Home from "./pages/Home/Home";
 import SignIn from "./pages/Home/SignIn";
@@ -36,18 +37,19 @@ import InventoryDaily from "./components/Inventory/inventory-data/InventoryDaily
 import InventorySavedHistory from "./components/Inventory/inventory-data/InventorySavedHistory.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <Router>
-    <Routes>
-      <Route path="/" element={<HomeLayout />}>
-        <Route index element={<Home />} />
-        <Route path="signin" element={<SignIn />} />
-        <Route path="signup" element={<SignUp />} />
-        <Route path="privacypolicy" element={<PrivacyPolicy />} />
-        <Route path="contact" element={<Contact />} />
-        <Route path="about" element={<About />} />
-        <Route path="terms-and-condition" element={<TermsAndCond />} />
-        <Route path="features" element={<Features />} />
-      </Route>
+  <SidebarProvider>
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomeLayout />}>
+          <Route index element={<Home />} />
+          <Route path="signin" element={<SignIn />} />
+          <Route path="signup" element={<SignUp />} />
+          <Route path="privacypolicy" element={<PrivacyPolicy />} />
+          <Route path="contact" element={<Contact />} />
+          <Route path="about" element={<About />} />
+          <Route path="terms-and-condition" element={<TermsAndCond />} />
+          <Route path="features" element={<Features />} />
+        </Route>
 
       {/* Dashboard route */}
       <Route path="/dashboard" element={<DashboardLayout />} />
@@ -86,4 +88,5 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       </Route>
     </Routes>
   </Router>
+  </SidebarProvider>
 );

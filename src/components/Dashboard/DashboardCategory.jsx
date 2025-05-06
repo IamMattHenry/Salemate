@@ -17,15 +17,15 @@ const categories = [
 
 const DashboardCategory = ({ setSelectedCategory, activeCategory = "All" }) => {
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+    <div className="flex gap-4 pb-4 h-[60px]">
       {categories.map(({ id, name, icon: Icon }) => (
         <button
           key={id}
           onClick={() => setSelectedCategory(name)}
           className={`
-            flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all
-            ${activeCategory === name 
-              ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30 scale-105' 
+            flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all h-[48px]
+            ${activeCategory === name
+              ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30 scale-105'
               : 'bg-white text-gray-700 hover:bg-amber-50 hover:text-amber-600 border border-gray-100'}
           `}
         >

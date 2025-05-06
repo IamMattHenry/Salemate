@@ -8,7 +8,7 @@ import useNameModal from "../../hooks/Modal/EnterNameModal";
 import useConfirmOrderModal from "../../hooks/Modal/ConfirmOrderModal";
 import useSuccessModal from "../../hooks/Modal/SuccessModal";
 import { AnimatePresence, motion } from "framer-motion";
-import { collection, addDoc, serverTimestamp, updateDoc, getFirestore, query, where, getDocs, orderBy } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, getFirestore, query, where, getDocs, orderBy } from "firebase/firestore";
 import firebaseApp from "../../firebaseConfig";
 
 const DashboardOrder = ({ product, orderList, setOrderList }) => {
@@ -169,9 +169,8 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
     }
   }, [quantities, orderList]);
 
-  // Function to clear all orders - triggered by the red bin icon
+  // Function to clear all orders if needed
   const clearAllOrders = () => {
-    console.log("Clearing all orders...");
     if (setOrderList) {
       setOrderList([]); // Clears the entire order list
       setQuantities([]); // Resets quantities
@@ -518,8 +517,8 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
     <>
       {/* Main Order Section */}
       <div className="flex flex-col h-full bg-white rounded-2xl shadow-lg overflow-hidden">
-        {/* Header Section */}
-        <div className="p-6 border-b border-gray-100">
+        {/* Header Section - Fixed height */}
+        <div className="p-6 border-b border-gray-100 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-amber-500 bg-clip-text text-transparent">
@@ -574,8 +573,8 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
           </div>
         </div>
 
-        {/* Order Items Section */}
-        <div className="flex-1 overflow-y-auto p-6">
+        {/* Order Items Section - Scrollable with fixed height */}
+        <div className="flex-1 overflow-y-auto p-6 h-[calc(100vh-350px)]">
           {displayItems.length > 0 ? (
             <div className="space-y-4">
               {displayItems.map((item, index) => (
@@ -586,16 +585,16 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                   <img
                     src={item.url}
                     alt={item.title}
-                    className="w-16 h-16 rounded-xl object-cover"
+                    className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
                   />
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">{item.title}</h3>
-                    <p className="text-sm text-gray-500">{item.description}</p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-gray-900 truncate">{item.title}</h3>
+                    <p className="text-sm text-gray-500 line-clamp-1">{item.description}</p>
                     <p className="text-amber-600 font-medium mt-1">
                       ₱{parseFloat(item.price).toFixed(2)}
                     </p>
                   </div>
-                  <div className="flex flex-col items-end gap-3">
+                  <div className="flex flex-col items-end gap-3 flex-shrink-0">
                     {orderList && (
                       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button className="p-1 text-gray-400 hover:text-amber-500 rounded-lg hover:bg-amber-50">
@@ -643,8 +642,8 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
           )}
         </div>
 
-        {/* Footer Section */}
-        <div className="border-t border-gray-100">
+        {/* Footer Section - Fixed height */}
+        <div className="border-t border-gray-100 flex-shrink-0">
           <div className="p-6 bg-gray-50">
             <div className="flex justify-between items-center mb-3">
               <span className="text-gray-600">Number of Products</span>
@@ -716,8 +715,8 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                   <input
                     type="text"
                     placeholder="e.g. Juan Dela Cruz"
-                    className={`w-full px-4 py-2.5 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2 
-                    ${nameError ? 'focus:ring-red-500/20 bg-red-50' : 'focus:ring-emerald-500/20'} 
+                    className={`w-full px-4 py-2.5 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2
+                    ${nameError ? 'focus:ring-red-500/20 bg-red-50' : 'focus:ring-emerald-500/20'}
                     transition-all text-sm`}
                     value={customerName}
                     onChange={handleCustomerNameChange}
@@ -738,8 +737,8 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                     type="text"
                     placeholder="Enter 6-digit ID"
                     maxLength={6}
-                    className={`w-full px-4 py-2.5 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2 
-                    ${idError ? 'focus:ring-red-500/20 bg-red-50' : 'focus:ring-emerald-500/20'} 
+                    className={`w-full px-4 py-2.5 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2
+                    ${idError ? 'focus:ring-red-500/20 bg-red-50' : 'focus:ring-emerald-500/20'}
                     transition-all text-sm`}
                     value={studentId}
                     onChange={(e) => {
@@ -749,8 +748,10 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                         if (idError) setIdError("");
                       }
                     }}
-                    onKeyPress={(e) => {
-                      if (!/[0-9]/.test(e.key)) {
+                    onKeyDown={(e) => {
+                      // Allow only numbers, backspace, delete, tab, arrows
+                      const allowedKeys = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+                      if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
                         e.preventDefault();
                       }
                     }}
@@ -769,7 +770,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                 <div className="flex justify-end gap-3">
                   <button
                     onClick={handleModalClose}
-                    className="px-4 py-2 text-gray-700 bg-white rounded-xl border border-gray-200 
+                    className="px-4 py-2 text-gray-700 bg-white rounded-xl border border-gray-200
                              hover:bg-gray-50 transition-colors text-sm font-medium"
                   >
                     Cancel
@@ -855,10 +856,10 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                   <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
                     {displayItems.map((item, index) => (
                       <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                        <img 
-                          src={item.url} 
-                          alt={item.title} 
-                          className="w-12 h-12 rounded-lg object-cover" 
+                        <img
+                          src={item.url}
+                          alt={item.title}
+                          className="w-12 h-12 rounded-lg object-cover"
                         />
                         <div className="flex-1">
                           <h4 className="text-sm font-medium text-gray-900">{item.title}</h4>
@@ -931,15 +932,15 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                 <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
                   <FaCheckCircle className="w-8 h-8 text-emerald-500" />
                 </div>
-                
+
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
                   Order Completed
                 </h3>
-                
+
                 <p className="text-gray-500 mb-4">
                   Your order has been successfully placed
                 </p>
-                
+
                 <div className="bg-emerald-50 px-4 py-2 rounded-lg mb-6">
                   <span className="text-sm font-medium text-emerald-800">
                     Order #{orderNumber - 1}
