@@ -1,15 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import DashboardSideNav from '../components/Dashboard/DashboardSideNav';
 import { motion } from "framer-motion";
 import Customers from '../pages/Main/Customers';
+import { useSidebar } from "../context/SidebarContext";
 
 const CustomersLayout = () => {
-    const [isMinimized, setSideNav] = useState(true);
-    
-    const toggleSideNav = () => {
-      setSideNav(!isMinimized);
-    };
-  
+    // Use the shared sidebar context instead of local state
+    const { isMinimized, toggleSideNav } = useSidebar();
+
     return (
       <motion.main
         className="grid min-h-screen max-w-full bg-no-repeat bg-fixed bg-gradient-to-b from-whitesm from-60% via-yellowf via-95% to-yellowsm to-100% overflow-y-hidden"
@@ -23,7 +21,7 @@ const CustomersLayout = () => {
       >
         <DashboardSideNav toggleSideNav={toggleSideNav} isMinimized={isMinimized} />
         <div className="pb-5">
-          <Customers /> 
+          <Customers />
         </div>
       </motion.main>
     );

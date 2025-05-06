@@ -1,14 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import DashboardSideNav from '../components/Dashboard/DashboardSideNav';
 import { motion } from "framer-motion";
 import Analytics from '../pages/Main/Analytics';
+import { useSidebar } from "../context/SidebarContext";
 
 const AnalyticsLayout = () => {
-  const [isMinimized, setSideNav] = useState(true);
-  
-  const toggleSideNav = () => {
-    setSideNav(!isMinimized);
-  };
+  // Use the shared sidebar context instead of local state
+  const { isMinimized, toggleSideNav } = useSidebar();
 
   return (
     <motion.main
@@ -23,7 +21,7 @@ const AnalyticsLayout = () => {
     >
       <DashboardSideNav toggleSideNav={toggleSideNav} isMinimized={isMinimized} />
       <div className="pb-5">
-        <Analytics /> 
+        <Analytics />
       </div>
     </motion.main>
   );

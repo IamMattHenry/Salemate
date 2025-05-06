@@ -1,24 +1,44 @@
 import React, { useState, useEffect } from "react";
 import { IoIosAdd, IoIosSearch, IoMdInformationCircle } from "react-icons/io";
-import { MdCancel } from "react-icons/md";
+import { MdCancel, MdDelete } from "react-icons/md";
 import { FaEdit, FaCheckCircle } from "react-icons/fa";
+import { FiAlertCircle } from "react-icons/fi";
 import useModal from "../../hooks/Modal/UseModal";
 import { AnimatePresence, motion } from "motion/react";
 import successModal from "../../hooks/Modal/SuccessModal";
 import DashboardCategory from "./DashboardCategory";
+import { addProduct, updateProduct, deleteProduct } from "../../services/productService";
 
-const ProductList = ({ products, addToOrderList, updateProducts }) => {
-  const { modal, toggleModal } = useModal();
+const ProductList = ({ products, addToOrderList, updateProducts, loading = false }) => {
+  const { modal, toggleModal: originalToggleModal } = useModal();
   const { okayModal, showSuccessModal } = successModal();
+
+  // Custom toggle modal function that also resets form fields
+  const toggleModal = () => {
+    // If the modal is currently open, reset all form fields when closing
+    if (modal) {
+      resetFormFields();
+    }
+    // Call the original toggle function
+    originalToggleModal();
+  };
 
   const [searchQuery, setSearchQuery] = useState(""); // State for search query
   const [picture, setPicture] = useState(""); // State for the uploaded picture
+  const [pictureFileName, setPictureFileName] = useState(""); // State for the uploaded picture filename
   const [category, setCategory] = useState(""); // State for the product category
   const [name, setName] = useState(""); // State for the product name
   const [description, setDescription] = useState(""); // State for the product description
   const [price, setPrice] = useState(""); // State for the product price
   const [isEditModalOpen, setIsEditModalOpen] = useState(false); // State for edit modal visibility
   const [currentProduct, setCurrentProduct] = useState(null); // State for the product being edited
+  const [editPictureFileName, setEditPictureFileName] = useState(""); // State for the edited picture filename
+
+  // New state variables for confirmation and success modals
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false); // State for delete confirmation modal
+  const [isSaveSuccessOpen, setIsSaveSuccessOpen] = useState(false); // State for save success modal
+  const [isDeleteSuccessOpen, setIsDeleteSuccessOpen] = useState(false); // State for delete success modal
+  const [productToDelete, setProductToDelete] = useState(null); // State for the product to be deleted
 
   // State for validation errors
   const [validationErrors, setValidationErrors] = useState({
@@ -84,6 +104,7 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
       const reader = new FileReader();
       reader.onload = () => {
         setPicture(reader.result); // Set the picture URL
+        setPictureFileName(file.name); // Store the filename
         // Clear picture validation error if it exists
         if (validationErrors.picture) {
           setValidationErrors({...validationErrors, picture: ""});
@@ -93,83 +114,121 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
     }
   };
 
-  const handleAddProduct = () => {
+  // Function to reset all form fields
+  const resetFormFields = () => {
+    // Reset the input fields
+    setName("");
+    setDescription("");
+    setPrice("");
+    setPicture("");
+    setPictureFileName("");
+    setCategory("");
+
+    // Reset validation errors
+    setValidationErrors({
+      name: "",
+      description: "",
+      price: "",
+      picture: "",
+      category: ""
+    });
+  };
+
+  const handleAddProduct = async () => {
     // Validate the form first
     if (!validateForm()) {
       return; // Stop if validation fails
     }
 
-    // Get all existing products from parent component by calling updateProducts with a callback
-    if (updateProducts) {
-      updateProducts((currentProducts) => {
-        // Generate a unique ID that's greater than any existing ID
-        const maxId = Math.max(...currentProducts.map(product => product.id), 0);
-        const newProduct = {
-          id: maxId + 1,
-          title: name, // Use the name from state
-          description: description, // Use the description from state
-          price: price, // Use the price from state
-          url: picture, // Use the uploaded picture URL
-          category: category, // Use the selected category
-        };
+    try {
+      // Create new product object
+      const newProduct = {
+        title: name, // Use the name from state
+        description: description, // Use the description from state
+        price: price, // Use the price from state
+        url: picture, // Use the uploaded picture URL
+        category: category, // Use the selected category
+      };
 
-        // Add the new product to the parent's product list
-        const updatedProducts = [...currentProducts, newProduct];
+      // Add the product to Firestore
+      await addProduct(newProduct);
 
-        // Close the "Add Item" modal
-        toggleModal();
+      // Close the "Add Item" modal
+      toggleModal();
 
-        // Show the success modal
-        showSuccessModal();
+      // Refresh the products list
+      if (updateProducts) {
+        await updateProducts();
+      }
 
-        // Reset the input fields
-        setName("");
-        setDescription("");
-        setPrice("");
-        setPicture("");
-        setCategory("");
+      // Show the success modal
+      showSuccessModal();
 
-        // Reset validation errors
-        setValidationErrors({
-          name: "",
-          description: "",
-          price: "",
-          picture: "",
-          category: ""
-        });
-
-        return updatedProducts;
-      });
+      // Reset form fields is handled by toggleModal
+    } catch (error) {
+      console.error("Error adding product:", error);
+      // You could show an error message here
     }
   };
 
   const handleEditProduct = (product) => {
     setCurrentProduct(product); // Set the product to be edited
+    setEditPictureFileName(""); // Clear the edit picture filename
     setIsEditModalOpen(true); // Open the edit modal
   };
 
-  const handleSaveProduct = () => {
-    if (updateProducts && currentProduct) {
-      updateProducts((currentProducts) => {
-        const index = currentProducts.findIndex((product) => product.id === currentProduct.id);
-        if (index !== -1) {
-          const updatedProductList = [...currentProducts];
-          updatedProductList[index] = currentProduct;
-          return updatedProductList;
+  const handleSaveProduct = async () => {
+    if (currentProduct) {
+      try {
+        // Update the product in Firestore
+        await updateProduct(currentProduct.id, currentProduct);
+
+        // Refresh the products list
+        if (updateProducts) {
+          await updateProducts();
         }
-        return currentProducts;
-      });
+
+        setIsEditModalOpen(false); // Close the edit modal
+        setIsSaveSuccessOpen(true); // Show the save success modal
+      } catch (error) {
+        console.error("Error updating product:", error);
+        // You could show an error message here
+      }
     }
-    setIsEditModalOpen(false); // Close the modal
   };
 
-  const handleDeleteProduct = (id) => {
-    if (updateProducts) {
-      updateProducts((currentProducts) => {
-        return currentProducts.filter(product => product.id !== id);
-      });
+  // Function to show delete confirmation modal
+  const confirmDelete = (product) => {
+    setProductToDelete(product);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  // Function to actually delete the product after confirmation
+  const handleDeleteProduct = async () => {
+    if (productToDelete) {
+      try {
+        // Delete the product from Firestore
+        await deleteProduct(productToDelete.id);
+
+        // Refresh the products list
+        if (updateProducts) {
+          await updateProducts();
+        }
+
+        setIsDeleteConfirmOpen(false); // Close the confirmation modal
+        setIsEditModalOpen(false); // Close the edit modal if open
+        setIsDeleteSuccessOpen(true); // Show the delete success modal
+      } catch (error) {
+        console.error("Error deleting product:", error);
+        // You could show an error message here
+      }
     }
-    setIsEditModalOpen(false); // Close the modal
+  };
+
+  // Function to cancel delete operation
+  const cancelDelete = () => {
+    setIsDeleteConfirmOpen(false);
+    setProductToDelete(null);
   };
 
   // Function to add product to order list
@@ -186,9 +245,9 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
   }) : [];
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header Section */}
-      <div className="flex justify-between items-center">
+    <div className="flex flex-col h-full">
+      {/* Header Section - Fixed height */}
+      <div className="flex justify-between items-center mb-6 flex-shrink-0">
         <h2 className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-amber-500 bg-clip-text text-transparent">
           Menu Items
         </h2>
@@ -218,52 +277,66 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
         </div>
       </div>
 
-      {/* Products Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProducts.map((product) => (
-          <div
-            key={product.id}
-            onClick={() => handleAddToOrder(product)}
-            className="group bg-white rounded-2xl border border-gray-100 overflow-hidden
-                     hover:shadow-lg transition-all duration-300 relative"
-          >
-            {/* Product Image */}
-            <div className="aspect-w-16 aspect-h-9 overflow-hidden">
-              <img
-                src={product.url}
-                alt={product.title}
-                className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-            
-            {/* Product Info */}
-            <div className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="font-bold text-gray-900 text-lg mb-1">{product.title}</h3>
-                  <p className="text-gray-500 text-sm line-clamp-2">{product.description}</p>
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEditProduct(product);
-                  }}
-                  className="p-2 text-gray-400 hover:text-amber-500 rounded-lg
-                           opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <FaEdit className="text-lg" />
-                </button>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-lg font-bold text-amber-600">₱{product.price}</span>
-                <span className="px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-sm font-medium">
-                  {product.category}
-                </span>
-              </div>
-            </div>
+      {/* Products Grid - Scrollable */}
+      <div className="overflow-y-auto flex-1 pr-2">
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500"></div>
           </div>
-        ))}
+        ) : filteredProducts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+            <MdDelete className="text-4xl mb-2" />
+            <p className="text-lg">No products found</p>
+            <p className="text-sm">Add a new product to get started</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[200px]">
+            {filteredProducts.map((product) => (
+            <div
+              key={product.id}
+              onClick={() => handleAddToOrder(product)}
+              className="group bg-white rounded-2xl border border-gray-100 overflow-hidden
+                       hover:shadow-lg transition-all duration-300 relative h-[280px] flex flex-col"
+            >
+              {/* Product Image - Fixed height */}
+              <div className="h-[140px] overflow-hidden flex-shrink-0">
+                <img
+                  src={product.url}
+                  alt={product.title}
+                  className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+
+              {/* Product Info - Fixed height */}
+              <div className="p-6 flex-1 flex flex-col justify-between">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="overflow-hidden">
+                    <h3 className="font-bold text-gray-900 text-lg mb-1 truncate">{product.title}</h3>
+                    <p className="text-gray-500 text-sm line-clamp-2">{product.description}</p>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditProduct(product);
+                    }}
+                    className="p-2 text-gray-400 hover:text-amber-500 rounded-lg
+                             opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                  >
+                    <FaEdit className="text-lg" />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between mt-auto">
+                  <span className="text-lg font-bold text-amber-600">₱{product.price}</span>
+                  <span className="px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-sm font-medium">
+                    {product.category}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+          </div>
+        )}
       </div>
 
       {/* Add Product Modal */}
@@ -276,7 +349,7 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-white w-[32rem] rounded-2xl shadow-xl"
+              className="bg-white w-[32rem] rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto"
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -393,37 +466,49 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
                   {/* Image Upload */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
-                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl">
+                    <label className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer hover:border-amber-400 hover:bg-amber-50 transition-colors">
                       <div className="space-y-1 text-center">
-                        <svg
-                          className="mx-auto h-12 w-12 text-gray-400"
-                          stroke="currentColor"
-                          fill="none"
-                          viewBox="0 0 48 48"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                            strokeWidth={2}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                        <div className="flex text-sm text-gray-600">
-                          <label className="relative cursor-pointer bg-white rounded-md font-medium text-amber-600 hover:text-amber-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-amber-500">
-                            <span>Upload a file</span>
-                            <input
-                              type="file"
-                              className="sr-only"
-                              accept="image/*"
-                              onChange={handlePictureUpload}
-                            />
-                          </label>
-                          <p className="pl-1">or drag and drop</p>
-                        </div>
-                        <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                        {pictureFileName ? (
+                          <>
+                            <div className="flex items-center justify-center mb-2">
+                              <svg className="h-5 w-5 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              <span className="text-sm font-medium text-gray-900">{pictureFileName}</span>
+                            </div>
+                            <p className="text-xs text-gray-500">File selected. Click to change.</p>
+                          </>
+                        ) : (
+                          <>
+                            <svg
+                              className="mx-auto h-12 w-12 text-gray-400"
+                              stroke="currentColor"
+                              fill="none"
+                              viewBox="0 0 48 48"
+                              aria-hidden="true"
+                            >
+                              <path
+                                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                            <div className="flex justify-center text-sm text-gray-600">
+                              <span className="font-medium text-amber-600 hover:text-amber-500">Upload a file</span>
+                              <p className="pl-1">or drag and drop</p>
+                            </div>
+                            <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          className="sr-only"
+                          accept="image/*"
+                          onChange={handlePictureUpload}
+                        />
                       </div>
-                    </div>
+                    </label>
                     {validationErrors.picture && (
                       <p className="mt-1 text-sm text-red-500">{validationErrors.picture}</p>
                     )}
@@ -431,21 +516,394 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
                 </div>
 
                 {/* Modal Footer */}
-                <div className="flex justify-end gap-3 mt-6">
+                <div className="sticky bottom-0 bg-white pt-4 pb-4 border-t border-gray-100 mt-6">
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={toggleModal}
+                      className="px-4 py-2 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleAddProduct}
+                      className="px-4 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600
+                               transition-colors shadow-lg shadow-amber-500/30"
+                    >
+                      Add Item
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Product Modal */}
+      <AnimatePresence>
+        {isEditModalOpen && currentProduct && (
+          <motion.div
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white w-[32rem] rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            >
+              {/* Modal Header */}
+              <div className="px-6 py-4 border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Edit Item</h3>
                   <button
-                    onClick={toggleModal}
+                    onClick={() => {
+                      setIsEditModalOpen(false);
+                      setEditPictureFileName("");
+                    }}
+                    className="p-2 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
+                  >
+                    <MdCancel className="text-xl" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 space-y-4">
+                {/* Form Fields */}
+                <div className="space-y-4">
+                  {/* Name Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                    <input
+                      type="text"
+                      placeholder="Enter item name"
+                      value={currentProduct.title}
+                      onChange={(e) => {
+                        setCurrentProduct({
+                          ...currentProduct,
+                          title: e.target.value
+                        });
+                      }}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
+                    />
+                  </div>
+
+                  {/* Description Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea
+                      placeholder="Enter item description"
+                      value={currentProduct.description}
+                      onChange={(e) => {
+                        setCurrentProduct({
+                          ...currentProduct,
+                          description: e.target.value
+                        });
+                      }}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
+                      rows="3"
+                    />
+                  </div>
+
+                  {/* Price Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                    <input
+                      type="text"
+                      placeholder="Enter price"
+                      value={currentProduct.price}
+                      onChange={(e) => {
+                        setCurrentProduct({
+                          ...currentProduct,
+                          price: e.target.value
+                        });
+                      }}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
+                    />
+                  </div>
+
+                  {/* Category Select */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <select
+                      value={currentProduct.category}
+                      onChange={(e) => {
+                        setCurrentProduct({
+                          ...currentProduct,
+                          category: e.target.value
+                        });
+                      }}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
+                    >
+                      <option value="">Select category</option>
+                      <option value="Drinks">Drinks</option>
+                      <option value="Dessert">Dessert</option>
+                      <option value="Meal">Meal</option>
+                      <option value="Snacks">Snacks</option>
+                    </select>
+                  </div>
+
+                  {/* Image Preview and Upload */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
+                    {currentProduct.url && (
+                      <div className="mb-3 flex justify-center">
+                        <img
+                          src={currentProduct.url}
+                          alt={currentProduct.title}
+                          className="h-40 w-auto object-cover rounded-lg border border-gray-200"
+                        />
+                      </div>
+                    )}
+                    <label className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer hover:border-amber-400 hover:bg-amber-50 transition-colors">
+                      <div className="space-y-1 text-center">
+                        {editPictureFileName ? (
+                          <>
+                            <div className="flex items-center justify-center mb-2">
+                              <svg className="h-5 w-5 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              <span className="text-sm font-medium text-gray-900">{editPictureFileName}</span>
+                            </div>
+                            <p className="text-xs text-gray-500">New file selected. Click to change.</p>
+                          </>
+                        ) : (
+                          <>
+                            <svg
+                              className="mx-auto h-12 w-12 text-gray-400"
+                              stroke="currentColor"
+                              fill="none"
+                              viewBox="0 0 48 48"
+                              aria-hidden="true"
+                            >
+                              <path
+                                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                            <div className="flex justify-center text-sm text-gray-600">
+                              <span className="font-medium text-amber-600 hover:text-amber-500">Upload a new image</span>
+                              <p className="pl-1">or drag and drop</p>
+                            </div>
+                            <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          className="sr-only"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = () => {
+                                setCurrentProduct({
+                                  ...currentProduct,
+                                  url: reader.result
+                                });
+                                setEditPictureFileName(file.name);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Modal Footer */}
+                <div className="sticky bottom-0 bg-white pt-4 pb-4 border-t border-gray-100 mt-6">
+                  <div className="flex justify-between gap-3">
+                    <button
+                      onClick={() => confirmDelete(currentProduct)}
+                      className="px-4 py-2 text-red-700 bg-red-50 rounded-xl hover:bg-red-100 transition-colors"
+                    >
+                      Delete
+                    </button>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => {
+                          setIsEditModalOpen(false);
+                          setEditPictureFileName("");
+                        }}
+                        className="px-4 py-2 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSaveProduct}
+                        className="px-4 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600
+                                 transition-colors shadow-lg shadow-amber-500/30"
+                      >
+                        Save Changes
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {isDeleteConfirmOpen && productToDelete && (
+          <motion.div
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white w-[400px] rounded-2xl shadow-xl overflow-hidden"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            >
+              {/* Modal Header */}
+              <div className="px-6 py-4 border-b border-gray-100 bg-red-50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-red-100 rounded-full">
+                      <FiAlertCircle className="text-red-500 text-xl" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900">Confirm Delete</h3>
+                  </div>
+                  <button
+                    onClick={cancelDelete}
+                    className="p-2 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
+                  >
+                    <MdCancel className="text-xl" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6">
+                <p className="text-gray-600 mb-4">
+                  Are you sure you want to delete <span className="font-semibold">{productToDelete.title}</span>? This action cannot be undone.
+                </p>
+
+                {/* Product Preview */}
+                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl mb-6">
+                  <img
+                    src={productToDelete.url}
+                    alt={productToDelete.title}
+                    className="w-16 h-16 rounded-lg object-cover"
+                  />
+                  <div>
+                    <h4 className="font-medium text-gray-900">{productToDelete.title}</h4>
+                    <p className="text-sm text-gray-500 line-clamp-1">{productToDelete.description}</p>
+                    <p className="text-amber-600 font-medium mt-1">₱{productToDelete.price}</p>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={cancelDelete}
                     className="px-4 py-2 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
-                    onClick={handleAddProduct}
-                    className="px-4 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 
-                             transition-colors shadow-lg shadow-amber-500/30"
+                    onClick={handleDeleteProduct}
+                    className="px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors shadow-lg shadow-red-500/30"
                   >
-                    Add Item
+                    Delete Item
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Save Success Modal */}
+      <AnimatePresence>
+        {isSaveSuccessOpen && (
+          <motion.div
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <motion.div
+              className="bg-white w-[360px] rounded-2xl shadow-2xl overflow-hidden text-center p-6"
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-4">
+                  <FaCheckCircle className="w-8 h-8 text-amber-500" />
+                </div>
+
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Changes Saved
+                </h3>
+
+                <p className="text-gray-500 mb-6">
+                  Your changes have been successfully saved
+                </p>
+
+                <button
+                  onClick={() => setIsSaveSuccessOpen(false)}
+                  className="w-full py-2.5 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors shadow-lg shadow-amber-500/30"
+                >
+                  Done
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Success Modal */}
+      <AnimatePresence>
+        {isDeleteSuccessOpen && (
+          <motion.div
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <motion.div
+              className="bg-white w-[360px] rounded-2xl shadow-2xl overflow-hidden text-center p-6"
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                  <MdDelete className="w-8 h-8 text-red-500" />
+                </div>
+
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Product Deleted
+                </h3>
+
+                <p className="text-gray-500 mb-6">
+                  The product has been successfully removed
+                </p>
+
+                <button
+                  onClick={() => setIsDeleteSuccessOpen(false)}
+                  className="w-full py-2.5 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors shadow-lg shadow-amber-500/30"
+                >
+                  Done
+                </button>
               </div>
             </motion.div>
           </motion.div>
