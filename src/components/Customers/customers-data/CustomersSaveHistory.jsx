@@ -7,7 +7,11 @@ import {
   orderBy,
   where,
   addDoc,
-  serverTimestamp
+  serverTimestamp,
+  deleteDoc,
+  updateDoc,
+  onSnapshot,
+  doc
 } from "firebase/firestore";
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
@@ -15,65 +19,78 @@ import { LuDownload } from "react-icons/lu";
 import CustomersNav from "../CustomersNav";
 import firebaseApp from "../../../firebaseConfig";
 
-// Add this new function after your existing imports
+// Modify the checkAndCreateMonthlyReport function
 const checkAndCreateMonthlyReport = async (db) => {
   const currentDate = new Date();
   const currentMonthYear = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
   
   try {
-    // Check if we already have a report for this month
+    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+    
+    // Get current orders data
+    const ordersQuery = query(
+      collection(db, "order_transaction"),
+      where("order_date", ">=", startOfMonth),
+      where("order_date", "<=", endOfMonth),
+      orderBy("order_date", "desc")
+    );
+    
+    const ordersSnapshot = await getDocs(ordersQuery);
+    const customerData = new Map();
+    
+    // Process orders
+    ordersSnapshot.docs.forEach(doc => {
+      const order = doc.data();
+      if (!order.customer_id || !order.order_date) return;
+      
+      const customerId = order.customer_id;
+      if (!customerData.has(customerId)) {
+        customerData.set(customerId, {
+          monthlyOrders: 0,
+          monthlySpent: 0
+        });
+      }
+      
+      const customer = customerData.get(customerId);
+      if (order.order_status !== "Cancelled") {
+        customer.monthlyOrders++;
+        customer.monthlySpent += Number(order.order_total || 0);
+      }
+    });
+
+    // Find existing report for current month
     const monthQuery = query(
       collection(db, "customer_history"),
       where("monthYear", "==", currentMonthYear)
     );
     
     const monthSnapshot = await getDocs(monthQuery);
-    
-    if (monthSnapshot.empty) {
-      // Calculate start and end of current month
-      const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-      const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-      
-      // Get orders for current month
-      const ordersQuery = query(
-        collection(db, "order_transaction"),
-        where("order_date", ">=", startOfMonth),
-        where("order_date", "<=", endOfMonth),
-        orderBy("order_date", "desc")
-      );
-      
-      const ordersSnapshot = await getDocs(ordersQuery);
-      const customerData = new Map();
-      
-      // Process orders
-      ordersSnapshot.docs.forEach(doc => {
-        const order = doc.data();
-        if (!order.customer_id || !order.order_date) return;
-        
-        const customerId = order.customer_id;
-        if (!customerData.has(customerId)) {
-          customerData.set(customerId, {
-            monthlyOrders: 0,
-            monthlySpent: 0
-          });
-        }
-        
-        const customer = customerData.get(customerId);
-        if (order.order_status !== "Cancelled") {
-          customer.monthlyOrders++;
-          customer.monthlySpent += Number(order.order_total || 0);
-        }
+
+    const reportData = {
+      monthYear: currentMonthYear,
+      lastUpdated: serverTimestamp(),
+      customerCount: customerData.size,
+      totalOrders: Array.from(customerData.values())
+        .reduce((sum, c) => sum + c.monthlyOrders, 0),
+      totalSpent: Array.from(customerData.values())
+        .reduce((sum, c) => sum + c.monthlySpent, 0)
+    };
+
+    // Update or create report
+    if (!monthSnapshot.empty) {
+      const docRef = monthSnapshot.docs[0].ref;
+      await updateDoc(docRef, {
+        ...reportData,
+        dateSaved: monthSnapshot.docs[0].data().dateSaved // Keep original creation date
       });
-      
-      // Create new monthly record
+      console.log(`Updated existing report for ${currentMonthYear}`);
+    } else {
       await addDoc(collection(db, "customer_history"), {
-        monthYear: currentMonthYear,
-        dateSaved: serverTimestamp(),
-        lastUpdated: serverTimestamp(),
-        customerCount: customerData.size,
-        totalOrders: Array.from(customerData.values()).reduce((sum, c) => sum + c.monthlyOrders, 0),
-        totalSpent: Array.from(customerData.values()).reduce((sum, c) => sum + c.monthlySpent, 0)
+        ...reportData,
+        dateSaved: serverTimestamp() // New report gets current timestamp
       });
+      console.log(`Created new report for ${currentMonthYear}`);
     }
   } catch (error) {
     console.error("Error checking/creating monthly report:", error);
@@ -112,24 +129,43 @@ const CustomersSaveHistory = () => {
       );
       
       const savedSnapshot = await getDocs(savedQuery);
-      const histories = savedSnapshot.docs.map(doc => ({
-        id: doc.id,
-        monthYear: doc.data().monthYear,
-        dateSaved: doc.data().dateSaved ? 
-          new Date(doc.data().dateSaved.toDate()).toLocaleDateString() :
-          'No date',
-        customerCount: doc.data().customerCount || 0,
-        totalOrders: doc.data().totalOrders || 0,
-        totalSpent: doc.data().totalSpent || 0
-      }));
-      
+      const uniqueHistories = new Map(); // Use Map to track unique monthYear entries
+
+      // Keep only the most recent entry for each monthYear
+      savedSnapshot.docs.forEach(doc => {
+        const data = doc.data();
+        const monthYear = data.monthYear;
+        
+        if (!uniqueHistories.has(monthYear)) {
+          uniqueHistories.set(monthYear, {
+            id: doc.id,
+            monthYear: monthYear,
+            dateSaved: data.dateSaved ? 
+              new Date(data.dateSaved.toDate()).toLocaleDateString() :
+              'No date',
+            customerCount: data.customerCount || 0,
+            totalOrders: data.totalOrders || 0,
+            totalSpent: data.totalSpent || 0
+          });
+        } else {
+          // Delete duplicate document
+          deleteDoc(doc.ref).catch(err => 
+            console.error("Error deleting duplicate:", err)
+          );
+        }
+      });
+
+      // Convert Map values to array for state
+      const histories = Array.from(uniqueHistories.values());
       setSavedHistories(histories);
+      
     } catch (error) {
       console.error("Error fetching histories:", error);
     }
   };
 
-  const handleDownload = async (history) => {
+  // Remove automatic download from handleDownload function and rename it to updateAndDownload
+  const updateAndDownload = async (history) => {
     try {
       setLoading(true);
       
@@ -138,17 +174,18 @@ const CustomersSaveHistory = () => {
       const startOfMonth = new Date(`${month} 1, ${year}`);
       const endOfMonth = new Date(startOfMonth.getFullYear(), startOfMonth.getMonth() + 1, 0);
 
-      // Update query to filter by date range
+      // Query orders for the selected month
       const ordersQuery = query(
         collection(db, "order_transaction"),
         where("order_date", ">=", startOfMonth),
         where("order_date", "<=", endOfMonth),
         orderBy("order_date", "desc")
       );
-      
+
       const ordersSnapshot = await getDocs(ordersQuery);
       const customerData = new Map();
 
+      // Process orders and build customer data
       ordersSnapshot.docs.forEach(doc => {
         const order = doc.data();
         if (!order.customer_id) return;
@@ -174,63 +211,81 @@ const CustomersSaveHistory = () => {
         }
       });
 
-      const pdfDoc = new jsPDF();
-      pdfDoc.setFontSize(18);
-      pdfDoc.text(`Customer Report - ${history.monthYear}`, 14, 20);
-
-      // Add summary
-      pdfDoc.setFontSize(12);
-      pdfDoc.text([
-        `Total Customers: ${history.customerCount}`,
-        `Total Orders: ${history.totalOrders}`,
-        `Total Sales: PHP ${history.totalSpent.toLocaleString()}`
-      ], 14, 40);
-
-      // Add Top 5 by Total Spent
-      pdfDoc.setFontSize(14);
-      pdfDoc.text('Top 5 Customers by Total Spent', 14, 70);
-
-      const top5BySpent = Array.from(customerData.values())
-        .sort((a, b) => b.monthlySpent - a.monthlySpent)
-        .slice(0, 5);
-
-      autoTable(pdfDoc, {
-        startY: 75,
-        head: [['Rank', 'Recipient', 'Total Spent', 'Monthly Orders']],
-        body: top5BySpent.map((customer, index) => [
-          `#${index + 1}`,
-          customer.recipient,
-          `PHP ${customer.monthlySpent.toLocaleString()}`,
-          customer.monthlyOrders
-        ]),
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [241, 196, 15] },
-        theme: 'grid'
-      });
-
-      // Add All Customers section
-      pdfDoc.setFontSize(14);
-      pdfDoc.text('All Customers', 14, pdfDoc.lastAutoTable.finalY + 20);
-
+      // Sort customers by amount spent
       const sortedCustomers = Array.from(customerData.values())
         .sort((a, b) => b.monthlySpent - a.monthlySpent);
 
+      // Generate PDF
+      const pdfDoc = new jsPDF();
+      
+      // Header
+      pdfDoc.setFont("helvetica", "bold");
+      pdfDoc.setFontSize(16);
+      pdfDoc.text(`Total Customer Report`, pdfDoc.internal.pageSize.width / 2, 20, { align: "center" });
+      pdfDoc.setFontSize(12);
+      pdfDoc.text(`For the Month of ${history.monthYear}`, pdfDoc.internal.pageSize.width / 2, 30, { align: "center" });
+
+      // Summary box
+      pdfDoc.setDrawColor(241, 196, 15);
+      pdfDoc.setLineWidth(0.5);
+      pdfDoc.roundedRect(14, 40, 182, 40, 3, 3);
+
+      // Summary content
+      pdfDoc.setFont("helvetica", "bold");
+      pdfDoc.setFontSize(12);
+      pdfDoc.text('Monthly Customer Summary', 20, 50);
+
+      pdfDoc.setFont("helvetica", "normal");
+      pdfDoc.setFontSize(10);
+      const summaryData = [
+        `Total Active Customers This Month: ${sortedCustomers.length}`,
+        `Total Customer Orders: ${sortedCustomers.reduce((sum, c) => sum + c.monthlyOrders, 0)}`,
+        `Total Customer Sales: PHP ${sortedCustomers.reduce((sum, c) => sum + c.monthlySpent, 0).toLocaleString()}`
+      ];
+      
+      summaryData.forEach((text, index) => {
+        pdfDoc.text(text, 20, 60 + (index * 8));
+      });
+
+      // Customer table
       autoTable(pdfDoc, {
-        startY: pdfDoc.lastAutoTable.finalY + 25,
-        head: [['Recipient', 'Customer ID', 'Monthly Orders', 'Total Spent', 'Status']],
-        body: sortedCustomers.map(customer => [
+        startY: 90,  // Moved down to accommodate new header
+        head: [['#', 'Recipient', 'Customer ID', 'Monthly Orders', 'Total Spent', 'Status']],
+        body: sortedCustomers.map((customer, index) => [
+          (index + 1).toString(),
           customer.recipient,
-          formatCustomerId(customer.customerId), // Apply the formatter here
+          formatCustomerId(customer.customerId),
           customer.monthlyOrders,
           `PHP ${customer.monthlySpent.toLocaleString()}`,
           isCustomerActive(customer.lastDateOrdered) ? 'Active' : 'Inactive'
         ]),
         styles: { fontSize: 8 },
-        headStyles: { fillColor: [241, 196, 15] },
+        headStyles: { 
+          fillColor: [241, 196, 15],
+          halign: 'center'
+        },
+        columnStyles: {
+          0: { halign: 'center', cellWidth: 20 },
+          2: { halign: 'center' },
+          3: { halign: 'center' },
+          4: { halign: 'right' },
+          5: { halign: 'center' }
+        },
         theme: 'grid'
       });
 
+      // Save PDF
       pdfDoc.save(`${history.monthYear}.pdf`);
+
+      // Update document in Firestore
+      const historyRef = doc(db, "customer_history", history.id);
+      await updateDoc(historyRef, {
+        lastUpdated: serverTimestamp(),
+        customerCount: sortedCustomers.length,
+        totalOrders: sortedCustomers.reduce((sum, c) => sum + c.monthlyOrders, 0),
+        totalSpent: sortedCustomers.reduce((sum, c) => sum + c.monthlySpent, 0)
+      });
+
     } catch (error) {
       console.error("Error generating PDF:", error);
       alert("Error generating PDF. Please try again.");
@@ -310,29 +365,51 @@ const CustomersSaveHistory = () => {
     }
   };
 
+  // Add a cleanup function for duplicate reports
+  const cleanupDuplicateReports = async () => {
+    try {
+      const reportsQuery = query(
+        collection(db, "customer_history"),
+        orderBy("dateSaved", "desc")
+      );
+      
+      const snapshot = await getDocs(reportsQuery);
+      const reportsByMonth = new Map();
+      
+      // Keep only the latest report for each month
+      snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        if (!reportsByMonth.has(data.monthYear)) {
+          reportsByMonth.set(data.monthYear, doc.id);
+        } else {
+          // Delete duplicate report
+          deleteDoc(doc.ref);
+          console.log(`Deleted duplicate report for ${data.monthYear}`);
+        }
+      });
+      
+      // Refresh the display
+      await fetchSavedHistories();
+      
+    } catch (error) {
+      console.error("Error cleaning up duplicate reports:", error);
+    }
+  };
+
+  // Update useEffect to only update data without downloading
   useEffect(() => {
     fetchSavedHistories();
-    checkAndCreateMonthlyReport(db);
     
-    // Set up daily check at midnight
-    const now = new Date();
-    const night = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate() + 1,
-      0, 0, 0
-    );
-    const msToMidnight = night.getTime() - now.getTime();
-    
-    const initialTimeout = setTimeout(() => {
-      checkAndCreateMonthlyReport(db);
-      const dailyInterval = setInterval(() => {
-        checkAndCreateMonthlyReport(db);
-      }, 24 * 60 * 60 * 1000);
-      return () => clearInterval(dailyInterval);
-    }, msToMidnight);
-    
-    return () => clearTimeout(initialTimeout);
+    // Listen for order changes and update existing report
+    const ordersRef = collection(db, "order_transaction");
+    const unsubscribe = onSnapshot(ordersRef, async (snapshot) => {
+      if (snapshot.docChanges().length > 0) {
+        // Update current month's data only
+        await checkAndCreateMonthlyReport(db);
+      }
+    });
+
+    return () => unsubscribe();
   }, [db]);
 
   return (
@@ -359,7 +436,7 @@ const CustomersSaveHistory = () => {
                   <td className="py-3 px-6 text-left">{history.dateSaved}</td>
                   <td className="py-3 px-6 text-center">
                     <button
-                      onClick={() => handleDownload(history)}
+                      onClick={() => updateAndDownload(history)}
                       className="text-amber-600 hover:text-amber-700 transition-colors cursor-pointer"
                       title="Download PDF"
                     >
