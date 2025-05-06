@@ -36,75 +36,93 @@ const SavedHistory = () => {
     }
   };
 
+  // Update the generatePDF function
   const generatePDF = async (monthYear, transactions) => {
     setLoading(true);
     try {
-      const doc = new jsPDF();
+      const pdfDoc = new jsPDF();
 
-      // Add title
-      doc.setFontSize(20);
-      doc.setFont(undefined, 'bold');
-      doc.text("Monthly Transaction Report", 14, 15);
+      // Title
+      pdfDoc.setFont("helvetica", "bold");
+      pdfDoc.setFontSize(20);
+      pdfDoc.text('Monthly Orders Summary', 20, 30);
 
-      doc.setFontSize(12);
-      doc.setFont(undefined, 'normal');
-      doc.text(`Period: ${monthYear}`, 14, 25);
+      // Get the current week
+      const today = new Date();
+      const weekNumber = Math.ceil(today.getDate() / 7);
+      pdfDoc.setFontSize(12);
+      pdfDoc.setTextColor(107, 114, 128);
+      pdfDoc.text(`Week ${weekNumber} | ${today.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })}`, 20, 40);
 
-      let currentY = 35;
+      // Summary Box
+      pdfDoc.setDrawColor(255, 191, 0);
+      pdfDoc.setFillColor(255, 251, 235);
+      pdfDoc.roundedRect(15, 50, 180, 60, 3, 3, 'FD');
 
-      // Calculate analytics
-      const totalOrders = transactions.length;
-      const completedOrders = transactions.filter(t => t.order_status === "Delivered").length;
-      const pendingOrders = transactions.filter(t => t.order_status === "Preparing").length;
-      const cancelledOrders = transactions.filter(t => t.order_status === "Cancelled").length;
-      const totalSales = transactions
-        .filter(t => t.order_status === "Delivered")
-        .reduce((sum, t) => sum + (parseFloat(t.order_total) || 0), 0);
-
-      // Add analytics with PHP text instead of symbol
-      const analytics = [
-        `Total Orders: ${totalOrders}`,
-        `Completed Orders: ${completedOrders}`,
-        `Pending Orders: ${pendingOrders}`,
-        `Cancelled Orders: ${cancelledOrders}`,
-        `Total Sales: PHP ${totalSales.toLocaleString()}`
+      // Summary Content
+      pdfDoc.setFontSize(12);
+      pdfDoc.setTextColor(0, 0, 0);
+      const summaryStats = [
+        `Total Orders: ${transactions.length}`,
+        `Completed Orders: ${transactions.filter(t => t.order_status === "Delivered").length}`,
+        `Total Sales: PHP ${transactions
+          .filter(t => t.order_status === "Delivered")
+          .reduce((sum, t) => sum + (parseFloat(t.order_total) || 0), 0)
+          .toLocaleString()}`
       ];
 
-      analytics.forEach(line => {
-        doc.text(line, 14, currentY);
-        currentY += 6;
+      summaryStats.forEach((stat, index) => {
+        pdfDoc.text(stat, 20, 70 + (index * 15));
       });
 
-      currentY += 10;
+      // Orders Table
+      autoTable(pdfDoc, {
+        startY: 125,
+        head: [['#', 'Order ID', 'Customer', 'Items', 'Total', 'Status']],
+        body: transactions.map((order, index) => [
+          (index + 1).toString(),
+          order.order_id,
+          order.recipient,
+          order.order_name,
+          `PHP ${parseFloat(order.order_total).toLocaleString()}`,
+          order.order_status
+        ]),
+        styles: {
+          fontSize: 10,
+          cellPadding: 6,
+          lineColor: [255, 191, 0],
+          lineWidth: 0.1,
+        },
+        headStyles: {
+          fillColor: [255, 191, 0],
+          textColor: [0, 0, 0],
+          fontSize: 10,
+          fontStyle: 'bold',
+          halign: 'center',
+          valign: 'middle',
+          minCellHeight: 14,
+        },
+        columnStyles: {
+          0: { halign: 'center', cellWidth: 15 },
+          1: { halign: 'center', cellWidth: 25 },
+          2: { halign: 'left', cellWidth: 45 },
+          3: { halign: 'left', cellWidth: 45 },
+          4: { halign: 'right', cellWidth: 30 },
+          5: { halign: 'center', cellWidth: 25 }
+        },
+        alternateRowStyles: {
+          fillColor: [255, 251, 235]
+        },
+        margin: { left: 15, right: 15 },
+        tableWidth: 'auto'
+      });
 
-      // Add tables for each status with PHP text
-      const statuses = ['Delivered', 'Preparing', 'Cancelled'];
-      for (const status of statuses) {
-        const filteredTransactions = transactions.filter(t => t.order_status === status);
-        if (filteredTransactions.length > 0) {
-          doc.text(`${status} Orders`, 14, currentY);
-          currentY += 5;
-
-          autoTable(doc, {
-            startY: currentY,
-            head: [['Order ID', 'Name', 'Recipient', 'Amount', 'Date']],
-            body: filteredTransactions.map(order => [
-              order.order_id,
-              order.order_name,
-              order.recipient,
-              `PHP ${parseFloat(order.order_total).toLocaleString()}`,
-              new Date(order.order_date.seconds * 1000).toLocaleDateString()
-            ]),
-            styles: { fontSize: 8 },
-            headStyles: { fillColor: [255, 207, 80] }
-          });
-
-          currentY = doc.lastAutoTable.finalY + 10;
-        }
-      }
-
-      // Save PDF
-      doc.save(`${monthYear.replace(' ', '')}_Transactions.pdf`);
+      pdfDoc.save(`${monthYear.replace(' ', '')}_Orders.pdf`);
     } catch (error) {
       console.error("Error generating PDF:", error);
       alert("Error generating PDF. Please try again.");
@@ -319,52 +337,85 @@ const SavedHistory = () => {
     checkAndSaveCurrentMonth();
   }, []);
 
+  // Update the return section with modern UI
   return (
-    <section className="bg-white rounded-2xl shadow-feat w-full mx-auto block my-4 font-latrue">
-      <div className="overflow-x-auto">
-        <table className="w-full text-[1rem]">
-          <thead>
-            <tr className="leading-normal border-b-[0.5px] border-b-gray-600/50">
-              <th className="py-3 px-6 text-left">Name</th>
-              <th className="py-3 px-6 text-left">Date Saved</th>
-            </tr>
-          </thead>
-          <tbody>
-            {savedHistories.map((history, index) => (
-              <tr
-                key={index}
-                className="hover:bg-yellowsm/20 hover:shadow-lg border-b-[0.5px] border-yellowsm/50"
-              >
-                <td className="py-3 px-6 text-left">
-                  {`${history.monthYear}.pdf`}
-                </td>
-                <td className="py-3 px-6 text-left">
-                  {history.dateSaved}
-                </td>
-                <td className="py-3 px-6 text-center">
-                  <button
-                    onClick={() => handleRowClick(history)}
-                    className="text-amber-600 hover:text-amber-700 transition-colors cursor-pointer"
-                    title="Download PDF"
-                  >
-                    <LuDownload size={20} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {loading && (
-        <div className="fixed inset-0 bg-black/25 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded-lg">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
-            <p className="mt-2 text-sm">Processing...</p>
-          </div>
+    <div className="w-full min-h-screen bg-gray-50/50 p-6">
+      <section className="max-w-5xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Order History</h1>
+          <p className="text-gray-500 mt-1">View and download monthly order reports</p>
         </div>
-      )}
-    </section>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Report Name</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Generated Date</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {savedHistories.map((history, index) => (
+                  <tr key={index} className="group hover:bg-amber-50/50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-amber-100 rounded-lg">
+                          <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{`${history.monthYear}.pdf`}</p>
+                          <p className="text-xs text-gray-500">Order Report</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div>
+                        <p className="text-sm text-gray-900">{history.dateSaved}</p>
+                        <p className="text-xs text-gray-500">Last generated</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <button
+                        onClick={() => handleRowClick(history)}
+                        className="inline-flex items-center justify-center p-2 text-amber-600 hover:text-amber-700 
+                                 hover:bg-amber-50 rounded-lg transition-colors group-hover:bg-amber-100/50"
+                        title="Download Report"
+                      >
+                        <LuDownload className="w-5 h-5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Empty State */}
+          {savedHistories.length === 0 && (
+            <div className="text-center py-12">
+              <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p className="mt-4 text-sm text-gray-500">No order reports available</p>
+            </div>
+          )}
+        </div>
+
+        {/* Loading State */}
+        {loading && (
+          <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl shadow-xl p-6 flex items-center gap-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-[3px] border-amber-500/30 border-t-amber-500" />
+              <p className="text-sm font-medium text-gray-900">Generating order report...</p>
+            </div>
+          </div>
+        )}
+      </section>
+    </div>
   );
 };
 
