@@ -514,159 +514,159 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
   return (
     <>
       {/* Main Order Section */}
-      <div className="bg-white shadow-feat p-4 h-full rounded-tr-xl rounded-br-xl">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h3 className="font-lato font-semibold text-lg">Order #{orderNumber}:</h3>
-          <div className="font-lato text-sm font-semibold space-x-2 flex bg-gray-100 p-1 rounded-md shadow-sm">
-            <span className="flex gap-1 items-center">
-              <Clock size={16} className="text-gray-700" />
-              {timeToday}
-            </span>
-            <span className="flex gap-1 items-center">
-              <Calendar size={16} className="text-gray-700" />
-              {formattedDate}
-            </span>
+      <div className="flex flex-col h-full bg-white rounded-2xl shadow-lg overflow-hidden">
+        {/* Header Section */}
+        <div className="p-6 border-b border-gray-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-amber-500 bg-clip-text text-transparent">
+                Order #{orderNumber}
+              </span>
+            </div>
+            <div className="flex items-center gap-3 text-sm">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg">
+                <Clock size={14} />
+                <span>{timeToday}</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg">
+                <Calendar size={14} />
+                <span>{formattedDate}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Payment Mode Section */}
+          <div className="mt-6">
+            <h4 className="text-sm font-medium text-gray-600 mb-3">Mode of Payment</h4>
+            <div className="flex items-center justify-between">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setPaymentMode("Cash")}
+                  className={`px-6 py-2 rounded-xl font-medium transition-all ${
+                    paymentMode === "Cash"
+                      ? "bg-amber-500 text-white shadow-md shadow-amber-500/30"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  Cash
+                </button>
+                <button
+                  onClick={() => setPaymentMode("Online")}
+                  className={`px-6 py-2 rounded-xl font-medium transition-all ${
+                    paymentMode === "Online"
+                      ? "bg-amber-500 text-white shadow-md shadow-amber-500/30"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  Online
+                </button>
+              </div>
+              <button
+                onClick={clearAllOrders}
+                className="p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-all"
+              >
+                <MdDelete size={22} />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Payment Mode */}
-        <div className="space-y-2 mt-5 mx-3">
-          <h4 className="font-lato font-semibold text-base text-gray-800">Mode of Payment:</h4>
-          <div className="font-semibold font-lato text-base flex items-center justify-between">
-            <div className="space-x-3">
-              <button
-                className={`border-2 rounded-xl py-1 px-6 cursor-pointer ${
-                  paymentMode === "Cash"
-                    ? "bg-black text-white border-black"
-                    : "border-gray-400 hover:bg-gray-200"
-                }`}
-                onClick={() => setPaymentMode("Cash")}
-              >
-                Cash
-              </button>
-              <button
-                className={`border-2 rounded-xl py-1 px-5 cursor-pointer ${
-                  paymentMode === "Online"
-                    ? "bg-black text-white border-black"
-                    : "border-gray-400 hover:bg-gray-200"
-                }`}
-                onClick={() => setPaymentMode("Online")}
-              >
-                Online
-              </button>
-            </div>
-            <div
-              className="text-red-600 text-xl cursor-pointer hover:text-red-700"
-              onClick={(e) => {
-                e.stopPropagation();
-                clearAllOrders();
-              }}
-            >
-              <MdDelete size={24} />
-            </div>
-          </div>
-        </div>
-
-        {/* Order Items */}
-        <div className="h-[17.3rem] w-full mt-5 flex flex-col space-y-5 overflow-y-auto product-scroll px-3">
+        {/* Order Items Section */}
+        <div className="flex-1 overflow-y-auto p-6">
           {displayItems.length > 0 ? (
-            displayItems.map((item, index) => (
-              <div
-                key={index}
-                className="relative grid grid-cols-[30%_1fr_35%] gap-2 items-center bg-gray-400/5 p-2 rounded-lg"
-              >
-                <div>
+            <div className="space-y-4">
+              {displayItems.map((item, index) => (
+                <div
+                  key={index}
+                  className="group flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-amber-50/50 transition-colors"
+                >
                   <img
                     src={item.url}
                     alt={item.title}
-                    className="size-20 rounded-[50%]"
+                    className="w-16 h-16 rounded-xl object-cover"
                   />
-                </div>
-                <div className="flex flex-col justify-start">
-                  <span className="font-semibold text-lg">{item.title}</span>
-                  <span className="text-sm text-gray-500 font-lato">
-                    {item.description}
-                  </span>
-                  <span className="text-xs font-bold">&#8369; {parseFloat(item.price).toFixed(2)}</span>
-                </div>
-                <div className="font-lato font-bold text-sm text-center flex flex-col justify-between h-full">
-                  <div className="text-sm flex justify-end space-x-1">
+                  <div className="flex-1">
+                    <h3 className="font-medium text-gray-900">{item.title}</h3>
+                    <p className="text-sm text-gray-500">{item.description}</p>
+                    <p className="text-amber-600 font-medium mt-1">
+                      ₱{parseFloat(item.price).toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-3">
                     {orderList && (
-                      <>
-                        <IoPencil className="text-gray-600" />
-                        <MdCancel
-                          className="cursor-pointer text-red-500"
+                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button className="p-1 text-gray-400 hover:text-amber-500 rounded-lg hover:bg-amber-50">
+                          <IoPencil size={16} />
+                        </button>
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
                             removeItem(index);
                           }}
-                          size={20}
-                        />
-                      </>
+                          className="p-1 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50"
+                        >
+                          <MdCancel size={16} />
+                        </button>
+                      </div>
                     )}
-                  </div>
-                  <div className="space-x-2 flex items-center justify-center">
-                    <button
-                      onClick={() => decreaseQuantity(index)}
-                      className="cursor-pointer text-xl"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="text"
-                      value={quantities[index] || 1}
-                      readOnly
-                      className="border-[0.5px] border-gray-500 w-[50%] text-center rounded-xl"
-                    />
-                    <button
-                      onClick={() => increaseQuantity(index)}
-                      className="cursor-pointer text-xl"
-                    >
-                      +
-                    </button>
+                    <div className="flex items-center gap-3 bg-white rounded-lg border border-gray-200 p-1">
+                      <button
+                        onClick={() => decreaseQuantity(index)}
+                        className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-100 rounded-lg"
+                      >
+                        -
+                      </button>
+                      <span className="w-8 text-center font-medium">
+                        {quantities[index] || 1}
+                      </span>
+                      <button
+                        onClick={() => increaseQuantity(index)}
+                        className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-100 rounded-lg"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           ) : (
-            <p className="text-center text-gray-500 my-8">
-              No items in the order list.
-            </p>
+            <div className="h-full flex flex-col items-center justify-center text-gray-400">
+              <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+              <p>No items in the order list</p>
+            </div>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="grid grid-rows-2 bg-gray-200 h-auto -mx-4 py-3 pl-5 pr-7 gap-3 mt-3 rounded-t-lg shadow-inner">
-          <div className="flex justify-between items-center">
-            <span className="font-bold font-lato text-base text-gray-800">
-              Number of Products:
-            </span>
-            <span className="font-medium font-lato text-base">
-              {totalQuantity}x
-            </span>
+        {/* Footer Section */}
+        <div className="border-t border-gray-100">
+          <div className="p-6 bg-gray-50">
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-gray-600">Number of Products</span>
+              <span className="font-medium text-gray-900">{totalQuantity}x</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Subtotal</span>
+              <span className="font-bold text-lg text-amber-600">
+                ₱{subtotal.toFixed(2)}
+              </span>
+            </div>
+            <button
+              onClick={handleCheckout}
+              disabled={displayItems.length === 0}
+              className={`
+                w-full mt-4 py-3 rounded-xl font-medium transition-all
+                ${displayItems.length > 0
+                  ? "bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-500/30"
+                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                }
+              `}
+            >
+              Checkout
+            </button>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="font-bold font-lato text-base text-gray-800">Subtotal:</span>
-            <span className="font-medium font-lato text-base">
-              &#8369; {subtotal.toFixed(2)}
-            </span>
-          </div>
-        </div>
-
-        {/* Checkout Button */}
-        <div className="h-[3.3rem] items-center flex justify-end mt-4">
-          <button
-            className={`text-sm font-lato font-bold rounded-3xl border-[0.5px] py-2 px-6 ${
-              displayItems.length > 0
-                ? "bg-[#0cd742] text-white cursor-pointer hover:bg-[#0ab538] shadow-md"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-            }`}
-            onClick={handleCheckout}
-            disabled={displayItems.length === 0}
-          >
-            Checkout
-          </button>
         </div>
       </div>
 

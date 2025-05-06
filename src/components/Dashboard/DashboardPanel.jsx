@@ -64,20 +64,33 @@ const DashboardPanel = () => {
   };
 
   return (
-    <div className="bg-white/50 w-auto shadow-feat h-auto grid grid-cols-[60%_1fr] mx-5 my-4">
-      <div className="pt-5 px-5 pb-5">
-        <h3 className="font-lato font-semibold text-2xl ml-6">MENU CATEGORIES</h3>
-        <div>
+    <div className="grid grid-cols-[1.5fr_1fr] gap-6 p-6 min-h-[calc(100vh-80px)]">
+      {/* Menu Panel */}
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        {/* Header */}
+        <div className="p-6 border-b border-gray-100">
+          <h3 className="text-xl font-semibold bg-gradient-to-r from-amber-600 to-amber-500 bg-clip-text text-transparent">
+            Menu Categories
+          </h3>
+        </div>
+        
+        {/* Categories Section */}
+        <div className="p-6 border-b border-gray-100 bg-gradient-to-b from-amber-50/30">
           <DashboardCategory setSelectedCategory={setSelectedCategory} />
         </div>
-        <ProductList
-          products={filteredProducts}
-          addToOrderList={addToOrderList}
-          updateProducts={updateProducts}
-        />
+
+        {/* Products Grid */}
+        <div className="p-6">
+          <ProductList
+            products={filteredProducts}
+            addToOrderList={addToOrderList}
+            updateProducts={updateProducts}
+          />
+        </div>
       </div>
-      <div>
-        {/* Pass orderList and setOrderList to DashboardOrder */}
+
+      {/* Order Panel */}
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         <DashboardOrder orderList={orderList} setOrderList={setOrderList} />
       </div>
     </div>

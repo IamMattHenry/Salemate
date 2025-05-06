@@ -23,7 +23,10 @@ const OrdersTable = () => {
   const { modal, toggleModal } = UseModal();
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
-  const [sortOrder, setSortOrder] = useState("timestamp"); // Add sort state, default to timestamp
+  const [sortConfig, setSortConfig] = useState({
+    type: "timestamp",
+    direction: "desc"
+  }); // Update the sort state to handle multiple sort options
 
   const db = getFirestore(firebaseApp);
 
@@ -141,9 +144,18 @@ const OrdersTable = () => {
 
       // Sort orders based on current sort preference
       let sortedOrders;
-      if (sortOrder === "timestamp") {
+      if (sortConfig.type === "timestamp") {
         // Sort by timestamp (newest first)
         sortedOrders = ordersList.sort((a, b) => b.timestamp - a.timestamp);
+      } else if (sortConfig.type === "timestamp_asc") {
+        // Sort by timestamp (oldest first)
+        sortedOrders = ordersList.sort((a, b) => a.timestamp - b.timestamp);
+      } else if (sortConfig.type === "amount_desc") {
+        // Sort by amount (highest first)
+        sortedOrders = ordersList.sort((a, b) => b.order_total - a.order_total);
+      } else if (sortConfig.type === "amount_asc") {
+        // Sort by amount (lowest first)
+        sortedOrders = ordersList.sort((a, b) => a.order_total - b.order_total);
       } else {
         // Sort by order_id (lowest to highest)
         sortedOrders = ordersList.sort((a, b) => a.order_id_num - b.order_id_num);
@@ -158,19 +170,39 @@ const OrdersTable = () => {
     }
   };
 
-  // Toggle between sorting by timestamp and order ID
-  const toggleSortOrder = () => {
-    const newSortOrder = sortOrder === "timestamp" ? "order_id" : "timestamp";
-    setSortOrder(newSortOrder);
+  // Add sort options and handler
+  const sortOptions = [
+    { value: "timestamp", label: "Newest First" },
+    { value: "timestamp_asc", label: "Oldest First" },
+    { value: "amount_desc", label: "Highest Amount" },
+    { value: "amount_asc", label: "Lowest Amount" },
+    { value: "order_id", label: "Order ID" },
+  ];
+
+  const handleSort = (sortType) => {
+    let sortedOrders = [...orders];
     
-    // Re-sort the current orders
-    let sortedOrders;
-    if (newSortOrder === "timestamp") {
-      sortedOrders = [...orders].sort((a, b) => b.timestamp - a.timestamp);
-    } else {
-      sortedOrders = [...orders].sort((a, b) => a.order_id_num - b.order_id_num);
+    switch (sortType) {
+      case "timestamp":
+        sortedOrders.sort((a, b) => b.timestamp - a.timestamp);
+        break;
+      case "timestamp_asc":
+        sortedOrders.sort((a, b) => a.timestamp - b.timestamp);
+        break;
+      case "amount_desc":
+        sortedOrders.sort((a, b) => b.order_total - a.order_total);
+        break;
+      case "amount_asc":
+        sortedOrders.sort((a, b) => a.order_total - b.order_total);
+        break;
+      case "order_id":
+        sortedOrders.sort((a, b) => a.order_id_num - b.order_id_num);
+        break;
+      default:
+        break;
     }
     
+    setSortConfig({ type: sortType });
     setOrders(sortedOrders);
   };
 
@@ -297,147 +329,268 @@ const OrdersTable = () => {
     </tbody>
   );
 
+  // Update the main section and table styling
   return (
-    <section className="bg-white rounded-2xl shadow-feat w-full mx-auto">
+    <section className="bg-white rounded-2xl shadow-lg w-full mx-auto p-6">
       {error && (
-        <div className="p-4 text-red-500 bg-red-50 m-4 rounded-lg">
+        <div className="p-4 mb-6 text-red-500 bg-red-50 rounded-xl border border-red-100 flex items-center">
+          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" />
+          </svg>
           {error}
         </div>
       )}
-      <div className="flex justify-between items-center p-4">
-        <h2 className="text-lg font-bold">Orders</h2>
-        <button 
-          onClick={toggleSortOrder} 
-          className="text-sm px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-        >
-          Sort by: {sortOrder === "timestamp" ? "Newest First" : "Order ID"}
-        </button>
+
+      {/* Modern Header */}
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold bg-gradient-to-r from-amber-600 to-amber-500 bg-clip-text text-transparent">
+          Today's Orders
+        </h2>
+        {/* Modern Sort Dropdown */}
+        <div className="relative inline-block">
+          <select 
+            onChange={(e) => handleSort(e.target.value)} 
+            className="appearance-none bg-white border border-amber-200 text-amber-700 px-4 py-2.5 pr-10 rounded-xl
+                      hover:bg-amber-50 transition-all cursor-pointer font-medium shadow-sm
+                      focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+          >
+            {sortOptions.map((option) => (
+              <option 
+                key={option.value} 
+                value={option.value}
+                className="text-gray-700 bg-white hover:bg-amber-50"
+              >
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+            <svg 
+              className="w-5 h-5 text-amber-500" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M8 9l4 4 4-4"
+              />
+            </svg>
+          </div>
+        </div>
       </div>
+
       {loading ? (
-        <div className="p-8 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto"></div>
+        <div className="p-12 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-amber-200 border-t-amber-500 mx-auto"></div>
+          <p className="mt-4 text-amber-600 font-medium">Loading orders...</p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <TableHead />
+        <div className="overflow-hidden rounded-xl border border-amber-100">
+          {/* Fixed header */}
+          <div className="bg-gradient-to-r from-amber-50 to-amber-100/50 sticky top-0 z-10">
+            <div className="grid grid-cols-6 text-amber-800">
+              <div className="px-6 py-4 font-semibold text-left">Order</div>
+              <div className="px-6 py-4 font-semibold text-left">Recipient</div>
+              <div className="px-6 py-4 font-semibold text-center">Amount</div>
+              <div className="px-6 py-4 font-semibold text-center">Time</div>
+              <div className="px-6 py-4 font-semibold text-center">MOP</div>
+              <div className="px-6 py-4 font-semibold text-center">Status</div>
+            </div>
+          </div>
+
+          {/* Scrollable content */}
+          <div className="max-h-[calc(100vh-280px)] overflow-y-auto">
             {filterOrdersBySearch(filterOrders(orders)).length > 0 ? (
-              <TableRow />
+              <div className="divide-y divide-amber-100">
+                {filterOrdersBySearch(filterOrders(orders)).map((order) => (
+                  <div
+                    key={order.id}
+                    onClick={() => handleRowClick(order)}
+                    className="grid grid-cols-6 hover:bg-amber-50/50 transition-colors cursor-pointer group"
+                  >
+                    <div className="px-6 py-4">
+                      <div className="font-medium text-gray-900">{order.order_name}</div>
+                    </div>
+                    <div className="px-6 py-4">
+                      <div className="font-medium text-gray-900">{order.recipient}</div>
+                    </div>
+                    <div className="px-6 py-4 text-center">
+                      <div className="font-semibold text-amber-700">₱{order.order_total}</div>
+                    </div>
+                    <div className="px-6 py-4 text-center text-gray-600">{order.time}</div>
+                    <div className="px-6 py-4">
+                      <div className="flex justify-center">
+                        <span className="px-3 py-1 rounded-full text-sm font-medium bg-amber-50 text-amber-700">
+                          {order.mop}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex justify-center">
+                        <div className={`
+                          flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium
+                          ${order.order_status === 'Delivered' 
+                            ? 'bg-emerald-100 text-emerald-700' 
+                            : order.order_status === 'Preparing'
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'bg-red-100 text-red-700'}
+                        `}>
+                          <span className="h-2 w-2 rounded-full bg-current"></span>
+                          {order.order_status}
+                          <OrderStatusDropdown
+                            currentStatus={order.order_status}
+                            onStatusChange={(newStatus) => handleStatusChange(order.id, newStatus)}
+                            isOpen={activeDropdown === order.id}
+                            onToggle={(isOpen) => setActiveDropdown(isOpen ? order.id : null)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
-              <tbody>
-                <tr>
-                  <td colSpan="6" className="text-center py-8 text-gray-500">
-                    {searchQuery
-                      ? `No results found for "${searchQuery}"`
-                      : `No ${
-                          location.pathname.includes("completed")
-                            ? "completed"
-                            : location.pathname.includes("pending")
-                            ? "pending"
-                            : location.pathname.includes("cancelled")
-                            ? "cancelled"
-                            : ""
-                        } orders found`}
-                  </td>
-                </tr>
-              </tbody>
+              <div className="text-center py-12">
+                <div className="text-gray-500 flex flex-col items-center">
+                  <svg className="w-12 h-12 mb-4 text-amber-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 012-2h2a2 2 012 2" />
+                  </svg>
+                  {searchQuery ? (
+                    <p>No results found for "{searchQuery}"</p>
+                  ) : (
+                    <p>No {location.pathname.includes("completed") ? "completed" : 
+                        location.pathname.includes("pending") ? "pending" : 
+                        location.pathname.includes("cancelled") ? "cancelled" : ""} orders found</p>
+                  )}
+                </div>
+              </div>
             )}
-          </table>
+          </div>
         </div>
       )}
 
+      {/* Rest of your modal code remains the same */}
       {modal && selectedOrder && (
         <AnimatePresence>
           <motion.div
-            className="fixed inset-0 bg-black/25 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.3 }}
           >
             <motion.div
-              className="bg-white w-[28rem] rounded-2xl font-latrue overflow-hidden"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.2 }}
+              className="bg-white w-[36rem] rounded-2xl overflow-hidden shadow-2xl border border-gray-100"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ duration: 0.3 }}
             >
-              {/* Header */}
-              <div className="w-full flex items-center justify-between px-4 py-2 bg-[#0CD742] text-white">
-                <div className="flex items-center gap-2">
-                  <IoMdInformationCircle className="text-2xl" />
-                    <span className="font-medium text-lg">Order Info</span>
+              {/* Modern Glass Header */}
+              <div className="w-full flex items-center justify-between px-8 py-6 bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-300 text-white relative overflow-hidden">
+                <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
+                <div className="flex items-center gap-4 relative z-10">
+                  <IoMdInformationCircle className="text-3xl" />
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-xl">Order Details</span>
+                    <span className="text-sm text-emerald-50">#{selectedOrder.order_id}</span>
                   </div>
+                </div>
                 <button
                   onClick={toggleModal}
-                  className="hover:opacity-70 text-lg font-bold cursor-pointer"
+                  className="relative z-10 hover:bg-white/20 p-2 rounded-lg transition-all duration-200 hover:rotate-90"
                 >
-                  ✕
+                  <span className="text-2xl">✕</span>
                 </button>
               </div>
 
-              {/* Content */}
-              <div className="p-3">
-                {/* Order Header */}
-                <div className="mb-4 space-y-0.5">
-                  <div className="flex justify-between text-sm">
-                    <div>
-                      <div className="font-bold font-lato text-xl -mb-2">Order ID: {selectedOrder.order_id}</div>
-                      <div className="-mb-1 font-semibold">Status: {selectedOrder.order_status}</div>
-                      <div className="font-semibold">Recipient Name: {selectedOrder.recipient}</div>
+              {/* Scrollable Content with Modern Cards */}
+              <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
+                <div className="p-8 space-y-6 bg-gradient-to-b from-emerald-50/50">
+                  {/* Order Status & Time */}
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-2">
+                      <span className={`
+                        inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium
+                        ${selectedOrder.order_status === 'Delivered' 
+                          ? 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-700/20' 
+                          : selectedOrder.order_status === 'Preparing'
+                          ? 'bg-amber-100 text-amber-700 ring-1 ring-amber-700/20'
+                          : 'bg-red-100 text-red-700 ring-1 ring-red-700/20'}
+                      `}>
+                        <span className="mr-1.5 h-2 w-2 rounded-full bg-current"></span>
+                        {selectedOrder.order_status}
+                      </span>
                     </div>
-                    <div className="text-right font-semibold text-sm">
-                      <div className="-mb-1">Date: {new Date(selectedOrder.order_date.seconds * 1000).toLocaleDateString('en-US', {
-                        month: 'long',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}</div>
-                      <div>Time: {selectedOrder.time}</div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-900">{selectedOrder.date}</p>
+                      <p className="text-sm text-gray-500">{selectedOrder.time}</p>
                     </div>
                   </div>
-                </div>
 
-                {/* Order Details Grid */}
-                <div className="grid grid-cols-2 gap-3">
-                  {/* Orders Column with Individual Quantities */}
-                  <div className="bg-[#FFF8E6] rounded-lg p-2 shadow-sm col-span-2">
-                    <h4 className="text-sm font-bold mb-2">Order Details</h4>
-                    <div className="space-y-1">
+                  {/* Modern Customer Info Card */}
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <h3 className="font-medium text-gray-900 mb-3 flex items-center">
+                      <span className="bg-emerald-100 p-2 rounded-lg mr-3">
+                        <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </span>
+                      Customer Information
+                    </h3>
+                    <p className="text-gray-700 font-medium">{selectedOrder.recipient}</p>
+                  </div>
+
+                  {/* Modern Order Items Card */}
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <h3 className="font-medium text-gray-900 mb-4 flex items-center">
+                      <span className="bg-emerald-100 p-2 rounded-lg mr-3">
+                        <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 012-2h2a2 2 012 2" />
+                        </svg>
+                      </span>
+                      Order Items
+                    </h3>
+                    <div className="space-y-3">
                       {selectedOrder.items && selectedOrder.items.length > 0 ? (
-                        // Display individual items if available
                         selectedOrder.items.map((item, index) => (
-                          <div key={index} className="text-sm flex justify-between">
-                            <span>{item.title === "Meal" ? "Katsu" : item.title}:</span>
-                            <span>x{item.quantity}</span>
+                          <div key={index} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0">
+                            <span className="text-gray-800 font-medium">{item.title === "Meal" ? "Katsu" : item.title}</span>
+                            <span className="bg-emerald-50 text-emerald-700 font-medium px-3 py-1 rounded-full">×{item.quantity}</span>
                           </div>
                         ))
                       ) : (
-                        // Fallback to legacy format
-                        <div className="text-sm flex justify-between">
-                          <span>{selectedOrder.order_name}:</span>
-                          <span>x{selectedOrder.no_order || 1}</span>
+                        <div className="flex justify-between items-center py-3">
+                          <span className="text-gray-800 font-medium">{selectedOrder.order_name}</span>
+                          <span className="bg-emerald-50 text-emerald-700 font-medium px-3 py-1 rounded-full">×{selectedOrder.no_order || 1}</span>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Amount Column */}
-                  <div className="bg-[#FFF8E6] rounded-lg p-2 shadow-sm">
-                    <h4 className="text-sm font-bold mb-1">Amount</h4>
-                    <div className="text-sm">
-                      <div className="flex justify-between">
-                        <span>Total:</span>
-                        <span>₱{selectedOrder.order_total}</span>
+                  {/* Modern Payment Details Card */}
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <h3 className="font-medium text-gray-900 mb-4 flex items-center">
+                      <span className="bg-emerald-100 p-2 rounded-lg mr-3">
+                        <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 002 2" />
+                        </svg>
+                      </span>
+                      Payment Details
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center px-4 py-3 bg-gray-50 rounded-xl">
+                        <span className="text-gray-600">Payment Method</span>
+                        <span className="font-medium text-gray-900">{selectedOrder.mop}</span>
+                      </div>
+                      <div className="flex justify-between items-center px-4 py-3 bg-emerald-50 rounded-xl">
+                        <span className="font-medium text-emerald-800">Total Amount</span>
+                        <span className="font-bold text-emerald-700 text-lg">₱{selectedOrder.order_total}</span>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Payment Column */}
-                  <div className="bg-[#FFF8E6] rounded-lg p-2 shadow-sm">
-                    <h4 className="text-sm font-bold mb-1">
-                      Mode of Payment
-                    </h4>
-                    <div className="text-sm">{selectedOrder.mop}</div>
                   </div>
                 </div>
               </div>
