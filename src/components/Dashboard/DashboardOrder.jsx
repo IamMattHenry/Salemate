@@ -379,18 +379,21 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
       isValid = false;
     }
 
-    // Validate student ID
+    // Validate customer ID
     if (!studentId.trim()) {
-      setIdError("Student ID is required");
+      setIdError("Customer ID is required");
       isValid = false;
-    } else if (studentId.length < 6) {
-      setIdError("Student ID must be at least 6 digits long");
+    } else if (studentId.length !== 6) {
+      setIdError("Customer ID must be exactly 6 digits");
+      isValid = false;
+    } else if (!/^\d+$/.test(studentId)) {
+      setIdError("Customer ID must contain only numbers");
       isValid = false;
     } else {
       // Check for duplicate ID with different name
       const isDuplicate = await checkDuplicateId(studentId, customerName);
       if (isDuplicate) {
-        setIdError("This Student ID already exists with a different name. Please use a different ID.");
+        setIdError("This Customer ID is already in use with a different name");
         isValid = false;
       }
     }
@@ -670,11 +673,11 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
         </div>
       </div>
 
-      {/* Enter Name Modal */}
+      {/* Customer Details Modal */}
       {inputNameModal && (
         <AnimatePresence>
           <motion.div
-            className="h-screen w-screen bg-black/25 flex justify-center items-center fixed top-0 left-0 bottom-0 right-0 z-50"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -682,80 +685,122 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
             onClick={handleModalClose}
           >
             <motion.div
-              className="bg-white w-[18rem] min-h-[20rem] pb-3 rounded-xl font-lato"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
+              className="bg-white w-[440px] rounded-2xl shadow-2xl"
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="w-full rounded-t-xl flex items-center justify-between bg-[#0cd742] text-white py-2 px-3">
-                <div className="flex items-center text-center justify-center space-x-1.5">
-                  <span className="font-semibold text-sm pt-1">Confirm Order</span>
-                </div>
-                <div>
-                  <MdCancel className="cursor-pointer" onClick={handleModalClose} />
+              {/* Header */}
+              <div className="px-8 py-6">
+                <div className="flex items-center gap-5">
+                  <div className="p-3.5 bg-emerald-100 rounded-xl">
+                    <svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Complete Order</h3>
+                    <p className="text-sm text-gray-500 mt-0.5">Enter customer details to proceed</p>
+                  </div>
                 </div>
               </div>
-              <div className="w-auto h-auto justify-center flex flex-col items-center pt-5">
-                <div className="space-y-3 px-4">
-                  {/* Customer Name Field */}
-                  <span className="text-sm">Please enter the customer's name:</span>
-                  <div>
-                    <div className="relative w-full">
-                      <input
-                        type="text"
-                        placeholder="e.g. Juan Dela Cruz"
-                        className={`font-lato border-[1px] ${nameError ? 'border-red-500' : 'border-gray-500'} pl-4 pr-8 pt-2 pb-2 rounded-2xl text-base placeholder:text-base w-full bg-gray-300 shadow`}
-                        value={customerName}
-                        onChange={handleCustomerNameChange}
-                      />
-                      <div className="h-5 mt-1">
-                        {nameError && (
-                          <div className="text-red-500 text-xs flex items-center">
-                            <FiAlertCircle className="mr-1" />
-                            {nameError}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Student ID Field */}
-                  <span className="text-sm">Please enter the student's ID:</span>
-                  <div>
-                    <div className="relative w-full">
-                      <input
-                        type="text"
-                        placeholder="e.g., 232xxx"
-                        className={`font-lato border-[1px] ${idError ? 'border-red-500' : 'border-gray-500'} pl-4 pr-8 pt-2 pb-2 rounded-2xl text-base placeholder:text-base w-full bg-gray-300 shadow`}
-                        value={studentId}
-                        onChange={(e) => {
-                          setStudentId(e.target.value);
-                          if (idError) setIdError("");
-                        }}
-                      />
-                      <div className="h-5 mt-1">
-                        {idError && (
-                          <div className="text-red-500 text-xs flex items-center">
-                            <FiAlertCircle className="mr-1" />
-                            {idError}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+              {/* Form Fields */}
+              <div className="px-8 py-6 space-y-5">
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                    Customer Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Juan Dela Cruz"
+                    className={`w-full px-4 py-2.5 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2 
+                    ${nameError ? 'focus:ring-red-500/20 bg-red-50' : 'focus:ring-emerald-500/20'} 
+                    transition-all text-sm`}
+                    value={customerName}
+                    onChange={handleCustomerNameChange}
+                  />
+                  {nameError && (
+                    <p className="mt-2 text-sm text-red-500 flex items-center gap-1.5">
+                      <FiAlertCircle size={14} />
+                      <span>{nameError}</span>
+                    </p>
+                  )}
+                </div>
 
-                  {/* Next Button */}
-                  <div className="w-full flex items-center justify-center mx-a mt-2">
-                    <button
-                      className={`${isValidating ? 'bg-gray-400' : 'bg-[#0cd742]'} text-white text-center py-1.5 px-8.5 rounded-2xl text-[0.77rem] cursor-pointer hover:bg-black/70`}
-                      onClick={handleNameSubmit}
-                      disabled={isValidating}
-                    >
-                      {isValidating ? 'Validating...' : 'Next'}
-                    </button>
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                    Customer ID
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter 6-digit ID"
+                    maxLength={6}
+                    className={`w-full px-4 py-2.5 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2 
+                    ${idError ? 'focus:ring-red-500/20 bg-red-50' : 'focus:ring-emerald-500/20'} 
+                    transition-all text-sm`}
+                    value={studentId}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '');
+                      if (value.length <= 6) {
+                        setStudentId(value);
+                        if (idError) setIdError("");
+                      }
+                    }}
+                    onKeyPress={(e) => {
+                      if (!/[0-9]/.test(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                  />
+                  {idError && (
+                    <p className="mt-2 text-sm text-red-500 flex items-center gap-1.5">
+                      <FiAlertCircle size={14} />
+                      <span>{idError}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="px-8 py-5 bg-gray-50 rounded-b-2xl border-t border-gray-100">
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={handleModalClose}
+                    className="px-4 py-2 text-gray-700 bg-white rounded-xl border border-gray-200 
+                             hover:bg-gray-50 transition-colors text-sm font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleNameSubmit}
+                    disabled={isValidating}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2
+                      ${isValidating
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-500/30'
+                      }
+                    `}
+                  >
+                    {isValidating ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Continue</span>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             </motion.div>
@@ -767,90 +812,98 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
       {confirmOrderModal && (
         <AnimatePresence>
           <motion.div
-            className="h-screen w-screen bg-black/25 flex justify-center items-center fixed top-0 left-0 bottom-0 right-0 z-50"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className="bg-white w-[25rem] h-auto pb-5 rounded-3xl font-lato"
-              initial={{ opacity: 0, scale: 0.8 }}
+              className="bg-white w-[400px] rounded-2xl shadow-2xl overflow-hidden"
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
+              exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="w-full rounded-t-3xl flex items-center justify-between bg-[#0cd742] text-white py-2 px-3">
-                <div className="flex items-center text-center justify-center space-x-1.5">
-                  <span className="font-semibold text-sm pt-1">CONFIRM ORDER</span>
-                </div>
-                <div>
-                  <MdCancel className="cursor-pointer" onClick={toggleConfirmOrderModal} />
-                </div>
-              </div>
-              <div className="p-4">
-                <div className="mb-2">
-                  <div className="flex justify-between">
-                    <span className="font-bold text-sm">Order ID:</span>
-                    <span className="text-sm font-medium">{orderNumber}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium text-sm">Payment Method:</span>
-                    <span className="text-sm">{paymentMode}</span>
-                  </div>
-                </div>
-
-                {/* Order Items List */}
-                <div className="max-h-40 overflow-y-auto mb-4">
-                  {displayItems.map((item, index) => (
-                    <div key={index} className="flex justify-between items-center mb-2 text-sm">
-                      <div>
-                        <div className="font-medium">{item.title}</div>
-                        <div className="text-xs text-gray-500">
-                          Quantity: {quantities[index] || 1}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div>₱{parseFloat(item.price).toFixed(2)}</div>
-                        <div className="text-xs">
-                          x{quantities[index] || 1}
-                        </div>
-                      </div>
+              {/* Header */}
+              <div className="px-6 py-5 bg-emerald-500 text-white">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-emerald-400/30 rounded-lg">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
                     </div>
-                  ))}
-                </div>
-
-                {/* Order Total */}
-                <div className="border-t pt-2 mb-4">
-                  <div className="flex justify-between font-medium">
-                    <span>Total:</span>
-                    <span>
-                      ₱{subtotal.toFixed(2)}
-                    </span>
+                    <h3 className="font-semibold">Confirm Order</h3>
                   </div>
-                </div>
-
-                {/* Date and Time */}
-                <div className="border-t pt-2 mb-4 text-sm">
-                  <div className="flex justify-between">
-                    <span>Date:</span>
-                    <span>{formattedDate}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Time:</span>
-                    <span>{timeToday}</span>
-                  </div>
-                </div>
-
-                {/* Submit Button */}
-                <div className="flex justify-center">
-                  <button
-                    className="bg-[#0cd742] text-white text-center py-1 px-8 rounded-2xl text-sm cursor-pointer hover:bg-black/70"
-                    onClick={handleConfirmOrder}
-                  >
-                    Submit
+                  <button onClick={toggleConfirmOrderModal} className="p-1 hover:bg-emerald-400/30 rounded-lg transition-colors">
+                    <MdCancel size={20} />
                   </button>
                 </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 space-y-6">
+                {/* Order Details */}
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center py-3 px-4 bg-emerald-50 rounded-xl">
+                    <span className="text-sm font-medium text-emerald-900">Order #{orderNumber}</span>
+                    <span className="text-sm text-emerald-700">{paymentMode}</span>
+                  </div>
+
+                  {/* Items List */}
+                  <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+                    {displayItems.map((item, index) => (
+                      <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                        <img 
+                          src={item.url} 
+                          alt={item.title} 
+                          className="w-12 h-12 rounded-lg object-cover" 
+                        />
+                        <div className="flex-1">
+                          <h4 className="text-sm font-medium text-gray-900">{item.title}</h4>
+                          <div className="flex items-center justify-between mt-1">
+                            <span className="text-xs text-gray-500">
+                              Qty: {quantities[index] || 1}
+                            </span>
+                            <span className="text-sm font-medium text-emerald-600">
+                              ₱{parseFloat(item.price * (quantities[index] || 1)).toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Total */}
+                  <div className="flex justify-between items-center py-3 px-4 bg-emerald-50 rounded-xl">
+                    <span className="font-medium text-emerald-900">Total Amount</span>
+                    <span className="text-lg font-bold text-emerald-700">₱{subtotal.toFixed(2)}</span>
+                  </div>
+
+                  {/* Date & Time */}
+                  <div className="flex gap-3 text-sm">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg flex-1">
+                      <Calendar size={14} className="text-gray-400" />
+                      <span className="text-gray-600">{formattedDate}</span>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg flex-1">
+                      <Clock size={14} className="text-gray-400" />
+                      <span className="text-gray-600">{timeToday}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
+                <button
+                  onClick={handleConfirmOrder}
+                  className="w-full py-2.5 bg-emerald-500 text-white rounded-xl font-medium
+                           hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/30"
+                >
+                  Confirm Order
+                </button>
               </div>
             </motion.div>
           </motion.div>
@@ -861,45 +914,45 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
       {okayModal && (
         <AnimatePresence>
           <motion.div
-            className="h-screen w-screen bg-black/25 flex justify-center items-center fixed top-0 left-0 bottom-0 right-0 z-50"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className="bg-white w-[17rem] h-auto pb-5 rounded-4xl font-lato"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
+              className="bg-white w-[360px] rounded-2xl shadow-2xl overflow-hidden text-center p-6"
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="w-full rounded-t-4xl flex items-center flex-col text-black pt-4 px-3">
-                <div className="flex items-center flex-col text-center space-x-1.5">
-                  <FaCheckCircle className="size-12 text-[#0cd742]" />
-                  <span className="font-bold text-2xl pt-1 mt-1">
-                    Order Completed
-                  </span>
-                  <div>
-                    <div className="w-auto h-auto justify-center flex flex-col items-center mt-2">
-                      <div className="space-y-2 w-[80%]">
-                        <span className="text-[.9rem]">
-                          Congrats! You have ordered successfully
-                        </span>
-                        <div className="text-[.9rem] font-semibold mt-2">
-                          Order ID: {orderNumber - 1}
-                        </div>
-                      </div>
-                      <button
-                        className="bg-[#0cd742] text-white text-center py-1 mt-3 px-8.5 rounded-2xl text-[0.77rem] cursor-pointer hover:bg-black/70"
-                        type="submit"
-                        onClick={handleOrderComplete}
-                      >
-                        Done
-                      </button>
-                    </div>
-                  </div>
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
+                  <FaCheckCircle className="w-8 h-8 text-emerald-500" />
                 </div>
+                
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Order Completed
+                </h3>
+                
+                <p className="text-gray-500 mb-4">
+                  Your order has been successfully placed
+                </p>
+                
+                <div className="bg-emerald-50 px-4 py-2 rounded-lg mb-6">
+                  <span className="text-sm font-medium text-emerald-800">
+                    Order #{orderNumber - 1}
+                  </span>
+                </div>
+
+                <button
+                  onClick={handleOrderComplete}
+                  className="w-full py-2.5 bg-emerald-500 text-white rounded-xl font-medium
+                           hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/30"
+                >
+                  Done
+                </button>
               </div>
             </motion.div>
           </motion.div>
