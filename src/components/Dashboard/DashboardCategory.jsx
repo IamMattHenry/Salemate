@@ -7,44 +7,32 @@ import {
   GiForkKnifeSpoon,
 } from "react-icons/gi";
 
-const DashboardCategory = ({ setSelectedCategory }) => {
+const categories = [
+  { id: 'all', name: 'All', icon: GiForkKnifeSpoon },
+  { id: 'drinks', name: 'Drinks', icon: GiCoffeeMug },
+  { id: 'dessert', name: 'Dessert', icon: GiCakeSlice },
+  { id: 'meal', name: 'Meal', icon: GiBowlOfRice },
+  { id: 'snacks', name: 'Snacks', icon: GiFrenchFries },
+];
+
+const DashboardCategory = ({ setSelectedCategory, activeCategory = "All" }) => {
   return (
-    <div className="grid md:grid-cols-[15%_15%_15%_15%_15%] gap-8 place-content-center mt-4">
-      <div
-        className="flex flex-col items-center bg-white rounded-2xl shadow-feat pt-4 pb-2 w-auto hover:bg-yellowsm/20 transition cursor-pointer"
-        onClick={() => setSelectedCategory("All")}
-      >
-        <GiForkKnifeSpoon className="text-3xl" />
-        <span className="font-lato font-semibold text-md mt-2 pt-2 ">All</span>
-      </div>
-      <div
-        className="flex flex-col items-center bg-white rounded-2xl shadow-feat pt-4 pb-2 px-4 w-auto hover:bg-yellowsm/20 transition cursor-pointer"
-        onClick={() => setSelectedCategory("Drinks")}
-      > 
-        <GiCoffeeMug className="text-3xl" />
-        <span className="font-lato font-semibold text-md mt-2 pt-2">Drinks</span>
-      </div>
-      <div
-        className="flex flex-col items-center bg-white rounded-2xl shadow-feat pt-4 pb-2 px-4 w-auto hover:bg-yellowsm/20 transition cursor-pointer"
-        onClick={() => setSelectedCategory("Dessert")}
-      >
-        <GiCakeSlice className="text-3xl" />
-        <span className="font-lato font-semibold text-md mt-2 pt-2 ">Dessert</span>
-      </div>
-      <div
-        className="flex flex-col items-center bg-white rounded-2xl shadow-feat pt-4 pb-2 px-4 w-auto hover:bg-yellowsm/20 transition cursor-pointer"
-        onClick={() => setSelectedCategory("Meal")}
-      >
-        <GiBowlOfRice className="text-3xl" />
-        <span className="font-lato font-semibold text-md mt-2 pt-2 ">Meal</span>
-      </div>
-      <div
-        className="flex flex-col items-center bg-white rounded-2xl shadow-feat pt-4 pb-2 px-4 w-auto hover:bg-yellowsm/20 transition cursor-pointer"
-        onClick={() => setSelectedCategory("Snacks")}
-      >
-        <GiFrenchFries className="text-3xl" />
-        <span className="font-lato font-semibold text-md mt-2 pt-2 ">Snacks</span>
-      </div>
+    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+      {categories.map(({ id, name, icon: Icon }) => (
+        <button
+          key={id}
+          onClick={() => setSelectedCategory(name)}
+          className={`
+            flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all
+            ${activeCategory === name 
+              ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30 scale-105' 
+              : 'bg-white text-gray-700 hover:bg-amber-50 hover:text-amber-600 border border-gray-100'}
+          `}
+        >
+          <Icon className={`text-xl ${activeCategory === name ? 'text-white' : 'text-amber-500'}`} />
+          <span className="whitespace-nowrap">{name}</span>
+        </button>
+      ))}
     </div>
   );
 };

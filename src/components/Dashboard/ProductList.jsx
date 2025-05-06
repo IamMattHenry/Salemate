@@ -186,389 +186,272 @@ const ProductList = ({ products, addToOrderList, updateProducts }) => {
   }) : [];
 
   return (
-    <>
-      {/* Success Modal */}
+    <div className="p-6 space-y-6">
+      {/* Header Section */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-amber-500 bg-clip-text text-transparent">
+          Menu Items
+        </h2>
+        <div className="flex items-center gap-4">
+          {/* Search Bar */}
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search items..."
+              className="w-64 px-4 py-2 pl-10 bg-white border border-gray-200 rounded-xl
+                       focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500
+                       transition-all"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <IoIosSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
+          </div>
+          {/* Add Item Button */}
+          <button
+            onClick={toggleModal}
+            className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-xl
+                     hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/30"
+          >
+            <IoIosAdd className="text-xl" />
+            <span>Add Item</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Products Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredProducts.map((product) => (
+          <div
+            key={product.id}
+            onClick={() => handleAddToOrder(product)}
+            className="group bg-white rounded-2xl border border-gray-100 overflow-hidden
+                     hover:shadow-lg transition-all duration-300 relative"
+          >
+            {/* Product Image */}
+            <div className="aspect-w-16 aspect-h-9 overflow-hidden">
+              <img
+                src={product.url}
+                alt={product.title}
+                className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
+              />
+            </div>
+            
+            {/* Product Info */}
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="font-bold text-gray-900 text-lg mb-1">{product.title}</h3>
+                  <p className="text-gray-500 text-sm line-clamp-2">{product.description}</p>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditProduct(product);
+                  }}
+                  className="p-2 text-gray-400 hover:text-amber-500 rounded-lg
+                           opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <FaEdit className="text-lg" />
+                </button>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-lg font-bold text-amber-600">₱{product.price}</span>
+                <span className="px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-sm font-medium">
+                  {product.category}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Add Product Modal */}
       <AnimatePresence>
-        {okayModal && (
+        {modal && (
           <motion.div
-            className="h-screen w-screen bg-black/25 flex justify-center items-center fixed top-0 left-0 bottom-0 right-0 z-50"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
           >
             <motion.div
-              className="bg-white size-[17rem] rounded-4xl font-lato"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.2 }}
+              className="bg-white w-[32rem] rounded-2xl shadow-xl"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
             >
-              <div className="w-full rounded-t-4xl flex items-center flex-col text-black pt-4 px-3">
-                <div className="flex items-center flex-col text-center space-x-1.5">
-                  <FaCheckCircle className="size-19 text-[#0cd742]" />
-                  <span className="font-bold text-2xl pt-1 mt-2">
-                    Item Successfully Added
-                  </span>
+              {/* Modal Header */}
+              <div className="px-6 py-4 border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Add New Item</h3>
+                  <button
+                    onClick={toggleModal}
+                    className="p-2 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
+                  >
+                    <MdCancel className="text-xl" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 space-y-4">
+                {/* Form Fields */}
+                <div className="space-y-4">
+                  {/* Name Input */}
                   <div>
-                    <div className="w-auto h-auto justify-center flex flex-col items-center mt-2">
-                      <div className="space-y-2 w-[80%]">
-                        <span className="text-[.9rem]">
-                          Congrats! You have successfully added an item
-                        </span>
-                      </div>
-                      <button
-                        className="bg-[#0cd742] text-white text-center py-1 mt-1 px-7 rounded-2xl border-[0.5px] border-black text-[0.875rem] cursor-pointer hover:bg-black/70"
-                        type="submit"
-                        onClick={() => {
-                          showSuccessModal(); // Close the success modal
-                        }}
-                      >
-                        Done
-                      </button>
-                    </div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                    <input
+                      type="text"
+                      placeholder="Enter item name"
+                      value={name}
+                      onChange={(e) => {
+                        setName(e.target.value);
+                        if (validationErrors.name) {
+                          setValidationErrors({...validationErrors, name: ""});
+                        }
+                      }}
+                      className={`w-full px-4 py-2.5 rounded-xl border ${
+                        validationErrors.name ? 'border-red-300' : 'border-gray-300'
+                      } focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500`}
+                    />
+                    {validationErrors.name && (
+                      <p className="mt-1 text-sm text-red-500">{validationErrors.name}</p>
+                    )}
                   </div>
+
+                  {/* Description Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea
+                      placeholder="Enter item description"
+                      value={description}
+                      onChange={(e) => {
+                        setDescription(e.target.value);
+                        if (validationErrors.description) {
+                          setValidationErrors({...validationErrors, description: ""});
+                        }
+                      }}
+                      className={`w-full px-4 py-2.5 rounded-xl border ${
+                        validationErrors.description ? 'border-red-300' : 'border-gray-300'
+                      } focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500`}
+                      rows="3"
+                    />
+                    {validationErrors.description && (
+                      <p className="mt-1 text-sm text-red-500">{validationErrors.description}</p>
+                    )}
+                  </div>
+
+                  {/* Price Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                    <input
+                      type="text"
+                      placeholder="Enter price"
+                      value={price}
+                      onChange={(e) => {
+                        setPrice(e.target.value);
+                        if (validationErrors.price) {
+                          setValidationErrors({...validationErrors, price: ""});
+                        }
+                      }}
+                      className={`w-full px-4 py-2.5 rounded-xl border ${
+                        validationErrors.price ? 'border-red-300' : 'border-gray-300'
+                      } focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500`}
+                    />
+                    {validationErrors.price && (
+                      <p className="mt-1 text-sm text-red-500">{validationErrors.price}</p>
+                    )}
+                  </div>
+
+                  {/* Category Select */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <select
+                      value={category}
+                      onChange={(e) => {
+                        setCategory(e.target.value);
+                        if (validationErrors.category) {
+                          setValidationErrors({...validationErrors, category: ""});
+                        }
+                      }}
+                      className={`w-full px-4 py-2.5 rounded-xl border ${
+                        validationErrors.category ? 'border-red-300' : 'border-gray-300'
+                      } focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500`}
+                    >
+                      <option value="">Select category</option>
+                      <option value="Drinks">Drinks</option>
+                      <option value="Dessert">Dessert</option>
+                      <option value="Meal">Meal</option>
+                      <option value="Snacks">Snacks</option>
+                    </select>
+                    {validationErrors.category && (
+                      <p className="mt-1 text-sm text-red-500">{validationErrors.category}</p>
+                    )}
+                  </div>
+
+                  {/* Image Upload */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
+                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl">
+                      <div className="space-y-1 text-center">
+                        <svg
+                          className="mx-auto h-12 w-12 text-gray-400"
+                          stroke="currentColor"
+                          fill="none"
+                          viewBox="0 0 48 48"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                            strokeWidth={2}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        <div className="flex text-sm text-gray-600">
+                          <label className="relative cursor-pointer bg-white rounded-md font-medium text-amber-600 hover:text-amber-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-amber-500">
+                            <span>Upload a file</span>
+                            <input
+                              type="file"
+                              className="sr-only"
+                              accept="image/*"
+                              onChange={handlePictureUpload}
+                            />
+                          </label>
+                          <p className="pl-1">or drag and drop</p>
+                        </div>
+                        <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                      </div>
+                    </div>
+                    {validationErrors.picture && (
+                      <p className="mt-1 text-sm text-red-500">{validationErrors.picture}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Modal Footer */}
+                <div className="flex justify-end gap-3 mt-6">
+                  <button
+                    onClick={toggleModal}
+                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAddProduct}
+                    className="px-4 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 
+                             transition-colors shadow-lg shadow-amber-500/30"
+                  >
+                    Add Item
+                  </button>
                 </div>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-      {/* Toggle Product Adding Modal */}
-      {modal && (
-        <AnimatePresence>
-          <motion.div
-            className="h-screen w-screen bg-black/25 flex justify-center items-center fixed top-0 left-0 bottom-0 right-0 z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <motion.div
-              className="bg-white h-120 w-112 rounded-xl font-lato"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="w-full rounded-t-xl flex items-center justify-between bg-[#0cd742] text-white py-2 px-3">
-                <div className="flex items-center text-center justify-center space-x-1.5">
-                  <IoMdInformationCircle className="text-[1rem]" />
-                  <span className="font-semibold text-[1rem] pt-1">Add Item</span>
-                </div>
-                <div>
-                  <MdCancel className="cursor-pointer" onClick={toggleModal} />
-                </div>
-              </div>
-              <div className="w-auto h-auto justify-center flex flex-col items-center pt-5">
-                <div className="space-y-2">
-                  {/* Description Field */}
-                  <span className="text-lg">Description:</span>
-                  <div>
-                    <div className="relative w-full">
-                      <input
-                        type="text"
-                        placeholder="Type description"
-                        className={`font-lato border-[1px] ${validationErrors.description ? 'border-red-500' : 'border-gray-500'} pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-[1rem] placeholder:text-gray-500 min-w-[20rem] bg-gray-300 shadow`}
-                        value={description} // Bind to state
-                        onChange={(e) => {
-                          setDescription(e.target.value);
-                          if (validationErrors.description) {
-                            setValidationErrors({...validationErrors, description: ""});
-                          }
-                        }} // Update state on change
-                      />
-                      <FaEdit className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-[1rem]" />
-                    </div>
-                    {validationErrors.description && (
-                      <p className="text-red-500 text-xs mt-1">{validationErrors.description}</p>
-                    )}
-                  </div>
-                  {/* Name Field */}
-                  <span className="text-lg">Name:</span>
-                  <div>
-                    <div className="relative w-full">
-                      <input
-                        type="text"
-                        placeholder="Type any item name"
-                        className={`font-lato border-[1px] ${validationErrors.name ? 'border-red-500' : 'border-gray-500'} pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-[1rem] placeholder:text-gray-500 w-full bg-gray-300 shadow`}
-                        value={name} // Bind to state
-                        onChange={(e) => {
-                          setName(e.target.value);
-                          if (validationErrors.name) {
-                            setValidationErrors({...validationErrors, name: ""});
-                          }
-                        }} // Update state on change
-                      />
-                      <FaEdit className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-[1rem]" />
-                    </div>
-                    {validationErrors.name && (
-                      <p className="text-red-500 text-xs mt-1">{validationErrors.name}</p>
-                    )}
-                  </div>
-                  {/* Price Field */}
-                  <span className="text-lg">Price:</span>
-                  <div>
-                    <div className="relative w-full">
-                      <input
-                        type="text"
-                        placeholder="Type item price"
-                        className={`font-lato border-[1px] ${validationErrors.price ? 'border-red-500' : 'border-gray-500'} pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-[1rem] placeholder:text-gray-500 w-full bg-gray-300 shadow`}
-                        value={price} // Bind to state
-                        onChange={(e) => {
-                          setPrice(e.target.value);
-                          if (validationErrors.price) {
-                            setValidationErrors({...validationErrors, price: ""});
-                          }
-                        }} // Update state on change
-                      />
-                      <FaEdit className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-[1rem]" />
-                    </div>
-                    {validationErrors.price && (
-                      <p className="text-red-500 text-xs mt-1">{validationErrors.price}</p>
-                    )}
-                  </div>
-
-                  {/* Picture Upload Field */}
-                  <span className="text-lg">Picture:</span>
-                  <div>
-                    <div className="relative w-full">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className={`font-lato border-[1px] ${validationErrors.picture ? 'border-red-500' : 'border-gray-500'} pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-[1rem] placeholder:text-gray-500 w-full bg-gray-300 shadow`}
-                        onChange={(e) => handlePictureUpload(e)}
-                      />
-                    </div>
-                    {validationErrors.picture && (
-                      <p className="text-red-500 text-xs mt-1">{validationErrors.picture}</p>
-                    )}
-                  </div>
-
-                  {/* Category Field */}
-                  <span className="text-lg">Category:</span>
-                  <div>
-                    <div className="relative w-full">
-                      <select
-                        className={`font-lato border-[1px] ${validationErrors.category ? 'border-red-500' : 'border-gray-500'} pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-[1rem] w-full bg-gray-300 shadow`}
-                        value={category} // Bind to state
-                        onChange={(e) => {
-                          setCategory(e.target.value);
-                          if (validationErrors.category) {
-                            setValidationErrors({...validationErrors, category: ""});
-                          }
-                        }} // Update state on change
-                      >
-                        <option value="" disabled>Select a category</option>
-                        <option value="Drinks">Drinks</option>
-                        <option value="Dessert">Dessert</option>
-                        <option value="Meal">Meal</option>
-                        <option value="Snacks">Snacks</option>
-                      </select>
-                    </div>
-                    {validationErrors.category && (
-                      <p className="text-red-500 text-xs mt-1">{validationErrors.category}</p>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <button
-                    className="bg-[#0cd742] text-white text-center py-1 mt-3 px-5.5 rounded-3xl text-[0.95rem] cursor-pointer hover:bg-black/70 border-[0.5px] border-black"
-                    type="submit"
-                    onClick={handleAddProduct}
-                  >
-                    Submit
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        </AnimatePresence>
-      )}
-      {/* Edit Product Modal */}
-      {isEditModalOpen && currentProduct && (
-        <motion.div
-          className="h-screen w-screen bg-black/25 flex justify-center items-center fixed top-0 left-0 bottom-0 right-0 z-50"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <motion.div
-            className="bg-white h-auto w-[30rem] rounded-xl font-lato p-5"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.2 }}
-          >
-            <h2 className="text-xl font-bold mb-4">Edit Product</h2>
-            <div className="space-y-4">
-              {/* Name Field */}
-              <div>
-                <label className="block text-sm font-medium">Name:</label>
-                <input
-                  type="text"
-                  className="w-full border border-gray-300 rounded-lg p-2"
-                  value={currentProduct.title}
-                  onChange={(e) =>
-                    setCurrentProduct({ ...currentProduct, title: e.target.value })
-                  }
-                />
-              </div>
-              {/* Description Field */}
-              <div>
-                <label className="block text-sm font-medium">Description:</label>
-                <textarea
-                  className="w-full border border-gray-300 rounded-lg p-2"
-                  value={currentProduct.description}
-                  onChange={(e) =>
-                    setCurrentProduct({
-                      ...currentProduct,
-                      description: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              {/* Price Field */}
-              <div>
-                <label className="block text-sm font-medium">Price:</label>
-                <input
-                  type="number"
-                  className="w-full border border-gray-300 rounded-lg p-2"
-                  value={currentProduct.price}
-                  onChange={(e) =>
-                    setCurrentProduct({ ...currentProduct, price: e.target.value })
-                  }
-                />
-              </div>
-              {/* Picture Field */}
-              <div>
-                <label className="block text-sm font-medium">Picture:</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="w-full border border-gray-300 rounded-lg p-2"
-                  onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onload = () => {
-                        setCurrentProduct({ ...currentProduct, url: reader.result });
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
-                />
-              </div>
-              {/* Category Field */}
-              <div>
-                <label className="block text-sm font-medium">Category:</label>
-                <select
-                  className="w-full border border-gray-300 rounded-lg p-2"
-                  value={currentProduct.category}
-                  onChange={(e) =>
-                    setCurrentProduct({ ...currentProduct, category: e.target.value })
-                  }
-                >
-                  <option value="Drinks">Drinks</option>
-                  <option value="Dessert">Dessert</option>
-                  <option value="Meal">Meal</option>
-                  <option value="Snacks">Snacks</option>
-                </select>
-              </div>
-            </div>
-            <div className="flex justify-end space-x-4 mt-5">
-              {/* Delete Button */}
-              <button
-                className="bg-red-500 text-white px-4 py-2 rounded-lg"
-                onClick={() => handleDeleteProduct(currentProduct.id)}
-              >
-                Delete
-              </button>
-              {/* Save Button */}
-              <button
-                className="bg-green-500 text-white px-4 py-2 rounded-lg"
-                onClick={handleSaveProduct}
-              >
-                Save
-              </button>
-              {/* Cancel Button */}
-              <button
-                className="bg-gray-300 px-4 py-2 rounded-lg"
-                onClick={() => setIsEditModalOpen(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-      <div className="mt-10 w-full flex justify-between items-center">
-        <h3 className="font-lato font-semibold text-2xl ml-6">ALL PRODUCTS</h3>
-        <div className="relative w-2/5 mr-5">
-          <input
-            type="text"
-            placeholder="Search"
-            className="font-lato bg-white border-[1px] border-gray-500 pl-3 pr-7 pt-1 pb-0.5 rounded-2xl text-sm placeholder:text-gray-500 w-full"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)} // Update search query
-          />
-          <IoIosSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm" />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 mx-5 gap-4 mt-5 min-h-[10.25rem]">
-        {filteredProducts.map((product) => (
-          <div
-            key={product.id}
-            className="bg-white rounded-3xl flex items-center justify-center flex-col py-3 px-5 text-center shadow-feat cursor-pointer relative"
-            onClick={() => handleAddToOrder(product)} // Add this onClick handler
-          >
-            {/* Pencil Icon */}
-            <FaEdit
-              className="absolute top-2 right-2 text-gray-500 cursor-pointer hover:text-black"
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent triggering the parent onClick
-                handleEditProduct(product);
-              }} // Open the edit modal
-            />
-            <img
-              src={product.url}
-              alt="product-img"
-              className="object-contain rounded-[50%] size-27.5 my-3"
-            />
-            <h3 className="font-latrue font-extrabold text-xl">{product.title}</h3>
-            <span className="text-sm font-latrue -mb-1 tracking-tight w-10/12 text-gray-500 font-semibold">
-              {product.description}
-            </span>
-            <span className="font-bold text-sm font-latrue mt-3">
-              Price: {product.price}
-            </span>
-          </div>
-        ))}
-
-        {/* Add Item Box */}
-        <div
-          className="bg-white rounded-3xl flex items-center justify-center flex-col py-3 px-5 text-center shadow-feat cursor-pointer"
-          onClick={toggleModal}
-        >
-          <IoIosAdd className="text-gray-500 size-24" />
-          <span className="font-medium text-sm font-latrue text-gray-500 mt-[-10px]">
-            Add Item
-          </span>
-        </div>
-
-        {/* Placeholder Boxes for Consistency */}
-        {products && Array.from({
-          length: (3 - ((filteredProducts.length + 1) % 3)) % 3, // Calculate remaining spaces
-        }).map((_, index) => (
-          <div
-            key={index}
-            className="bg-transparent rounded-3xl flex items-center justify-center flex-col py-3 px-5 text-center"
-          ></div>
-        ))}
-      </div>
-    </>
+    </div>
   );
 };
 
