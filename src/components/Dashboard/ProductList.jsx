@@ -248,7 +248,7 @@ const ProductList = ({ products, addToOrderList, updateProducts, loading = false
     <div className="flex flex-col h-full">
       {/* Header Section - Fixed height */}
       <div className="flex justify-between items-center mb-6 flex-shrink-0">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-amber-500 bg-clip-text text-transparent">
+        <h2 className="text-2xl font-semibold bg-gradient-to-r from-amber-600 to-amber-500 bg-clip-text text-transparent">
           Menu Items
         </h2>
         <div className="flex items-center gap-4">

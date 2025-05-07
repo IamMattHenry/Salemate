@@ -1,10 +1,10 @@
-import { 
-  getFirestore, 
-  collection, 
-  doc, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
+import {
+  getFirestore,
+  collection,
+  doc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
   getDocs,
   query,
   orderBy,
@@ -24,7 +24,7 @@ export const fetchProducts = async () => {
   try {
     const q = query(productsCollection, orderBy('title'));
     const querySnapshot = await getDocs(q);
-    
+
     return querySnapshot.docs.map(doc => ({
       id: doc.id, // Use Firestore document ID as product ID
       ...doc.data(),
@@ -42,18 +42,21 @@ export const fetchProducts = async () => {
  */
 export const addProduct = async (product) => {
   try {
+    // Create a copy of the product to modify if needed
+    const productToSave = { ...product };
+
     // Add timestamp fields
     const productWithTimestamp = {
-      ...product,
+      ...productToSave,
       created_at: serverTimestamp(),
       updated_at: serverTimestamp()
     };
-    
+
     const docRef = await addDoc(productsCollection, productWithTimestamp);
-    
+
     return {
       id: docRef.id,
-      ...product
+      ...product // Return the original product with URL for client-side use
     };
   } catch (error) {
     console.error('Error adding product:', error);
@@ -70,13 +73,16 @@ export const addProduct = async (product) => {
 export const updateProduct = async (id, updatedProduct) => {
   try {
     const productRef = doc(db, 'product', id);
-    
+
+    // Create a copy of the product to modify if needed
+    const productToSave = { ...updatedProduct };
+
     // Add updated timestamp
     const productWithTimestamp = {
-      ...updatedProduct,
+      ...productToSave,
       updated_at: serverTimestamp()
     };
-    
+
     await updateDoc(productRef, productWithTimestamp);
   } catch (error) {
     console.error('Error updating product:', error);

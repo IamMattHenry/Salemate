@@ -33,7 +33,7 @@ function Contact() {
                   <img
                     src="/Address_1.png"
                     alt="address icon"
-                    
+
                   />
                 </div>
                 <div className="w-[75%] space-y-5 mt-10">
@@ -54,7 +54,7 @@ function Contact() {
                   <img
                     src="/email_1.png"
                     alt="email icon"
-                    
+
                   />
                 </div>
                 <div className="w-[75%] space-y-5 mt-10">
@@ -91,7 +91,7 @@ function Contact() {
         </HomePanel>
       </div>
       </div>
-      
+
     </div>
   );
 }

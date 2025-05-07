@@ -17,19 +17,19 @@ const categories = [
 
 const DashboardCategory = ({ setSelectedCategory, activeCategory = "All" }) => {
   return (
-    <div className="flex gap-4 pb-4 h-[60px]">
+    <div className="flex justify-center gap-6 pb-6 h-[70px]">
       {categories.map(({ id, name, icon: Icon }) => (
         <button
           key={id}
           onClick={() => setSelectedCategory(name)}
           className={`
-            flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all h-[48px]
+            flex items-center gap-3 px-6 py-3.5 rounded-xl font-medium transition-all h-[56px] text-lg
             ${activeCategory === name
               ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30 scale-105'
               : 'bg-white text-gray-700 hover:bg-amber-50 hover:text-amber-600 border border-gray-100'}
           `}
         >
-          <Icon className={`text-xl ${activeCategory === name ? 'text-white' : 'text-amber-500'}`} />
+          <Icon className={`text-2xl ${activeCategory === name ? 'text-white' : 'text-amber-500'}`} />
           <span className="whitespace-nowrap">{name}</span>
         </button>
       ))}

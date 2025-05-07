@@ -71,13 +71,13 @@ const DashboardPanel = () => {
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col h-full">
         {/* Header */}
         <div className="p-6 border-b border-gray-100 flex-shrink-0">
-          <h3 className="text-xl font-semibold bg-gradient-to-r from-amber-600 to-amber-500 bg-clip-text text-transparent">
+          <h3 className="text-2xl font-semibold bg-gradient-to-r from-amber-600 to-amber-500 bg-clip-text text-transparent">
             Menu Categories
           </h3>
         </div>
 
         {/* Categories Section */}
-        <div className="p-6 border-b border-gray-100 bg-gradient-to-b from-amber-50/30 flex-shrink-0">
+        <div className="p-6 pt-4 border-b border-gray-100 bg-gradient-to-b from-amber-50/30 flex-shrink-0">
           <DashboardCategory setSelectedCategory={setSelectedCategory} />
         </div>
 
