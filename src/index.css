@@ -178,3 +178,47 @@
 .button-glow:hover {
   animation: buttonGlow 1.5s infinite;
 }
+
+/* Shake animation for error/warning modals */
+@keyframes shakeWarning {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+.animate-shake {
+  animation: shakeWarning 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* Flip animation for deleted account modal */
+@keyframes flipWarning {
+  0% {
+    transform: perspective(400px) rotateY(0);
+  }
+  20% {
+    transform: perspective(400px) rotateY(-10deg);
+  }
+  40% {
+    transform: perspective(400px) rotateY(10deg);
+  }
+  60% {
+    transform: perspective(400px) rotateY(-5deg);
+  }
+  80% {
+    transform: perspective(400px) rotateY(5deg);
+  }
+  100% {
+    transform: perspective(400px) rotateY(0);
+  }
+}
+
+.animate-flip {
+  animation: flipWarning 1s ease-in-out both;
+  transform-style: preserve-3d;
+}

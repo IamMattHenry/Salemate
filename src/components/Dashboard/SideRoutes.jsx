@@ -8,15 +8,17 @@ import { FaBasketShopping } from "react-icons/fa6";
 import { RiServiceFill } from "react-icons/ri";
 import { SiDashlane } from "react-icons/si";
 import { MdBlock } from "react-icons/md";
+import { FaUserShield } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 import AccessDeniedModal from "../Auth/AccessDeniedModal";
 
 const SideRoutes = ({ isMinimized }) => {
-  const { resetPinVerification, hasAccess, userProfile, pinVerified } = useAuth();
+  const { resetPinVerification, hasAccess, userProfile, pinVerified, isAdmin } = useAuth();
   const [showAccessDenied, setShowAccessDenied] = useState(false);
   const [currentModule, setCurrentModule] = useState(null);
 
-  const routes = [
+  // Base routes for all users
+  let routes = [
     {
       path: "/dashboard",
       label: "Dashboard",
@@ -53,6 +55,17 @@ const SideRoutes = ({ isMinimized }) => {
       module: "customer"
     },
   ];
+
+  // Add Admin route for admin users only
+  if (isAdmin()) {
+    routes.push({
+      path: "/admin",
+      label: "Admin",
+      icon: <FaUserShield />,
+      requiresPin: false,
+      module: "admin"
+    });
+  }
 
   // Check if user is in Financial department for PIN verification
   const isFinancial = userProfile?.department === 'Financial';

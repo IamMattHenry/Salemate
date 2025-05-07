@@ -40,6 +40,7 @@ import CustomersSaveHistory from "./components/Customers/customers-data/Customer
 import InventoryLayout from "./layouts/InventoryLayout.jsx";
 import InventoryDaily from "./components/Inventory/inventory-data/InventoryDaily.jsx";
 import InventorySavedHistory from "./components/Inventory/inventory-data/InventorySavedHistory.jsx";
+import AdminLayout from "./layouts/AdminLayout.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <Router>
@@ -115,6 +116,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="daily-inventory" element={<InventoryDaily />} />
             <Route path="saved-history" element={<InventorySavedHistory/>} />
           </Route>
+
+          {/* Admin section route - admin only */}
+          <Route path="/admin" element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          } />
         </Routes>
         </LoadingProvider>
       </AuthProvider>
