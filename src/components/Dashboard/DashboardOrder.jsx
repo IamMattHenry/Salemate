@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Clock, Calendar } from "lucide-react";
 import { MdCancel, MdDelete } from "react-icons/md";
 import { FaCheckCircle } from "react-icons/fa";
-import { IoPencil } from "react-icons/io5";
 import { FiAlertCircle } from "react-icons/fi";
 import useNameModal from "../../hooks/Modal/EnterNameModal";
 import useConfirmOrderModal from "../../hooks/Modal/ConfirmOrderModal";
@@ -766,10 +765,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                   </div>
                   <div className="flex flex-col items-end gap-3 flex-shrink-0">
                     {orderList && (
-                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="p-1 text-gray-400 hover:text-amber-500 rounded-lg hover:bg-amber-50">
-                          <IoPencil size={16} />
-                        </button>
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

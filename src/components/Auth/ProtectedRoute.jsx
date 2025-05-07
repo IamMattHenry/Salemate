@@ -21,6 +21,8 @@ const getModuleFromPath = (path) => {
       return 'inventory';
     case 'customer':
       return 'customer';
+    case 'admin':
+      return 'admin';
     default:
       return null;
   }
@@ -68,6 +70,11 @@ const ProtectedRoute = ({ children }) => {
     window.location.href = "/signin";
     return null;
   }
+
+  // Note: We don't need to check if the user document exists in Firestore here
+  // because we've already implemented this check in the AuthContext.jsx file
+  // If a user is deleted from the admin panel, they will be automatically signed out
+  // when the AuthContext checks for their document in Firestore
 
   // Check if user has access to this module
   if (currentModule && !hasAccess(currentModule)) {

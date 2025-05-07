@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { BsBoxArrowRight, BsAt, BsFillLockFill } from "react-icons/bs";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification } from "firebase/auth";
-import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
 import { useAuth } from "../../context/AuthContext";
 import firebaseApp, { auth } from "../../firebaseConfig"; // Import both app and auth
 import useModal from "../../hooks/Modal/UseModal"; // Import your custom hook
+import DisabledAccountModal from "../../components/Auth/DisabledAccountModal"; // Import the disabled account modal
+import DeletedAccountModal from "../../components/Auth/DeletedAccountModal"; // Import the deleted account modal
 
 function SignIn() {
   const [email, setEmail] = useState("");
@@ -15,6 +17,8 @@ function SignIn() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
+  const [showDisabledModal, setShowDisabledModal] = useState(false);
+  const [showDeletedModal, setShowDeletedModal] = useState(false);
   const { modal, toggleModal } = useModal(); // Use the custom modal hook
   const navigate = useNavigate();
   const { resetPinVerification } = useAuth();
@@ -34,6 +38,19 @@ function SignIn() {
       // First, we need to sign in the user to get their user object
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+
+      // Check if account is disabled
+      const userDocRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists() && userDoc.data().disabled === true) {
+        // Sign out the user immediately
+        await auth.signOut();
+        // Show the disabled account modal instead of just an error message
+        setShowDisabledModal(true);
+        setIsLoading(false);
+        return;
+      }
 
       // Send verification email
       await sendEmailVerification(user, {
@@ -82,19 +99,36 @@ function SignIn() {
         return;
       }
 
-      // Get user data to check department
+      // Get user data to check department and disabled status
       const userDocRef = doc(db, "users", user.uid);
       const userDoc = await getDoc(userDocRef);
 
       if (userDoc.exists()) {
+        const userData = userDoc.data();
+
+        // Check if account is disabled
+        if (userData.disabled === true) {
+          // Sign out the user immediately
+          await auth.signOut();
+          // Show the disabled account modal instead of just an error message
+          setShowDisabledModal(true);
+          setIsLoading(false);
+          return;
+        }
+
         // Update emailVerified status in Firestore if needed
-        if (userDoc.data().emailVerified === false) {
+        if (userData.emailVerified === false) {
           await updateDoc(userDocRef, {
             emailVerified: true
           });
         }
 
-        console.log("User signed in:", user.email, "Department:", userDoc.data().department);
+        // Update last sign-in timestamp
+        await updateDoc(userDocRef, {
+          lastSignIn: new Date().toISOString()
+        });
+
+        console.log("User signed in:", user.email, "Department:", userData.department);
         // Clear any existing PIN verification status
         localStorage.removeItem('pinVerified');
         // Force PIN verification on next protected page access
@@ -109,20 +143,15 @@ function SignIn() {
           window.location.href = "/dashboard";
         }, 1000);
       } else {
-        console.log("User signed in but no profile found:", user);
-        // Clear any existing PIN verification status
-        localStorage.removeItem('pinVerified');
-        // Force PIN verification on next protected page access
-        resetPinVerification();
-        console.log("PIN verification reset for new login session");
+        // User document doesn't exist in Firestore - this means the user was deleted from the admin panel
+        console.log("User document not found in Firestore. User was likely deleted from admin panel:", user.email);
 
-        // Add a small delay before redirecting to ensure auth state is updated
-        console.log("Setting up redirect to dashboard...");
-        setTimeout(() => {
-          console.log("Now redirecting to dashboard...");
-          // Use window.location for a full page refresh to ensure clean state
-          window.location.href = "/dashboard";
-        }, 1000);
+        // Sign out the user immediately
+        await auth.signOut();
+        // Show the deleted account modal instead of just an error message
+        setShowDeletedModal(true);
+        setIsLoading(false);
+        return;
       }
     } catch (err) {
       if (err.code === "auth/user-not-found") {
@@ -305,6 +334,20 @@ function SignIn() {
           </div>
         </div>
       )}
+
+      {/* Disabled Account Modal */}
+      <DisabledAccountModal
+        isOpen={showDisabledModal}
+        onClose={() => setShowDisabledModal(false)}
+        email={email}
+      />
+
+      {/* Deleted Account Modal */}
+      <DeletedAccountModal
+        isOpen={showDeletedModal}
+        onClose={() => setShowDeletedModal(false)}
+        email={email}
+      />
    </div>
   );
 }

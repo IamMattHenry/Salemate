@@ -26,7 +26,8 @@ const InitialPinVerification = () => {
            path.startsWith('/orders') ||
            path.startsWith('/analytics') ||
            path.startsWith('/inventory') ||
-           path.startsWith('/customer');
+           path.startsWith('/customer') ||
+           path.startsWith('/admin');
   };
 
   useEffect(() => {

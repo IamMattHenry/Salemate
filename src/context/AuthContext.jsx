@@ -14,23 +14,29 @@ const departmentAccess = {
     orders: true,
     analytics: false,
     inventory: true,
-    customer: false
+    customer: false,
+    admin: false
   },
   Marketing: {
     dashboard: true,
     orders: true,
     analytics: false,
     inventory: false,
-    customer: true
+    customer: true,
+    admin: false
   },
   Financial: {
     dashboard: true,
     orders: true,
     analytics: true,
     inventory: false,
-    customer: true
+    customer: true,
+    admin: false
   }
 };
+
+// Admin emails for special access
+const ADMIN_EMAILS = ['admin@gmail.com', 'adminadmin@gmail.com', 'salemate186@gmail.com'];
 
 // Create a provider component
 export const AuthProvider = ({ children }) => {
@@ -144,8 +150,17 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('pinVerified');
   };
 
-  // Check if user has access to a specific module based on department
+  // Check if the current user is an admin
+  const isAdmin = () => {
+    return currentUser && ADMIN_EMAILS.includes(currentUser.email);
+  };
+
+  // Check if user has access to a specific module based on department or admin status
   const hasAccess = (module) => {
+    // Admin has access to all modules
+    if (isAdmin()) return true;
+
+    // For non-admin users, check department permissions
     if (!userProfile || !userProfile.department) return false;
 
     const department = userProfile.department;
@@ -199,7 +214,6 @@ export const AuthProvider = ({ children }) => {
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       console.log("Auth state changed:", user ? "User logged in" : "No user");
-      setCurrentUser(user);
 
       if (user) {
         try {
@@ -207,8 +221,10 @@ export const AuthProvider = ({ children }) => {
           const userDoc = await getDoc(userDocRef);
 
           if (userDoc.exists()) {
+            // User document exists in Firestore, proceed normally
             const userData = userDoc.data();
             setUserProfile(userData);
+            setCurrentUser(user);
 
             // Explicitly check if user has a PIN
             if (userData.pin) {
@@ -225,15 +241,30 @@ export const AuthProvider = ({ children }) => {
               console.log("User does not have PIN, creation required");
             }
           } else {
+            // User document doesn't exist in Firestore - this means the user was deleted from the admin panel
+            console.log("User document not found in Firestore. User was likely deleted from admin panel:", user.email);
+
+            // Sign out the user immediately
+            await signOut(auth);
+            setCurrentUser(null);
+            setUserProfile(null);
             setHasPin(false);
-            console.log("User document doesn't exist, PIN creation required");
+            setPinVerified(false);
+            localStorage.removeItem('pinVerified');
+            console.log("User signed out due to missing Firestore document");
+
+            // Don't set currentUser since we're signing them out
+            return;
           }
         } catch (error) {
           console.error("Error fetching user profile:", error);
           setHasPin(false);
+          setCurrentUser(user); // Still set the user even if there was an error fetching profile
         }
       } else {
         // Reset states when user logs out
+        setCurrentUser(null);
+        setUserProfile(null);
         setHasPin(false);
         setPinVerified(false);
         localStorage.removeItem('pinVerified');
@@ -263,6 +294,7 @@ export const AuthProvider = ({ children }) => {
     verifyPin,
     resetPinVerification,
     hasAccess,
+    isAdmin,
     logout
   };
 
