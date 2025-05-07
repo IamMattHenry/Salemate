@@ -1,15 +1,18 @@
 // src/components/SignUp.jsx
-import React, { useState } from "react";
-import { FaEye, FaEyeSlash, FaUserAlt } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { FaEye, FaEyeSlash, FaUserAlt, FaCheck, FaTimes } from "react-icons/fa";
 import {
   BsBoxArrowRight,
   BsAt,
   BsFillLockFill,
   BsPeopleFill,
+  BsCheckCircleFill,
 } from "react-icons/bs";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
 import firebaseApp from "../../firebaseConfig"; // Adjust the path to your Firebase config file
+import { useNavigate } from "react-router-dom";
+import useModal from "../../hooks/Modal/UseModal"; // Import your custom hook
 
 function SignUp() {
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -22,9 +25,34 @@ function SignUp() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [passwordRequirements, setPasswordRequirements] = useState({
+    length: false,
+    number: false,
+    special: false
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
+  const { modal, toggleModal } = useModal();
+  const navigate = useNavigate();
   const auth = getAuth(firebaseApp);
   const db = getFirestore(firebaseApp);
+
+  // Check password requirements as user types
+  useEffect(() => {
+    if (password) {
+      setPasswordRequirements({
+        length: password.length >= 6,
+        number: /\d/.test(password),
+        special: /[!@#$%^&*]/.test(password)
+      });
+    } else {
+      setPasswordRequirements({
+        length: false,
+        number: false,
+        special: false
+      });
+    }
+  }, [password]);
 
   const togglePasswordVisibility = (field) => {
     if (field === "password") {
@@ -77,8 +105,10 @@ function SignUp() {
     e.preventDefault();
     setError("");
     setSuccess("");
+    setIsLoading(true);
 
     if (!validateFields()) {
+      setIsLoading(false);
       return;
     }
 
@@ -91,16 +121,37 @@ function SignUp() {
       );
       const user = userCredential.user;
 
+      // Send email verification
+      await sendEmailVerification(user, {
+        url: window.location.origin + "/signin", // Redirect URL after verification
+        handleCodeInApp: false,
+      });
+
       // Save additional user data to Firestore
       await setDoc(doc(db, "users", user.uid), {
         firstName,
         lastName,
         email,
         department,
+        emailVerified: false, // Track email verification status
+        createdAt: new Date().toISOString(),
       });
 
-      setSuccess("Account created successfully!");
+      setSuccess("Account created successfully! Please verify your email.");
       console.log("User registered:", user);
+
+      // Show success modal
+      toggleModal();
+
+      // Reset form
+      setFirstName("");
+      setLastName("");
+      setEmail("");
+      setDepartment("");
+      setPassword("");
+      setConfirmPassword("");
+
+      // We won't redirect automatically since they need to verify email first
     } catch (err) {
       if (err.code === "auth/email-already-in-use") {
         setError(
@@ -110,6 +161,8 @@ function SignUp() {
         setError(err.message);
       }
       console.error("Error during registration:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -208,6 +261,45 @@ function SignUp() {
                   )}
                 </div>
               </div>
+
+              {/* Password requirements */}
+              {password.length > 0 && (
+                <div className="bg-gray-50 p-3 rounded-lg w-full max-w-xs mx-auto">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Password requirements:</p>
+                  <ul className="space-y-1 text-sm">
+                    <li className="flex items-center">
+                      {passwordRequirements.length ? (
+                        <FaCheck className="text-green-500 mr-2" />
+                      ) : (
+                        <FaTimes className="text-red-500 mr-2" />
+                      )}
+                      <span className={passwordRequirements.length ? "text-green-700" : "text-gray-600"}>
+                        At least 6 characters
+                      </span>
+                    </li>
+                    <li className="flex items-center">
+                      {passwordRequirements.number ? (
+                        <FaCheck className="text-green-500 mr-2" />
+                      ) : (
+                        <FaTimes className="text-red-500 mr-2" />
+                      )}
+                      <span className={passwordRequirements.number ? "text-green-700" : "text-gray-600"}>
+                        At least 1 number
+                      </span>
+                    </li>
+                    <li className="flex items-center">
+                      {passwordRequirements.special ? (
+                        <FaCheck className="text-green-500 mr-2" />
+                      ) : (
+                        <FaTimes className="text-red-500 mr-2" />
+                      )}
+                      <span className={passwordRequirements.special ? "text-green-700" : "text-gray-600"}>
+                        At least 1 special character (!@#$%^&*)
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              )}
               <div className="relative w-full max-w-xs mx-auto">
                 <BsFillLockFill
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
@@ -236,10 +328,21 @@ function SignUp() {
               {success && <p className="text-green-500 text-sm">{success}</p>}
               <div className="text-center">
                 <button
-                  className="font-latrue font-bold mt-7 bg-black py-3 px-10 rounded-2xl text-whitesm cursor-pointer"
+                  className="font-latrue font-bold mt-7 bg-black py-3 px-10 rounded-2xl text-whitesm cursor-pointer flex items-center justify-center mx-auto"
                   type="submit"
+                  disabled={isLoading}
                 >
-                  Continue
+                  {isLoading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Creating Account...
+                    </>
+                  ) : (
+                    "Continue"
+                  )}
                 </button>
               </div>
               <div className="w-full text-center">
@@ -258,6 +361,44 @@ function SignUp() {
           </div>
         </div>
       </form>
+
+      {/* Success Modal */}
+      {modal && (
+        <div className="fixed inset-0 flex justify-center items-center z-50 bg-black/30">
+          <div className="bg-white p-6 rounded-3xl shadow-lg w-96 animate-pop-up">
+            <div className="text-center">
+              <div className="bg-green-500 text-white rounded-full h-16 w-16 flex items-center justify-center mx-auto mb-4">
+                <BsCheckCircleFill className="h-8 w-8" />
+              </div>
+
+              <h4 className="font-bold text-xl mb-2">Account Created Successfully!</h4>
+              <p className="text-gray-600 mb-3">
+                We've sent a verification link to <span className="font-semibold">{email || 'your email'}</span>.
+              </p>
+              <p className="text-gray-600 mb-5">
+                Please check your inbox and verify your email before signing in.
+              </p>
+
+              <div className="bg-blue-50 p-3 rounded-lg mb-5 text-left">
+                <p className="text-sm text-blue-800 font-medium">Important:</p>
+                <ul className="text-sm text-blue-700 list-disc pl-5 mt-1">
+                  <li>Check your spam folder if you don't see the email</li>
+                  <li>The verification link expires in 24 hours</li>
+                  <li>You must verify your email before signing in</li>
+                </ul>
+              </div>
+
+              <button
+                type="button"
+                className="bg-green-500 text-white w-full py-3 rounded-full font-medium"
+                onClick={() => navigate('/signin')}
+              >
+                Go to Sign In
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

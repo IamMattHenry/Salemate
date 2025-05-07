@@ -1,6 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
+import { getAuth, setPersistence, browserSessionPersistence } from "firebase/auth";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -20,4 +21,20 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 
+// Get Auth instance
+const auth = getAuth(app);
+
+// Set session persistence (user will be logged out when browser is closed)
+// We're using an IIFE to ensure this runs immediately and doesn't block other code
+(async () => {
+  try {
+    await setPersistence(auth, browserSessionPersistence);
+    console.log("Firebase auth persistence set to session only");
+  } catch (error) {
+    console.error("Error setting auth persistence:", error);
+  }
+})();
+
+// Export both the app and auth instances
 export default app;
+export { auth };

@@ -1,20 +1,17 @@
 import React, { useState } from "react";
 import { CiPower } from "react-icons/ci";
-import { getAuth, signOut } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoMdWarning } from "react-icons/io";
+import { useAuth } from "../../context/AuthContext";
 
 const DashboardLogout = ({ isMinimized }) => {
-  const auth = getAuth();
-  const navigate = useNavigate();
+  const { logout } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
+      await logout();
       console.log("User logged out successfully.");
-      navigate("/");
     } catch (error) {
       console.error("Error during logout:", error.message);
     }
