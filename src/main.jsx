@@ -7,6 +7,11 @@ import {
   Navigate,
 } from "react-router-dom";
 import { SidebarProvider } from "./context/SidebarContext";
+import { AuthProvider } from "./context/AuthContext";
+import { LoadingProvider } from "./context/LoadingContext";
+import ProtectedRoute from "./components/Auth/ProtectedRoute";
+import InitialPinVerification from "./components/Auth/InitialPinVerification";
+import WelcomeBackModal from "./components/Auth/WelcomeBackModal";
 import HomeLayout from "./layouts/HomeLayout";
 import Home from "./pages/Home/Home";
 import SignIn from "./pages/Home/SignIn";
@@ -37,56 +42,82 @@ import InventoryDaily from "./components/Inventory/inventory-data/InventoryDaily
 import InventorySavedHistory from "./components/Inventory/inventory-data/InventorySavedHistory.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <SidebarProvider>
-    <Router>
-      <Routes>
-        <Route path="/" element={<HomeLayout />}>
-          <Route index element={<Home />} />
-          <Route path="signin" element={<SignIn />} />
-          <Route path="signup" element={<SignUp />} />
-          <Route path="privacypolicy" element={<PrivacyPolicy />} />
-          <Route path="contact" element={<Contact />} />
-          <Route path="about" element={<About />} />
-          <Route path="terms-and-condition" element={<TermsAndCond />} />
-          <Route path="features" element={<Features />} />
-        </Route>
+  <Router>
+    <SidebarProvider>
+      <AuthProvider>
+        <LoadingProvider>
+          <InitialPinVerification />
+          <WelcomeBackModal />
+          <Routes>
+          <Route path="/" element={<HomeLayout />}>
+            <Route index element={<Home />} />
+            <Route path="signin" element={<SignIn />} />
+            <Route path="signup" element={<SignUp />} />
+            <Route path="privacypolicy" element={<PrivacyPolicy />} />
+            <Route path="contact" element={<Contact />} />
+            <Route path="about" element={<About />} />
+            <Route path="terms-and-condition" element={<TermsAndCond />} />
+            <Route path="features" element={<Features />} />
+          </Route>
 
-      {/* Dashboard route */}
-      <Route path="/dashboard" element={<DashboardLayout />} />
+          {/* Dashboard route */}
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <DashboardLayout />
+            </ProtectedRoute>
+          } />
 
-      {/* Orders section route */}
-      <Route path="/orders" element={<OrderLayout />}>
-        <Route index element={<Navigate to="all-transactions" replace />} />
-        <Route path="all-transactions" element={<AllTransact />} />
-        <Route path="cancelled-transactions" element={<CancelledTransact />} />
-        <Route path="completed-transactions" element={<CompletedTransact />} />
-        <Route path="pending-transactions" element={<PendingTransact />} />
-        <Route path="saved-history" element={<SavedHistory />} />
-      </Route>
+          {/* Orders section route */}
+          <Route path="/orders" element={
+            <ProtectedRoute>
+              <OrderLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<Navigate to="all-transactions" replace />} />
+            <Route path="all-transactions" element={<AllTransact />} />
+            <Route path="cancelled-transactions" element={<CancelledTransact />} />
+            <Route path="completed-transactions" element={<CompletedTransact />} />
+            <Route path="pending-transactions" element={<PendingTransact />} />
+            <Route path="saved-history" element={<SavedHistory />} />
+          </Route>
 
-      {/* Analytics section route */}
-      <Route path="/analytics" element={<AnalyticsLayout />}>
-        <Route index element={<Navigate to="daily-sales" replace />} />
-        <Route path="daily-sales" element={<DailySales />} />
-        <Route path="product-sales" element={<ProductSales />} />
-        <Route path="customer-frequency" element={<CustomerFrequency />} />
-        <Route path="save-history" element={<AnalyticsSavedHistory />} />
-      </Route>
+          {/* Analytics section route - with PIN */}
+          <Route path="/analytics" element={
+            <ProtectedRoute>
+              <AnalyticsLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<Navigate to="daily-sales" replace />} />
+            <Route path="daily-sales" element={<DailySales />} />
+            <Route path="product-sales" element={<ProductSales />} />
+            <Route path="customer-frequency" element={<CustomerFrequency />} />
+            <Route path="save-history" element={<AnalyticsSavedHistory />} />
+          </Route>
 
-      {/* Customers section route */}
-      <Route path="/customer" element={<CustomersLayout />}>
-        <Route index element={<Navigate to="overview" replace />} />
-        <Route path="overview" element={<CustomersOverview />} />
-        <Route path="saved-history" element={<CustomersSaveHistory />} />
-      </Route>
+          {/* Customers section route - with PIN */}
+          <Route path="/customer" element={
+            <ProtectedRoute>
+              <CustomersLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<Navigate to="overview" replace />} />
+            <Route path="overview" element={<CustomersOverview />} />
+            <Route path="saved-history" element={<CustomersSaveHistory />} />
+          </Route>
 
-      {/* Inventory section route */}
-      <Route path="/inventory" element={<InventoryLayout />}>
-        <Route index element={<Navigate to="daily-inventory" replace />} />
-        <Route path="daily-inventory" element={<InventoryDaily />} />
-        <Route path="saved-history" element={<InventorySavedHistory/>} />
-      </Route>
-    </Routes>
+          {/* Inventory section route - with PIN */}
+          <Route path="/inventory" element={
+            <ProtectedRoute>
+              <InventoryLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<Navigate to="daily-inventory" replace />} />
+            <Route path="daily-inventory" element={<InventoryDaily />} />
+            <Route path="saved-history" element={<InventorySavedHistory/>} />
+          </Route>
+        </Routes>
+        </LoadingProvider>
+      </AuthProvider>
+    </SidebarProvider>
   </Router>
-  </SidebarProvider>
 );

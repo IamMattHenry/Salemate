@@ -3,14 +3,14 @@ import { BsPersonCircle } from "react-icons/bs";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { useLocation } from "react-router-dom";
-import firebaseApp from "../../firebaseConfig"; 
+import firebaseApp from "../../firebaseConfig";
 
 const DashboardHeader = () => {
   const [lastName, setLastName] = useState(""); // State to store the last name
   const [department, setDepartment] = useState(""); // State to store the department
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const location = useLocation(); 
+  const location = useLocation();
   const auth = getAuth(firebaseApp);
   const db = getFirestore(firebaseApp);
 
@@ -39,7 +39,7 @@ const DashboardHeader = () => {
       }
     });
 
-    return () => unsubscribe(); 
+    return () => unsubscribe();
   }, [auth, db]);
 
   const dateToday = new Date();
@@ -55,8 +55,8 @@ const DashboardHeader = () => {
     const path = location.pathname;
     if (path.includes("inventory")) return "Inventory";
     if (path.includes("dashboard")) return "Dashboard";
-    if (path.includes("orders")) return "Order History"; 
-    if (path.includes("analytics")) return "Analytic Report"; 
+    if (path.includes("orders")) return "Order History";
+    if (path.includes("analytics")) return "Analytic Report";
     if (path.includes("customer")) return "Customer";
     return "Welcome";
   };
@@ -81,9 +81,16 @@ const DashboardHeader = () => {
               <h3 className="font-semibold font-lato text-xl p-0 mb-[-7px]">
                 {lastName} {/* Display the last name */}
               </h3>
-              <span className="font-lato text-gray-400 text-sm">
-                {department} {/* Display the department */}
-              </span>
+              <div className="flex items-center justify-center">
+                <span className={`inline-block w-2 h-2 rounded-full mr-1.5 ${
+                  department === 'Marketing' ? 'bg-blue-500' :
+                  department === 'Production' ? 'bg-green-500' :
+                  department === 'Financial' ? 'bg-amber-500' : 'bg-gray-500'
+                }`}></span>
+                <span className="font-lato text-gray-400 text-sm">
+                  {department} {/* Display the department */}
+                </span>
+              </div>
             </div>
             <div>
               <BsPersonCircle className="size-8" />

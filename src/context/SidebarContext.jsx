@@ -8,9 +8,16 @@ export const SidebarProvider = ({ children }) => {
   // Initialize state from localStorage or default to true (minimized)
   const [isMinimized, setIsMinimized] = useState(() => {
     const savedState = localStorage.getItem('sidebarMinimized');
-    // If there's a saved state, parse it, otherwise default to true
+    // If there's a saved state, parse it, otherwise default to true (minimized)
     return savedState !== null ? JSON.parse(savedState) : true;
   });
+
+  // Force sidebar to be minimized on initial page load
+  useEffect(() => {
+    // Set sidebar to minimized state when component mounts
+    setIsMinimized(true);
+    localStorage.setItem('sidebarMinimized', JSON.stringify(true));
+  }, []);
 
   // Toggle function
   const toggleSideNav = () => {

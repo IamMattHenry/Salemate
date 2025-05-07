@@ -1,8 +1,22 @@
 import React, { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 function NavBar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { currentUser, logout } = useAuth();
+  const location = useLocation();
+
+  // Check if we're on the signin or signup page
+  const isAuthPage = location.pathname === "/signin" || location.pathname === "/signup";
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
 
   return (
     <nav className="z-50 w-full">
@@ -29,18 +43,46 @@ function NavBar() {
                 Contact Us
               </NavLink>
             </li>
-            <li>
-              <NavLink
-                to="/signin"
-                className={({ isActive }) =>
-                  isActive
-                    ? "bg-yellowsm text-whitesm hover:bg-whitesm hover:text-yellowsm py-3 px-7 rounded-3xl transition ease-in-out border-yellowsm text-sm"
-                    : "py-3 px-7 rounded-3xl text-whitesm bg-yellowsm transition ease-in-out hover:bg-whitesm hover:text-yellowsm border-2 border-yellowsm text-sm"
-                }
-              >
-                Get Access
-              </NavLink>
-            </li>
+            {/* Don't show auth buttons on signin/signup pages */}
+            {!isAuthPage && (
+              currentUser ? (
+                <>
+                  <li>
+                    <NavLink
+                      to="/dashboard"
+                      className={({ isActive }) =>
+                        isActive
+                          ? "py-3 px-7 text-sm rounded-3xl text-yellowsm transition ease-in-out hover:bg-yellowsm hover:text-white border-2 border-yellowsm"
+                          : "py-3 px-7 text-sm rounded-3xl text-yellowsm transition ease-in-out hover:bg-yellowsm hover:text-white border-2 border-yellowsm"
+                      }
+                    >
+                      Dashboard
+                    </NavLink>
+                  </li>
+                  <li>
+                    <button
+                      onClick={handleLogout}
+                      className="py-3 px-7 rounded-3xl text-whitesm bg-yellowsm transition ease-in-out hover:bg-whitesm hover:text-yellowsm border-2 border-yellowsm text-sm"
+                    >
+                      Sign Out
+                    </button>
+                  </li>
+                </>
+              ) : (
+                <li>
+                  <NavLink
+                    to="/signin"
+                    className={({ isActive }) =>
+                      isActive
+                        ? "bg-yellowsm text-whitesm hover:bg-whitesm hover:text-yellowsm py-3 px-7 rounded-3xl transition ease-in-out border-yellowsm text-sm"
+                        : "py-3 px-7 rounded-3xl text-whitesm bg-yellowsm transition ease-in-out hover:bg-whitesm hover:text-yellowsm border-2 border-yellowsm text-sm"
+                    }
+                  >
+                    Get Access
+                  </NavLink>
+                </li>
+              )
+            )}
           </ul>
           <div className="sm:hidden flex flex-col items-end">
             <button
@@ -56,24 +98,49 @@ function NavBar() {
           id="mobile-menu"
           className={`${
             isMobileMenuOpen ? "block" : "hidden"
-          } absolute inset-x-0 top-12 bg-primary py-5 px-7 text-center font-lato text-lg`}
+          } absolute inset-x-0 top-12 bg-primary py-5 px-7 text-center font-lato text-lg z-50`}
         >
           <li>
-            <a
-              href="#"
+            <NavLink
+              to="/contact"
               className="block my-3 transition ease-in-out hover:bg-background hover:text-primary rounded-full"
             >
               Contact Us
-            </a>
+            </NavLink>
           </li>
-          <li>
-            <a
-              href="#"
-              className="block my-3 transition ease-in-out hover:bg-background hover:text-primary rounded-full"
-            >
-              Get Access
-            </a>
-          </li>
+
+          {/* Don't show auth buttons on signin/signup pages */}
+          {!isAuthPage && (
+            currentUser ? (
+              <>
+                <li>
+                  <NavLink
+                    to="/dashboard"
+                    className="block my-3 transition ease-in-out hover:bg-background hover:text-primary rounded-full"
+                  >
+                    Dashboard
+                  </NavLink>
+                </li>
+                <li>
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full my-3 transition ease-in-out hover:bg-background hover:text-primary rounded-full text-center"
+                  >
+                    Sign Out
+                  </button>
+                </li>
+              </>
+            ) : (
+              <li>
+                <NavLink
+                  to="/signin"
+                  className="block my-3 transition ease-in-out hover:bg-background hover:text-primary rounded-full"
+                >
+                  Get Access
+                </NavLink>
+              </li>
+            )
+          )}
         </ul>
       </div>
     </nav>

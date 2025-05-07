@@ -1,12 +1,24 @@
-import React from "react";
+import React, { useEffect } from "react";
 import DashboardSideNav from "../components/Dashboard/DashboardSideNav";
 import { motion } from "framer-motion";
 import Inventory from "../pages/Main/Inventory";
 import { useSidebar } from "../context/SidebarContext";
+import { useLoading } from "../context/LoadingContext";
 
 const InventoryLayout = () => {
   // Use the shared sidebar context instead of local state
   const { isMinimized, toggleSideNav } = useSidebar();
+  const { hideLoading } = useLoading();
+
+  // Hide loading screen when component mounts
+  useEffect(() => {
+    // Small delay to ensure smooth transition
+    const timer = setTimeout(() => {
+      hideLoading();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <motion.main
