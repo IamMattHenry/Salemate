@@ -16,7 +16,7 @@ const DailySales = () => {
   const today = new Date();
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const currentDay = days[today.getDay()];
-  
+
   const formattedDate = today.toLocaleDateString('en-US', {
     month: '2-digit',
     day: '2-digit',
@@ -49,7 +49,7 @@ const DailySales = () => {
         const sales = [];
         let totalCashSales = 0;
         let totalOnlineSales = 0;
-        
+
         // Only process delivered orders
         querySnapshot.forEach((doc) => {
           const data = doc.data();
@@ -76,13 +76,13 @@ const DailySales = () => {
           }
         });
 
-        // Get only the 5 most recent delivered orders
-        const recentSales = sales.slice(0, 5);
+        // Get only the 3 most recent delivered orders
+        const recentSales = sales.slice(0, 3);
 
         setSalesData(recentSales);
         setTotalOnline(totalOnlineSales);
         setTotalCash(totalCashSales);
-        
+
       } catch (error) {
         console.error("Error fetching sales data:", error);
       } finally {
@@ -114,15 +114,16 @@ const DailySales = () => {
             subLabel="Online Payment"
             amount={`₱${totalOnline.toLocaleString()}`}
           />
-          <Card 
-            icon={<LuHeartHandshake />} 
-            label="Overall Profit:" 
-            amount={`₱${(totalCash + totalOnline).toLocaleString()}`} 
+          <Card
+            icon={<LuHeartHandshake />}
+            label="Overall Profit:"
+            amount={`₱${(totalCash + totalOnline).toLocaleString()}`}
           />
           <Card
             icon={<RiCustomerServiceFill />}
             label="Customer Summary:"
             amount={salesData.length}
+            subLabel="Showing top 3 orders"
           />
         </div>
         <div className="rounded-xl shadow-lg overflow-hidden border border-yellowsm/20">
@@ -158,8 +159,8 @@ const DailySales = () => {
                     </td>
                     <td className="px-6 py-4 text-center w-32">
                       <span className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-medium min-w-[80px]
-                        ${sale.mop === 'Online' 
-                          ? 'bg-green-100 text-green-800' 
+                        ${sale.mop === 'Online'
+                          ? 'bg-green-100 text-green-800'
                           : 'bg-blue-100 text-blue-800'}`}>
                         {sale.mop}
                       </span>

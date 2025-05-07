@@ -52,7 +52,7 @@ function Footer() {
         </motion.div>
 
         <motion.hr
-          className="h-0.5 my-5 w-[80%] max-w-[1200px] mx-auto bg-gray-700 border-0 rounded-lg opacity-10"
+          className="h-[1px] my-5 w-[95%] max-w-[1200px] mx-auto bg-gray-800 border-0 opacity-20"
           variants={itemVariants}
         ></motion.hr>
 
@@ -121,7 +121,7 @@ function Footer() {
         </motion.div>
 
         <motion.hr
-          className="h-0.5 my-5 w-[80%] max-w-[1200px] mx-auto bg-gray-700 border-0 rounded-lg opacity-10"
+          className="h-[1px] my-5 w-[95%] max-w-[1200px] mx-auto bg-gray-800 border-0 opacity-20"
           variants={itemVariants}
         ></motion.hr>
 

@@ -213,24 +213,27 @@ const SavedHistory = () => {
       // Check if we already have a save for this month
       const monthCheckQuery = query(
         collection(db, "saved_history"),
-        orderBy("dateSaved", "desc"),
-        limit(1)
+        orderBy("dateSaved", "desc")
       );
 
       const monthCheckSnapshot = await getDocs(monthCheckQuery);
-      const lastSave = monthCheckSnapshot.docs[0]?.data();
 
-      if (lastSave) {
-        const lastSaveDate = new Date(lastSave.dateSaved.seconds * 1000);
+      // Check if any of the documents match the current month/year
+      const currentMonthDoc = monthCheckSnapshot.docs.find(doc => {
+        const data = doc.data();
+        if (!data.dateSaved) return false;
 
-        // If last save was in a different month, create new save
-        if (lastSaveDate.getMonth() !== currentDate.getMonth() ||
-            lastSaveDate.getFullYear() !== currentDate.getFullYear()) {
-          await createNewMonthlySave(currentMonthYear);
-        }
-      } else {
-        // No previous saves exist, create first save
+        const savedDate = new Date(data.dateSaved.seconds * 1000);
+        return savedDate.getMonth() === currentDate.getMonth() &&
+               savedDate.getFullYear() === currentDate.getFullYear();
+      });
+
+      if (!currentMonthDoc) {
+        // No record exists for the current month, create one
+        console.log("No record found for current month, creating new monthly save");
         await createNewMonthlySave(currentMonthYear);
+      } else {
+        console.log("Record already exists for current month");
       }
     } catch (error) {
       console.error("Error checking monthly save:", error);
@@ -248,59 +251,68 @@ const SavedHistory = () => {
       const monthCheckSnapshot = await getDocs(monthCheckQuery);
       const existingRecord = monthCheckSnapshot.docs.find(doc => {
         const data = doc.data();
+        if (!data.dateSaved) return false;
+
         const savedDate = new Date(data.dateSaved.seconds * 1000);
         const currentDate = new Date();
         return savedDate.getMonth() === currentDate.getMonth() &&
                savedDate.getFullYear() === currentDate.getFullYear();
       });
 
-      // Get current month's transactions
-      const transactionQuery = query(
-        collection(db, "order_transaction"),
-        orderBy("order_date", "desc")
-      );
+      // If we already have transactions passed in, use those
+      let currentTransactions = transactions;
 
-      const transactionSnapshot = await getDocs(transactionQuery);
-      let currentTransactions = transactionSnapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
-        .filter(t => {
-          const orderDate = new Date(t.order_date.seconds * 1000);
-          const currentDate = new Date();
-          return orderDate.getMonth() === currentDate.getMonth() &&
-                 orderDate.getFullYear() === currentDate.getFullYear();
+      // Otherwise, get current month's transactions from the database
+      if (!currentTransactions) {
+        const transactionQuery = query(
+          collection(db, "order_transaction"),
+          orderBy("order_date", "desc")
+        );
+
+        const transactionSnapshot = await getDocs(transactionQuery);
+        currentTransactions = transactionSnapshot.docs
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }))
+          .filter(t => {
+            if (!t.order_date) return false;
+            const orderDate = new Date(t.order_date.seconds * 1000);
+            const currentDate = new Date();
+            return orderDate.getMonth() === currentDate.getMonth() &&
+                   orderDate.getFullYear() === currentDate.getFullYear();
+          });
+
+        // Sort by order_id in ascending order (lowest to highest)
+        currentTransactions = currentTransactions.sort((a, b) => {
+          // Convert order_id to numbers for proper numeric sorting
+          const orderIdA = parseInt(a.order_id) || 0;
+          const orderIdB = parseInt(b.order_id) || 0;
+          return orderIdA - orderIdB; // Ascending order
         });
-
-      // Sort by order_id in ascending order (lowest to highest)
-      currentTransactions = currentTransactions.sort((a, b) => {
-        // Convert order_id to numbers for proper numeric sorting
-        const orderIdA = parseInt(a.order_id) || 0;
-        const orderIdB = parseInt(b.order_id) || 0;
-        return orderIdA - orderIdB; // Ascending order
-      });
-
-      if (currentTransactions.length > 0) {
-        if (existingRecord) {
-          // Update existing record
-          await updateDoc(doc(db, "saved_history", existingRecord.id), {
-            transactions: currentTransactions,
-            lastUpdated: serverTimestamp()
-          });
-        } else {
-          // Create new record only if none exists for this month
-          await addDoc(collection(db, "saved_history"), {
-            monthYear,
-            transactions: currentTransactions,
-            dateSaved: serverTimestamp(),
-            lastUpdated: serverTimestamp()
-          });
-        }
-
-        // Refresh the list
-        await fetchSavedHistories();
       }
+
+      // Create or update the record even if there are no transactions yet
+      if (existingRecord) {
+        // Update existing record
+        await updateDoc(doc(db, "saved_history", existingRecord.id), {
+          transactions: currentTransactions || [],
+          lastUpdated: serverTimestamp()
+        });
+        console.log("Updated existing monthly save record");
+      } else {
+        // Create new record
+        await addDoc(collection(db, "saved_history"), {
+          monthYear,
+          transactions: currentTransactions || [],
+          dateSaved: serverTimestamp(),
+          lastUpdated: serverTimestamp()
+        });
+        console.log("Created new monthly save record");
+      }
+
+      // Refresh the list
+      await fetchSavedHistories();
     } catch (error) {
       console.error("Error creating/updating monthly save:", error);
     }
@@ -381,7 +393,7 @@ const SavedHistory = () => {
                     <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => handleRowClick(history)}
-                        className="inline-flex items-center justify-center p-2 text-amber-600 hover:text-amber-700 
+                        className="inline-flex items-center justify-center p-2 text-amber-600 hover:text-amber-700
                                  hover:bg-amber-50 rounded-lg transition-colors group-hover:bg-amber-100/50"
                         title="Download Report"
                       >

@@ -624,7 +624,7 @@ const InventoryDaily = () => {
       <section className="bg-white rounded-2xl shadow-feat w-[1180px] mx-auto my-4 px-4">
         <div className="w-full overflow-x-auto">
           <div className="flex items-center text-[1.28rem] tracking-tight font-bold py-3 px-4 font-latrue border-b-[0.5px] min-w-max justify-around">
-            <div className="w-[30px] min-w-[30px]"></div> {/* Spacer for reorder buttons */}
+            <div className="w-[30px] min-w-[30px]"></div> {/* Spacer for edit buttons */}
             <div className="w-[180px] min-w-[180px]">Raw Materials</div>
             <div className="w-[100px] min-w-[100px] text-center pl-2">Purchased</div>
             <div className="w-[100px] min-w-[100px] text-center pl-2">Processed<br />/Used</div>
@@ -644,7 +644,7 @@ const InventoryDaily = () => {
                 key={item.id}
                 className="flex justify-evenly items-center text-[1.15rem] font-latrue hover:bg-gray-50 mb-1 py-3 min-w-max border-b border-gray-100"
               >
-                {/* Replace reorder buttons with edit button */}
+                {/* Edit button */}
                 <div className="flex items-center justify-center w-[30px] min-w-[30px]">
                   <button
                     onClick={() => setEditingId(item.id)}

@@ -8,7 +8,7 @@ import useNameModal from "../../hooks/Modal/EnterNameModal";
 import useConfirmOrderModal from "../../hooks/Modal/ConfirmOrderModal";
 import useSuccessModal from "../../hooks/Modal/SuccessModal";
 import { AnimatePresence, motion } from "framer-motion";
-import { collection, addDoc, serverTimestamp, getFirestore, query, where, getDocs, orderBy } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, getFirestore, query, where, getDocs, orderBy, updateDoc, doc } from "firebase/firestore";
 import firebaseApp from "../../firebaseConfig";
 
 const DashboardOrder = ({ product, orderList, setOrderList }) => {
@@ -20,7 +20,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
   const [customerName, setCustomerName] = useState("");
   const [studentId, setStudentId] = useState("");
   const [nameError, setNameError] = useState("");
-  const [idError, setIdError] = useState("");
+  const [idError,   setIdError] = useState("");
   const [isValidating, setIsValidating] = useState(false);
 
   // Initialize Firestore
@@ -191,6 +191,15 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
     }
   };
 
+  // Check document size to ensure it doesn't exceed 32KB
+  const estimateDocumentSize = (obj) => {
+    // Convert object to JSON string and measure its size in bytes
+    const jsonString = JSON.stringify(obj);
+    // UTF-16 characters can take up to 4 bytes each in the worst case
+    // This is a conservative estimate
+    return jsonString.length * 4;
+  };
+
   // Save order to Firebase
   const saveOrderToFirebase = async () => {
     try {
@@ -206,6 +215,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
       }
 
       // Prepare order items with correct data types and exact format
+      // Remove URL completely to reduce document size
       const orderItems = orderList.map((item, index) => {
         const price = parseFloat(item.price);
         const qty = quantities[index];
@@ -216,12 +226,57 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
           price: price,
           quantity: qty,
           title: item.title,
-          url: item.url
+          // Don't include the URL at all - we'll use the product ID to reference the image if needed
+          imageRef: item.id // Using the product ID as a reference to the image
         };
       });
 
       // Calculate final total
       const orderTotal = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+      // Create the order document to check its size
+      const orderDoc = {
+        created_at: new Date(), // Use a regular Date for size estimation
+        customer_id: studentId,
+        items: orderItems,
+        mop: paymentMode,
+        no_order: totalQuantity,
+        order_date: new Date(), // Use a regular Date for size estimation
+        order_name: orderName,
+        order_status: "Preparing",
+        order_time: timeToday,
+        order_total: orderTotal,
+        recipient: customerName,
+        status: true,
+        updated_at: new Date(), // Use a regular Date for size estimation
+        order_id: "1" // Placeholder for size estimation
+      };
+
+      // Check if the document size exceeds 32KB (32,768 bytes)
+      const docSize = estimateDocumentSize(orderDoc);
+      console.log(`Estimated document size: ${docSize} bytes`);
+
+      if (docSize > 32768) {
+        console.warn("Document size exceeds 32KB limit. Trimming description fields...");
+
+        // Trim description fields to reduce size
+        orderItems.forEach(item => {
+          if (item.description && item.description.length > 50) {
+            item.description = item.description.substring(0, 50) + "...";
+          }
+        });
+
+        // Check size again after trimming
+        orderDoc.items = orderItems;
+        const newSize = estimateDocumentSize(orderDoc);
+        console.log(`New estimated document size after trimming: ${newSize} bytes`);
+
+        if (newSize > 32768) {
+          console.error("Document still exceeds 32KB limit after trimming");
+          alert("Order data is too large. Please reduce the number of items or try again.");
+          return false;
+        }
+      }
 
       // Get the highest order_id from existing orders created TODAY
       let nextOrderId = 1; // Default to 1 if no orders exist for today
@@ -292,6 +347,42 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
       const currentMonthYear = dateToday.toLocaleString("default", { month: "long", year: "numeric" });
       const customerHistoryRef = collection(db, "customer_history");
 
+      // Check if customer history document would exceed size limit
+      const customerHistoryDoc = {
+        monthYear: currentMonthYear,
+        totalItems: orderItems.reduce((sum, item) => sum + item.quantity, 0),
+        totalOrders: 1, // This is one order
+        totalSpent: orderTotal,
+        customerName: customerName,
+        studentId: studentId,
+        orderDate: formattedDate,
+        orderTime: timeToday,
+        customerCount: 1,
+        dateSaved: new Date(), // Use regular Date for size estimation
+        lastUpdated: new Date(), // Use regular Date for size estimation
+        orderItems: orderItems,
+        order_id: orderIdString
+      };
+
+      const historySize = estimateDocumentSize(customerHistoryDoc);
+      console.log(`Estimated customer history document size: ${historySize} bytes`);
+
+      if (historySize > 32768) {
+        console.warn("Customer history document exceeds 32KB limit. Simplifying order items...");
+
+        // Create simplified order items with minimal information
+        const simplifiedOrderItems = orderItems.map(item => ({
+          id: item.id,
+          title: item.title,
+          price: item.price,
+          quantity: item.quantity,
+          category: item.category
+          // Omit description and other large fields
+        }));
+
+        customerHistoryDoc.orderItems = simplifiedOrderItems;
+      }
+
       const customerHistorySnapshot = await addDoc(customerHistoryRef, {
         monthYear: currentMonthYear,
         totalItems: orderItems.reduce((sum, item) => sum + item.quantity, 0),
@@ -304,7 +395,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
         customerCount: 1,
         dateSaved: serverTimestamp(),
         lastUpdated: serverTimestamp(),
-        orderItems: orderItems,
+        orderItems: customerHistoryDoc.orderItems, // Use potentially simplified items
         order_id: orderIdString // Add the order_id to customer_history as well
       });
 
@@ -435,6 +526,81 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
     }
   };
 
+  // Function to update or create monthly saved history
+  const updateMonthlySavedHistory = async () => {
+    try {
+      const currentDate = new Date();
+      const currentMonthYear = currentDate.toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric'
+      });
+
+      // Check if a record for this month already exists
+      const monthCheckQuery = query(
+        collection(db, "saved_history"),
+        orderBy("dateSaved", "desc")
+      );
+
+      const monthCheckSnapshot = await getDocs(monthCheckQuery);
+      const existingRecord = monthCheckSnapshot.docs.find(doc => {
+        const data = doc.data();
+        if (!data.dateSaved) return false;
+
+        const savedDate = new Date(data.dateSaved.seconds * 1000);
+        return savedDate.getMonth() === currentDate.getMonth() &&
+               savedDate.getFullYear() === currentDate.getFullYear();
+      });
+
+      // Get current month's transactions
+      const transactionQuery = query(
+        collection(db, "order_transaction"),
+        orderBy("order_date", "desc")
+      );
+
+      const transactionSnapshot = await getDocs(transactionQuery);
+      let currentTransactions = transactionSnapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        .filter(t => {
+          if (!t.order_date) return false;
+          const orderDate = new Date(t.order_date.seconds * 1000);
+          return orderDate.getMonth() === currentDate.getMonth() &&
+                 orderDate.getFullYear() === currentDate.getFullYear();
+        });
+
+      // Sort by order_id in ascending order
+      currentTransactions = currentTransactions.sort((a, b) => {
+        const orderIdA = parseInt(a.order_id) || 0;
+        const orderIdB = parseInt(b.order_id) || 0;
+        return orderIdA - orderIdB;
+      });
+
+      if (currentTransactions.length > 0) {
+        if (existingRecord) {
+          // Update existing record
+          await updateDoc(doc(db, "saved_history", existingRecord.id), {
+            transactions: currentTransactions,
+            lastUpdated: serverTimestamp()
+          });
+          console.log("Updated existing monthly saved history");
+        } else {
+          // Create new record
+          await addDoc(collection(db, "saved_history"), {
+            monthYear: currentMonthYear,
+            transactions: currentTransactions,
+            dateSaved: serverTimestamp(),
+            lastUpdated: serverTimestamp()
+          });
+          console.log("Created new monthly saved history");
+        }
+      }
+    } catch (error) {
+      console.error("Error updating monthly saved history:", error);
+    }
+  };
+
   const handleConfirmOrder = async () => {
     toggleConfirmOrderModal(); // Hide confirmation modal
 
@@ -485,6 +651,9 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
       };
 
       await getNextOrderNumber();
+
+      // Update or create monthly saved history
+      await updateMonthlySavedHistory();
 
       setTimeout(() => {
         showSuccessModal();
@@ -582,6 +751,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                   key={index}
                   className="group flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-amber-50/50 transition-colors"
                 >
+                  {/* Display the image from the URL if available */}
                   <img
                     src={item.url}
                     alt={item.title}
@@ -856,6 +1026,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                   <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
                     {displayItems.map((item, index) => (
                       <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                        {/* Display the image from the URL if available */}
                         <img
                           src={item.url}
                           alt={item.title}
