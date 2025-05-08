@@ -324,7 +324,7 @@ const CustomerFrequency = () => {
 
   // Update the chart section in the return statement
   return (
-    <div className="bg-white rounded-2xl shadow-feat w-full mx-auto block pb-5">
+    <div className="bg-white rounded-2xl shadow-feat w-full mx-auto overflow-auto block pb-5 h-110">
       <AnalyticsDataHeader sectionHeader={sectionHeader} />
       {/* Make grid responsive */}
       <div className="mt-4 mx-3 md:mx-7 w-auto">
