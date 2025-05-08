@@ -42,6 +42,24 @@
   background-clip: content-box;
 }
 
+/* Custom scrollbar for analytics tables */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 207, 80, 0.5);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 207, 80, 0.7);
+}
+
 /* Animation for modal popup */
 @keyframes popUp {
   0% {

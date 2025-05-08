@@ -119,37 +119,40 @@ const TopSellingCard = memo(({ label, subLabel, products, quantities }) => {
         </div>
         <div className="text-sm text-gray-600">{subLabel}</div>
       </div>
-      <div className="space-y-3">
-        {Object.entries(topProducts).map(([name, amount]) => (
-          <div
-            key={name}
-            className={`flex justify-between items-start p-3 rounded-lg transition-all duration-200
-              ${name === topSellingProduct
-                ? 'bg-gradient-to-r from-amber-50 to-amber-100/30 shadow-sm'
-                : 'hover:bg-amber-50/30'}`}
-          >
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <span className={`${name === topSellingProduct ? 'font-bold text-amber-700' : 'text-gray-700'}`}>
-                  {name}
-                </span>
-                {name === topSellingProduct && amount > 0 && (
-                  <span className="text-amber-600 text-xs px-2 py-1 bg-amber-100 rounded-full font-medium">
-                    Best Seller
+      {/* Fixed height container with scrolling */}
+      <div className="h-[140px] overflow-y-auto pr-1 custom-scrollbar">
+        <div className="space-y-3">
+          {Object.entries(topProducts).map(([name, amount]) => (
+            <div
+              key={name}
+              className={`flex justify-between items-start p-3 rounded-lg transition-all duration-200
+                ${name === topSellingProduct
+                  ? 'bg-gradient-to-r from-amber-50 to-amber-100/30 shadow-sm'
+                  : 'hover:bg-amber-50/30'}`}
+            >
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className={`${name === topSellingProduct ? 'font-bold text-amber-700' : 'text-gray-700'}`}>
+                    {name}
                   </span>
-                )}
+                  {name === topSellingProduct && amount > 0 && (
+                    <span className="text-amber-600 text-xs px-2 py-1 bg-amber-100 rounded-full font-medium">
+                      Best Seller
+                    </span>
+                  )}
+                </div>
+                <div className="text-gray-600 text-sm mt-1">
+                  Sold: {quantitiesToDisplay[name] || 0}x
+                </div>
               </div>
-              <div className="text-gray-600 text-sm mt-1">
-                Sold: {quantitiesToDisplay[name] || 0}x
+              <div className={`${name === topSellingProduct
+                ? 'text-amber-700 font-bold text-xl'
+                : 'text-gray-700'} text-right ml-4`}>
+                ₱{amount.toLocaleString()}
               </div>
             </div>
-            <div className={`${name === topSellingProduct
-              ? 'text-amber-700 font-bold text-xl'
-              : 'text-gray-700'} text-right ml-4`}>
-              ₱{amount.toLocaleString()}
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

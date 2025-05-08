@@ -6,6 +6,8 @@ import { FiAlertCircle } from "react-icons/fi";
 import useNameModal from "../../hooks/Modal/EnterNameModal";
 import useConfirmOrderModal from "../../hooks/Modal/ConfirmOrderModal";
 import useSuccessModal from "../../hooks/Modal/SuccessModal";
+import useQRPaymentModal from "../../hooks/Modal/QRPaymentModal";
+import QRPaymentModal from "../Dashboard/QRPaymentModal";
 import { AnimatePresence, motion } from "framer-motion";
 import { collection, addDoc, serverTimestamp, getFirestore, query, where, getDocs, orderBy, updateDoc, doc } from "firebase/firestore";
 import firebaseApp from "../../firebaseConfig";
@@ -29,6 +31,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
   const { inputNameModal, showNameModal, toggleModal } = useNameModal();
   const { confirmOrderModal, showConfirmOrderModal, toggleConfirmOrderModal } = useConfirmOrderModal();
   const { okayModal, showSuccessModal } = useSuccessModal();
+  const { qrPaymentModal, showQRPaymentModal, hideQRPaymentModal } = useQRPaymentModal();
 
   // Get current date and time
   const dateToday = new Date();
@@ -607,6 +610,10 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
     const saveResult = await saveOrderToFirebase();
 
     if (saveResult) {
+      // Store the current subtotal and order number before resetting
+      const currentSubtotal = subtotal;
+      const currentOrderNumber = orderNumber;
+
       // Update the order number display to show the next order number
       const getNextOrderNumber = async () => {
         try {
@@ -654,10 +661,6 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
       // Update or create monthly saved history
       await updateMonthlySavedHistory();
 
-      setTimeout(() => {
-        showSuccessModal();
-      }, 300);
-
       // Reset order lists
       if (setOrderList) {
         setOrderList([]);
@@ -665,9 +668,47 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
         setTotalQuantity(0);
         setSubtotal(0);
       }
+
+      // If payment mode is Online, show QR Payment Modal with stored values
+      if (paymentMode === "Online") {
+        // Use setTimeout to ensure state updates have completed
+        setTimeout(() => {
+          // Show QR Payment Modal with the stored subtotal
+          const qrModalElement = document.createElement('div');
+          document.body.appendChild(qrModalElement);
+
+          // Show QR Payment Modal with correct values
+          showQRPaymentModal();
+
+          // Update QR Payment Modal props
+          const qrPaymentModalProps = {
+            orderNumber: currentOrderNumber - 1,
+            totalAmount: currentSubtotal
+          };
+
+          // Pass the stored values to QRPaymentModal
+          document.dispatchEvent(new CustomEvent('updateQRPaymentModal', {
+            detail: qrPaymentModalProps
+          }));
+        }, 300);
+      } else {
+        // For Cash payments, show success modal directly
+        setTimeout(() => {
+          showSuccessModal();
+        }, 300);
+      }
     } else {
       alert("Failed to save order. Please try again.");
     }
+  };
+
+  // Handle QR payment completion
+  const handleQRPaymentComplete = () => {
+    hideQRPaymentModal(); // Hide QR payment modal
+
+    setTimeout(() => {
+      showSuccessModal(); // Show success modal
+    }, 300);
   };
 
   const handleOrderComplete = () => {
@@ -1126,6 +1167,16 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
           </motion.div>
         </AnimatePresence>
       )}
+
+      {/* QR Payment Modal */}
+      <QRPaymentModal
+        isVisible={qrPaymentModal}
+        onClose={hideQRPaymentModal}
+        onComplete={handleQRPaymentComplete}
+        orderNumber={orderNumber - 1}
+        totalAmount={subtotal}
+        paymentMethod="Online"
+      />
     </>
   );
 };
