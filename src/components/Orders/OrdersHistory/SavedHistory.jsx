@@ -351,8 +351,8 @@ const SavedHistory = () => {
 
   // Update the return section with modern UI
   return (
-    <div className="w-full min-h-screen bg-gray-50/50 p-6">
-      <section className="max-w-5xl mx-auto">
+    <div className="w-auto min-h-screen bg-gray-50/50 py-6">
+      <section className="w-[94.5%] mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Order History</h1>
           <p className="text-gray-500 mt-1">View and download monthly order reports</p>

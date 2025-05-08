@@ -331,7 +331,7 @@ const OrdersTable = () => {
 
   // Update the main section and table styling
   return (
-    <section className="bg-white rounded-2xl shadow-lg w-full mx-auto p-6">
+    <section className="bg-white rounded-2xl h-[calc(100vh-150px)] shadow-lg w-full mx-auto p-6">
       {error && (
         <div className="p-4 mb-6 text-red-500 bg-red-50 rounded-xl border border-red-100 flex items-center">
           <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -388,7 +388,7 @@ const OrdersTable = () => {
           <p className="mt-4 text-amber-600 font-medium">Loading orders...</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-amber-100">
+        <div className="overflow-auto h-9/12 rounded-xl border border-amber-100">
           {/* Fixed header */}
           <div className="bg-gradient-to-r from-amber-50 to-amber-100/50 sticky top-0 z-10">
             <div className="grid grid-cols-6 text-amber-800">
@@ -400,9 +400,8 @@ const OrdersTable = () => {
               <div className="px-6 py-4 font-semibold text-center">Status</div>
             </div>
           </div>
-
           {/* Scrollable content */}
-          <div className="max-h-[calc(100vh-280px)] overflow-y-auto">
+          <div className="overflow-y-scroll">
             {filterOrdersBySearch(filterOrders(orders)).length > 0 ? (
               <div className="divide-y divide-amber-100">
                 {filterOrdersBySearch(filterOrders(orders)).map((order) => (
