@@ -30,14 +30,24 @@ const InventoryNav = () => {
   // Add error state
   const [formError, setFormError] = useState(false);
 
+  // Add specific error message for raw material name
+  const [rawMaterialError, setRawMaterialError] = useState('');
+
   // Update the handleAddItem function to remove setTimeout
   const handleAddItem = async (e) => {
     e.preventDefault();
-    
+
     try {
+      // Check if all required fields are filled
       if (!formInputs.rawMaterial || !formInputs.purchased || !clerkName) {
         setFormError(true);
         if (!clerkName) setClerkNameError(true);
+        return;
+      }
+
+      // Validate raw material name again before submission
+      if (!validateRawMaterialName(formInputs.rawMaterial)) {
+        setRawMaterialError('Item name can only contain letters (no numbers or special characters)');
         return;
       }
 
@@ -57,7 +67,7 @@ const InventoryNav = () => {
       };
 
       const docRef = await addDoc(collection(db, "inventory"), newItem);
-      
+
       // Reset form states
       setFormInputs({
         rawMaterial: '',
@@ -67,7 +77,7 @@ const InventoryNav = () => {
       setClerkName('');
       setFormError(false);
       setClerkNameError(false);
-      
+
       // Close add item modal and show success modal
       toggleSaveModal();
       toggleConfirmationModal();
@@ -78,13 +88,43 @@ const InventoryNav = () => {
     }
   };
 
+  // Validate raw material name - only allow letters and spaces
+  const validateRawMaterialName = (name) => {
+    // Regular expression to match only letters and spaces
+    const letterOnlyRegex = /^[A-Za-z\s]+$/;
+    return letterOnlyRegex.test(name);
+  };
+
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    // Special validation for raw material name
+    if (name === 'rawMaterial') {
+      // Allow empty value (for initial state)
+      if (value === '') {
+        setRawMaterialError('');
+        setFormInputs(prev => ({
+          ...prev,
+          [name]: value
+        }));
+        return;
+      }
+
+      // Check if the input contains only letters and spaces
+      if (!validateRawMaterialName(value)) {
+        setRawMaterialError('Item name can only contain letters (no numbers or special characters)');
+        return;
+      } else {
+        setRawMaterialError('');
+      }
+    }
+
     setFormInputs(prev => ({
       ...prev,
       [name]: value
     }));
+
     // Clear error when user starts typing
     if (formError) setFormError(false);
   };
@@ -124,8 +164,8 @@ const InventoryNav = () => {
             >
               <div className="w-full flex items-center justify-between p-6">
                 <h2 className="text-2xl font-bold text-black">Add Item</h2>
-                <button 
-                  className="hover:bg-gray-100 p-2 rounded-full transition-colors" 
+                <button
+                  className="hover:bg-gray-100 p-2 rounded-full transition-colors"
                   onClick={toggleSaveModal}
                 >
                   <X className="size-5 text-gray-400"/>
@@ -135,21 +175,24 @@ const InventoryNav = () => {
               <form className="flex flex-col space-y-6 px-6 pb-6" onSubmit={handleAddItem}>
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">Raw Materials</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     name="rawMaterial"
                     value={formInputs.rawMaterial}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border ${formError && !formInputs.rawMaterial ? 'border-red-500' : 'border-gray-200'} rounded-2xl text-sm focus:border-[#FFCF50] focus:ring-2 focus:ring-[#FFCF50]/20 transition-all outline-none placeholder:text-gray-400`}
-                    placeholder="Enter raw material name"
+                    className={`w-full px-4 py-3 border ${(formError && !formInputs.rawMaterial) || rawMaterialError ? 'border-red-500' : 'border-gray-200'} rounded-2xl text-sm focus:border-[#FFCF50] focus:ring-2 focus:ring-[#FFCF50]/20 transition-all outline-none placeholder:text-gray-400`}
+                    placeholder="Enter raw material name (letters only)"
                     required
                   />
+                  {rawMaterialError && (
+                    <p className="text-red-500 text-xs mt-1">{rawMaterialError}</p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">Purchased (g)</label>
-                    <input 
+                    <input
                       type="number"
                       name="purchased"
                       value={formInputs.purchased}
@@ -160,12 +203,12 @@ const InventoryNav = () => {
                       min="0"
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
                       Processed/Used (g) <span className="text-gray-400 text-xs">(Optional)</span>
                     </label>
-                    <input 
+                    <input
                       type="number"
                       name="used"
                       value={formInputs.used}
@@ -179,8 +222,8 @@ const InventoryNav = () => {
 
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">Clerk Name</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     name="clerkName"
                     value={clerkName}
                     onChange={(e) => setClerkName(e.target.value)}
@@ -198,7 +241,7 @@ const InventoryNav = () => {
                   <button
                     type="submit"
                     className="bg-[#FFCF50] text-black px-8 py-3 rounded-2xl font-medium text-sm hover:bg-[#e6bb48] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={formError}
+                    disabled={formError || !!rawMaterialError}
                   >
                     Add Item
                   </button>
@@ -227,7 +270,7 @@ const InventoryNav = () => {
               transition={{ duration: 0.2 }}
             >
               <div className="w-full rounded-t-3xl flex items-center justify-end text-gray-500 p-3">
-                <button 
+                <button
                   onClick={toggleConfirmationModal}
                   className="hover:bg-gray-100 p-2 rounded-full transition-colors"
                 >
