@@ -96,19 +96,24 @@ const TopSellingCard = memo(({ label, subLabel, products, quantities }) => {
     "Milk Tea": 0
   };
 
-  // Find the top selling product by sales amount, not quantity
-  const sortedProducts = Object.entries(productsToDisplay).sort(([,a], [,b]) => b - a);
-  const topSellingProduct = sortedProducts[0]?.[0] || "No sales yet";
+  // Find the top selling product by quantity, not sales amount
+  const sortedByQuantity = Object.entries(quantitiesToDisplay).sort(([,a], [,b]) => b - a);
+  const topSellingProduct = sortedByQuantity[0]?.[0] || "No sales yet";
 
-  // Limit to top 5 products for display
-  const topProducts = sortedProducts.slice(0, 5).reduce((obj, [key, value]) => {
-    obj[key] = value;
+  // Sort products by quantity for display purposes (not by price)
+  const sortedProducts = sortedByQuantity;
+
+  // Limit to top 5 products for display (sorted by quantity but showing price values)
+  const topProducts = sortedProducts.slice(0, 5).reduce((obj, [key]) => {
+    // Use the product name (key) to get the price value from productsToDisplay
+    obj[key] = productsToDisplay[key];
     return obj;
   }, {});
 
-  console.log("Top selling product:", topSellingProduct);
-  console.log("Products to display:", topProducts);
+  console.log("Top selling product (by quantity):", topSellingProduct);
+  console.log("Products to display (sorted by quantity, showing price values):", topProducts);
   console.log("All quantities:", quantitiesToDisplay);
+  console.log("Products sorted by quantity:", sortedByQuantity);
 
   return (
     <div className="bg-gradient-to-br from-amber-50 to-yellowsm/20 w-full rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6">
@@ -135,7 +140,7 @@ const TopSellingCard = memo(({ label, subLabel, products, quantities }) => {
                   <span className={`${name === topSellingProduct ? 'font-bold text-amber-700' : 'text-gray-700'}`}>
                     {name}
                   </span>
-                  {name === topSellingProduct && amount > 0 && (
+                  {name === topSellingProduct && quantitiesToDisplay[name] > 0 && (
                     <span className="text-amber-600 text-xs px-2 py-1 bg-amber-100 rounded-full font-medium">
                       Best Seller
                     </span>
@@ -548,20 +553,26 @@ const ProductSales = () => {
           })) : [];
         }));
 
-        // Sort products by sales volume
-        const sortedProducts = Object.entries(productSales)
-          .sort(([,a], [,b]) => b - a)
-          .reduce((obj, [key, value]) => ({
-            ...obj,
-            [key]: value
-          }), {});
+        // Sort products by quantity sold (not by sales volume)
+        const sortedByQuantity = Object.entries(productQty)
+          .sort(([,a], [,b]) => b - a);
+
+        // Convert to object format with price values for display
+        const sortedProducts = sortedByQuantity.reduce((obj, [key]) => ({
+          ...obj,
+          [key]: productSales[key]
+        }), {});
 
         console.log('Product Sales:', productSales);
         console.log('Product Quantities:', productQty);
 
-        // Log the top selling product
-        const topProduct = Object.entries(productSales).sort(([,a], [,b]) => b - a)[0];
-        console.log('Top Selling Product:', topProduct ? `${topProduct[0]} - ₱${topProduct[1]}` : 'None');
+        // Log the top selling product by quantity
+        const topProductByQuantity = Object.entries(productQty).sort(([,a], [,b]) => b - a)[0];
+        console.log('Top Selling Product (by quantity):', topProductByQuantity ? `${topProductByQuantity[0]} - ${topProductByQuantity[1]} units` : 'None');
+
+        // Also log the top selling product by price for comparison
+        const topProductByPrice = Object.entries(productSales).sort(([,a], [,b]) => b - a)[0];
+        console.log('Top Selling Product (by price):', topProductByPrice ? `${topProductByPrice[0]} - ₱${topProductByPrice[1]}` : 'None');
 
         // Prepare chart data dynamically
         const chartData = [
