@@ -21,8 +21,12 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
   const [customerName, setCustomerName] = useState("");
   const [studentId, setStudentId] = useState("");
   const [nameError, setNameError] = useState("");
-  const [idError,   setIdError] = useState("");
+  const [idError, setIdError] = useState("");
   const [isValidating, setIsValidating] = useState(false);
+  const [isStudent, setIsStudent] = useState(true);
+  const [customerSuffix, setCustomerSuffix] = useState("");
+  const [lastGeneratedId, setLastGeneratedId] = useState(0);
+  const [existingCustomers, setExistingCustomers] = useState([]);
 
   // Initialize Firestore
   const db = getFirestore(firebaseApp);
@@ -104,7 +108,55 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
     };
 
     getNextOrderNumber();
+    fetchExistingCustomers();
   }, []);
+
+  // Fetch existing customers and the last generated customer ID
+  const fetchExistingCustomers = async () => {
+    try {
+      // Query all orders to get customer information
+      const customersQuery = query(
+        collection(db, "order_transaction"),
+        orderBy("created_at", "desc")
+      );
+
+      const snapshot = await getDocs(customersQuery);
+      const customers = [];
+      let maxCustomerId = 0;
+
+      snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        if (data.recipient && data.customer_id) {
+          // Check if this is a non-student ID (starts with 'C')
+          if (data.customer_id.toString().startsWith('C')) {
+            const idNumber = parseInt(data.customer_id.substring(1));
+            if (idNumber > maxCustomerId) {
+              maxCustomerId = idNumber;
+            }
+          }
+
+          // Add to customers list if not already there
+          const existingCustomer = customers.find(c =>
+            c.name.toLowerCase() === data.recipient.toLowerCase()
+          );
+
+          if (!existingCustomer) {
+            customers.push({
+              name: data.recipient,
+              id: data.customer_id
+            });
+          }
+        }
+      });
+
+      setExistingCustomers(customers);
+      setLastGeneratedId(maxCustomerId);
+      console.log(`Loaded ${customers.length} existing customers`);
+      console.log(`Last generated customer ID: C${maxCustomerId}`);
+    } catch (error) {
+      console.error("Error fetching existing customers:", error);
+    }
+  };
 
   // Decrease quantity
   const decreaseQuantity = (index) => {
@@ -326,10 +378,19 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
       // Convert to string for consistency
       const orderIdString = nextOrderId.toString();
 
+      // Ensure we have a valid customer ID for non-students
+      if (!isStudent && (!studentId || studentId === '')) {
+        // Generate a new customer ID for non-students if none exists
+        const newCustomerId = generateCustomerId();
+        setStudentId(newCustomerId);
+        console.log(`Generated new customer ID for order: ${newCustomerId}`);
+      }
+
       // Save to "order_transaction" collection with exact format as specified
       const orderTransactionRef = await addDoc(collection(db, "order_transaction"), {
         created_at: serverTimestamp(),
         customer_id: studentId,
+        is_student: isStudent,
         items: orderItems,
         mop: paymentMode,
         no_order: totalQuantity,
@@ -395,7 +456,8 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
         totalOrders: 1, // This is one order
         totalSpent: orderTotal,
         customerName: customerName,
-        studentId: studentId,
+        customer_id: studentId,
+        is_student: isStudent,
         orderDate: formattedDate,
         orderTime: timeToday,
         customerCount: 1,
@@ -408,6 +470,20 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
       });
 
       console.log("Order saved to customer_history:", customerHistorySnapshot.id);
+
+      // Add this customer to our existingCustomers list if they're new
+      const existingCustomer = existingCustomers.find(
+        c => c.name.toLowerCase() === customerName.toLowerCase()
+      );
+
+      if (!existingCustomer) {
+        setExistingCustomers([
+          ...existingCustomers,
+          { name: customerName, id: studentId }
+        ]);
+        console.log(`Added new customer to existing customers list: ${customerName} (${studentId})`);
+      }
+
       return true;
     } catch (error) {
       console.error("Error saving order to Firebase:", error);
@@ -425,9 +501,53 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
   };
 
   const handleCustomerNameChange = (e) => {
-    setCustomerName(e.target.value);
+    // Only allow alphabetic characters, spaces, dots, and hyphens
+    const value = e.target.value;
+
+    // Allow only letters, spaces, dots, and hyphens
+    // This regex allows for names with suffixes like "Jr.", "Sr.", "III", etc.
+    if (/^[A-Za-z\s.\-]*$/.test(value) || value === '') {
+      setCustomerName(value);
+
+      // Check if this customer already exists
+      if (value.trim() !== '') {
+        const existingCustomer = existingCustomers.find(
+          c => c.name.toLowerCase() === value.toLowerCase()
+        );
+
+        if (existingCustomer) {
+          console.log(`Found existing customer: ${existingCustomer.name} with ID: ${existingCustomer.id}`);
+          setStudentId(existingCustomer.id.toString());
+
+          // Determine if this is a student or non-student based on ID format
+          setIsStudent(!existingCustomer.id.toString().startsWith('C'));
+        }
+      }
+    }
+
     // Clear name error when user types
     if (nameError) setNameError("");
+  };
+
+  // Function to handle suffix selection
+  const handleSuffixChange = (suffix) => {
+    setCustomerSuffix(suffix);
+
+    // Append suffix to name if not already there
+    if (suffix && !customerName.endsWith(suffix)) {
+      // Remove any existing suffix first
+      let baseName = customerName;
+      const suffixes = [" Jr.", " Sr.", " I", " II", " III", " IV", " V"];
+
+      for (const s of suffixes) {
+        if (baseName.endsWith(s)) {
+          baseName = baseName.substring(0, baseName.length - s.length);
+          break;
+        }
+      }
+
+      setCustomerName(baseName.trim() + " " + suffix);
+    }
   };
 
   // Function to check if student ID already exists in the database
@@ -463,6 +583,13 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
     }
   };
 
+  // Generate a unique customer ID for non-students
+  const generateCustomerId = () => {
+    const newId = lastGeneratedId + 1;
+    setLastGeneratedId(newId);
+    return `C${newId}`;
+  };
+
   // Validate form inputs
   const validateInputs = async () => {
     let isValid = true;
@@ -475,24 +602,44 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
     if (!customerName.trim()) {
       setNameError("Customer name is required");
       isValid = false;
+    } else if (!/^[A-Za-z\s.\-]+$/.test(customerName)) {
+      setNameError("Name should only contain letters, spaces, dots, and hyphens");
+      isValid = false;
     }
 
-    // Validate customer ID
-    if (!studentId.trim()) {
-      setIdError("Customer ID is required");
-      isValid = false;
-    } else if (studentId.length !== 6) {
-      setIdError("Customer ID must be exactly 6 digits");
-      isValid = false;
-    } else if (!/^\d+$/.test(studentId)) {
-      setIdError("Customer ID must contain only numbers");
-      isValid = false;
-    } else {
-      // Check for duplicate ID with different name
-      const isDuplicate = await checkDuplicateId(studentId, customerName);
-      if (isDuplicate) {
-        setIdError("This Customer ID is already in use with a different name");
+    // For students, validate student ID
+    if (isStudent) {
+      if (!studentId.trim()) {
+        setIdError("Student ID is required");
         isValid = false;
+      } else if (studentId.length !== 6) {
+        setIdError("Student ID must be exactly 6 digits");
+        isValid = false;
+      } else if (!/^\d+$/.test(studentId)) {
+        setIdError("Student ID must contain only numbers");
+        isValid = false;
+      } else {
+        // Check for duplicate ID with different name
+        const isDuplicate = await checkDuplicateId(studentId, customerName);
+        if (isDuplicate) {
+          setIdError("This Student ID is already in use with a different name");
+          isValid = false;
+        }
+      }
+    } else {
+      // For non-students, check if they already exist
+      const existingCustomer = existingCustomers.find(
+        c => c.name.toLowerCase() === customerName.toLowerCase()
+      );
+
+      if (existingCustomer) {
+        // Use existing customer ID
+        setStudentId(existingCustomer.id.toString());
+      } else if (!studentId || studentId === '') {
+        // Generate new customer ID
+        const newCustomerId = generateCustomerId();
+        setStudentId(newCustomerId);
+        console.log(`Generated new customer ID: ${newCustomerId}`);
       }
     }
 
@@ -507,6 +654,8 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
     setNameError("");
     setIdError("");
     setIsValidating(false);
+    setIsStudent(true);
+    setCustomerSuffix("");
 
     // Close the modal
     toggleModal();
@@ -1256,6 +1405,38 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
 
               {/* Form Fields */}
               <div className="px-8 py-6 space-y-5">
+                {/* Customer Type Toggle */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
+                    Customer Type
+                  </label>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsStudent(true)}
+                      className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all ${
+                        isStudent
+                          ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      Student
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsStudent(false)}
+                      className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all ${
+                        !isStudent
+                          ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      Non-Student
+                    </button>
+                  </div>
+                </div>
+
+                {/* Customer Name */}
                 <div>
                   <label className="block text-sm font-medium text-gray-900 mb-1.5">
                     Customer Name
@@ -1277,33 +1458,104 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                   )}
                 </div>
 
+                {/* Name Suffix */}
                 <div>
                   <label className="block text-sm font-medium text-gray-900 mb-1.5">
-                    Customer ID
+                    Suffix (Optional)
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Enter 6-digit ID"
-                    maxLength={6}
-                    className={`w-full px-4 py-2.5 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2
-                    ${idError ? 'focus:ring-red-500/20 bg-red-50' : 'focus:ring-emerald-500/20'}
-                    transition-all text-sm`}
-                    value={studentId}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
-                      if (value.length <= 6) {
-                        setStudentId(value);
-                        if (idError) setIdError("");
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      // Allow only numbers, backspace, delete, tab, arrows
-                      const allowedKeys = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
-                      if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
-                        e.preventDefault();
-                      }
-                    }}
-                  />
+                  <div className="flex flex-wrap gap-2">
+                    {["Jr.", "Sr.", "I", "II", "III", "IV", "V"].map((suffix) => (
+                      <button
+                        key={suffix}
+                        type="button"
+                        onClick={() => {
+                          // If already selected, deselect it
+                          if (customerSuffix === suffix) {
+                            setCustomerSuffix("");
+
+                            // Remove suffix from name if present
+                            if (customerName.endsWith(` ${suffix}`)) {
+                              setCustomerName(customerName.substring(0, customerName.length - suffix.length - 1));
+                            }
+                          } else {
+                            // Otherwise select it and update name
+                            let baseName = customerName;
+                            const suffixes = [" Jr.", " Sr.", " I", " II", " III", " IV", " V"];
+
+                            // Remove any existing suffix
+                            for (const s of suffixes) {
+                              if (baseName.endsWith(s)) {
+                                baseName = baseName.substring(0, baseName.length - s.length);
+                                break;
+                              }
+                            }
+
+                            setCustomerSuffix(suffix);
+                            setCustomerName(baseName.trim() + " " + suffix);
+                          }
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          customerSuffix === suffix
+                            ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-transparent'
+                        }`}
+                      >
+                        {suffix}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Customer ID - different based on customer type */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                    {isStudent ? "Student ID" : "Customer ID"}
+                  </label>
+                  {isStudent ? (
+                    // Student ID input
+                    <input
+                      type="text"
+                      placeholder="Enter 6-digit Student ID"
+                      maxLength={6}
+                      className={`w-full px-4 py-2.5 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2
+                      ${idError ? 'focus:ring-red-500/20 bg-red-50' : 'focus:ring-emerald-500/20'}
+                      transition-all text-sm`}
+                      value={studentId}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '');
+                        if (value.length <= 6) {
+                          setStudentId(value);
+                          if (idError) setIdError("");
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        // Allow only numbers, backspace, delete, tab, arrows
+                        const allowedKeys = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+                        if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
+                    />
+                  ) : (
+                    // Non-student ID display (read-only if exists)
+                    <div className="flex items-center">
+                      <input
+                        type="text"
+                        placeholder="Auto-generated for new customers"
+                        className="w-full px-4 py-2.5 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2
+                        focus:ring-emerald-500/20 transition-all text-sm"
+                        value={studentId}
+                        readOnly
+                      />
+                      {studentId && (
+                        <div className="ml-2 px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs">
+                          {existingCustomers.find(c => c.name.toLowerCase() === customerName.toLowerCase())
+                            ? "Existing"
+                            : "New"}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   {idError && (
                     <p className="mt-2 text-sm text-red-500 flex items-center gap-1.5">
                       <FiAlertCircle size={14} />

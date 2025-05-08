@@ -108,8 +108,7 @@ const TopSellingCard = memo(({ label, subLabel, products, quantities }) => {
     return obj;
   }, {});
 
-  console.log("Top selling product (by quantity):", topSellingProduct);
-  console.log("Products to display (sorted by quantity, showing price values):", topProducts);
+  // Debug logs removed to prevent console spam
 
   return (
     <div className="bg-gradient-to-br from-amber-50 to-yellowsm/20 w-full rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6">
@@ -332,14 +331,7 @@ const ProductSales = () => {
     date: currentMonth
   };
 
-  console.log('ProductSales component rendering with data:', {
-    weeklyTotals,
-    monthlyTotal,
-    topSellingProducts,
-    productQuantities,
-    loading,
-    dataFetched
-  });
+  // Debug logs removed to prevent console spam
 
   if (loading) {
     return (
