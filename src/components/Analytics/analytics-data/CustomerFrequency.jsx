@@ -9,8 +9,8 @@ import {
   BarElement,
   LineElement,
   PointElement,
-  LineController, 
-  BarController,  
+  LineController,
+  BarController,
   Title,
   Tooltip,
   Legend,
@@ -25,8 +25,8 @@ ChartJS.register(
   BarElement,
   LineElement,
   PointElement,
-  LineController, 
-  BarController,  
+  LineController,
+  BarController,
   Title,
   Tooltip,
   Legend,
@@ -52,7 +52,7 @@ const CustomerFrequency = () => {
   const [loading, setLoading] = useState(true);
   const db = getFirestore(firebaseApp);
 
-  const currentMonth = useMemo(() => 
+  const currentMonth = useMemo(() =>
     new Date().toLocaleString('default', { month: 'long' })
   , []);
 
@@ -67,10 +67,10 @@ const CustomerFrequency = () => {
         snapshot.forEach((doc) => {
           const data = doc.data();
           const recipient = data.recipient || '';
-          
+
           if (recipient) {
-            const orderDate = data.order_date?.seconds ? 
-              new Date(data.order_date.seconds * 1000) : 
+            const orderDate = data.order_date?.seconds ?
+              new Date(data.order_date.seconds * 1000) :
               new Date();
 
             // Track order count
@@ -78,7 +78,7 @@ const CustomerFrequency = () => {
             customerOrders.set(recipient, currentCount + 1);
 
             // Track customer's first order
-            if (!customerFirstOrders.has(recipient) || 
+            if (!customerFirstOrders.has(recipient) ||
                 orderDate < customerFirstOrders.get(recipient)) {
               customerFirstOrders.set(recipient, orderDate);
             }
@@ -119,7 +119,7 @@ const CustomerFrequency = () => {
           // Update monthly data
           const firstOrderDate = customerFirstOrders.get(recipient);
           const month = firstOrderDate.toLocaleString('default', { month: 'long' });
-          
+
           if (orderCount === 1) {
             monthlyNewCustomers[month]++;
           } else {
@@ -128,33 +128,21 @@ const CustomerFrequency = () => {
           monthlyTotals[month]++;
         });
 
-        // Debug log
-        console.log('Customer Metrics:', {
-          newCustomers: newCustomersCount,
-          returningCustomers: returningCustomersCount,
-          oneTime: oneTimeCount,
-          twoToTen: twoToTenCount,
-          elevenPlus: elevenPlusCount,
-          monthlyData: {
-            total: monthlyTotals,
-            new: monthlyNewCustomers,
-            returning: monthlyReturningCustomers
-          }
-        });
+        // Debug log removed to prevent console spam
 
         // Track monthly orders per customer
         const currentDate = new Date();
         const currentMonth = currentDate.getMonth();
         const currentYear = currentDate.getFullYear();
-        
+
         const monthlyCustomerOrders = new Map();
 
         snapshot.forEach((doc) => {
           const data = doc.data();
           const orderDate = new Date(data.order_date.seconds * 1000);
-          
+
           // Only count orders from current month
-          if (orderDate.getMonth() === currentMonth && 
+          if (orderDate.getMonth() === currentMonth &&
               orderDate.getFullYear() === currentYear) {
             const recipient = data.recipient || '';
             if (recipient) {
@@ -196,9 +184,9 @@ const CustomerFrequency = () => {
     return () => unsubscribe();
   }, [db]);
 
-  const sectionHeader = { 
-    label: "Monthly Customer Frequency", 
-    date: currentMonth 
+  const sectionHeader = {
+    label: "Monthly Customer Frequency",
+    date: currentMonth
   };
 
   // Update the chartData object
@@ -440,7 +428,7 @@ const LoyalCustomers = ({ customers }) => (
       {customers.length > 0 ? (
         <div className="space-y-3">
           {customers.map((customer, index) => (
-            <div 
+            <div
               key={index}
               className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-3 md:p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-amber-100/50"
             >

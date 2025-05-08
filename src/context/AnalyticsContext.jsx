@@ -38,15 +38,14 @@ export const AnalyticsProvider = ({ children }) => {
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        console.log('AnalyticsContext: Loading products...');
+        // Only log once when loading starts
+        if (process.env.NODE_ENV === 'development') {
+          console.log('AnalyticsContext: Loading products...');
+        }
         setLoading(true);
 
         // Fetch products from the product collection
         const productsData = await fetchProducts();
-        console.log(`AnalyticsContext: Fetched ${productsData.length} products from product collection`);
-
-        // Log product titles for debugging
-        console.log('AnalyticsContext: Product titles:', productsData.map(p => p.title));
 
         // Set all products in state
         setAllProducts(productsData);
@@ -64,7 +63,7 @@ export const AnalyticsProvider = ({ children }) => {
 
   // Fetch order data
   useEffect(() => {
-    console.log('AnalyticsContext: Setting up Firestore listener...');
+    // Removed console logs to prevent spam
     let isSubscribed = true;
 
     // Get the current date
@@ -73,9 +72,6 @@ export const AnalyticsProvider = ({ children }) => {
     // Create first and last day of the current month
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-    console.log(`AnalyticsContext: Current date is ${now.toLocaleDateString()}`);
-    console.log(`AnalyticsContext: Fetching orders from ${firstDay.toLocaleDateString()} to ${lastDay.toLocaleDateString()}`);
 
     const ordersRef = collection(db, 'order_transaction');
 
@@ -88,7 +84,6 @@ export const AnalyticsProvider = ({ children }) => {
       if (!isSubscribed) return;
 
       try {
-        console.log('AnalyticsContext: Processing snapshot data...');
         const sales = [];
         let totalMonthSales = 0;
         const weekTotals = [0, 0, 0, 0];
@@ -113,14 +108,10 @@ export const AnalyticsProvider = ({ children }) => {
           }
         });
 
-        console.log(`AnalyticsContext: Initialized ${Object.keys(productSales).length} products from product collection`);
-
         // Filter orders for the current month
         const now = new Date();
         const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
         const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-        console.log(`AnalyticsContext: Current month: ${firstDay.toLocaleDateString()} to ${lastDay.toLocaleDateString()}`);
 
         snapshot.forEach((doc) => {
           const data = doc.data();
@@ -137,8 +128,6 @@ export const AnalyticsProvider = ({ children }) => {
           if (orderDate < firstDay || orderDate > lastDay) {
             return;
           }
-
-          console.log(`AnalyticsContext: Processing delivered order from ${orderDate.toLocaleDateString()}`);
 
           const weekNum = getWeekNumber(orderDate);
 
@@ -209,8 +198,6 @@ export const AnalyticsProvider = ({ children }) => {
         setDataFetched(true);
         setLoading(false);
 
-        console.log('AnalyticsContext: Data processing complete');
-
       } catch (error) {
         console.error("AnalyticsContext: Error processing sales data:", error);
         setLoading(false);
@@ -222,7 +209,7 @@ export const AnalyticsProvider = ({ children }) => {
     });
 
     return () => {
-      console.log('AnalyticsContext: Cleaning up Firestore listener...');
+      // Removed console logs to prevent spam
       isSubscribed = false;
       unsubscribe();
     };
