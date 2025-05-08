@@ -49,6 +49,27 @@ export const AuthProvider = ({ children }) => {
     const savedPinStatus = localStorage.getItem('pinVerified');
     return savedPinStatus === 'true';
   });
+  // Track PIN verification attempts and account lockout - initialize from localStorage if available
+  const [pinAttempts, setPinAttempts] = useState(() => {
+    const savedAttempts = localStorage.getItem('pinAttempts');
+    return savedAttempts ? parseInt(savedAttempts, 10) : 0;
+  });
+  const [accountLocked, setAccountLocked] = useState(() => {
+    const savedLockStatus = localStorage.getItem('accountLocked');
+    return savedLockStatus === 'true';
+  });
+  const [lockoutEndTime, setLockoutEndTime] = useState(() => {
+    const savedLockoutTime = localStorage.getItem('lockoutEndTime');
+    // Check if the saved lockout time is still in the future
+    if (savedLockoutTime) {
+      const lockoutEnd = new Date(savedLockoutTime);
+      const now = new Date();
+      if (lockoutEnd > now) {
+        return savedLockoutTime;
+      }
+    }
+    return null;
+  });
   const db = getFirestore(firebaseApp);
   const navigate = useNavigate();
 
@@ -119,6 +140,28 @@ export const AuthProvider = ({ children }) => {
   const verifyPin = async (enteredPin) => {
     if (!currentUser) return false;
 
+    // Check if account is currently locked
+    if (accountLocked) {
+      // Check if lockout period has expired
+      if (lockoutEndTime && new Date() >= new Date(lockoutEndTime)) {
+        // Lockout period has expired, reset lockout state
+        setAccountLocked(false);
+        setLockoutEndTime(null);
+        setPinAttempts(0);
+
+        // Clear lockout info from localStorage
+        localStorage.removeItem('accountLocked');
+        localStorage.removeItem('lockoutEndTime');
+        localStorage.removeItem('pinAttempts');
+
+        console.log("Account lockout period has expired, allowing new attempts");
+      } else {
+        // Account is still locked
+        console.log("PIN verification failed - account is locked");
+        return { success: false, locked: true, remainingTime: lockoutEndTime };
+      }
+    }
+
     try {
       const userDocRef = doc(db, "users", currentUser.uid);
       const userDoc = await getDoc(userDocRef);
@@ -129,17 +172,60 @@ export const AuthProvider = ({ children }) => {
         // Save PIN verification status to localStorage
         localStorage.setItem('pinVerified', 'true');
 
+        // Reset PIN attempts on successful verification
+        setPinAttempts(0);
+        localStorage.removeItem('pinAttempts');
+        localStorage.removeItem('accountLocked');
+        localStorage.removeItem('lockoutEndTime');
+
         // Add a small delay to ensure state updates before returning
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        return true;
+        return { success: true };
       } else {
         console.log("PIN verification failed - incorrect PIN");
-        return false;
+
+        // Increment PIN attempts
+        const newAttempts = pinAttempts + 1;
+        setPinAttempts(newAttempts);
+        // Save to localStorage
+        localStorage.setItem('pinAttempts', newAttempts.toString());
+
+        console.log(`Failed PIN attempt ${newAttempts} of 5`);
+
+        // Check if max attempts reached (5)
+        if (newAttempts >= 5) {
+          // Lock the account for 1 minute
+          const lockoutEnd = new Date();
+          lockoutEnd.setMinutes(lockoutEnd.getMinutes() + 1); // 1 minute lockout
+
+          setAccountLocked(true);
+          setLockoutEndTime(lockoutEnd.toISOString());
+
+          // Save lockout info to localStorage
+          localStorage.setItem('accountLocked', 'true');
+          localStorage.setItem('lockoutEndTime', lockoutEnd.toISOString());
+
+          console.log(`Account locked until ${lockoutEnd.toLocaleTimeString()}`);
+
+          return {
+            success: false,
+            locked: true,
+            remainingTime: lockoutEnd.toISOString(),
+            maxAttemptsReached: true
+          };
+        }
+
+        return {
+          success: false,
+          locked: false,
+          attempts: newAttempts,
+          remainingAttempts: 5 - newAttempts
+        };
       }
     } catch (error) {
       console.error("Error verifying PIN:", error);
-      return false;
+      return { success: false, error: error.message };
     }
   };
 
@@ -148,6 +234,14 @@ export const AuthProvider = ({ children }) => {
     setPinVerified(false);
     // Clear PIN verification status from localStorage
     localStorage.removeItem('pinVerified');
+    // Also reset PIN attempts and lockout status
+    setPinAttempts(0);
+    setAccountLocked(false);
+    setLockoutEndTime(null);
+    // Clear all PIN-related localStorage items
+    localStorage.removeItem('pinAttempts');
+    localStorage.removeItem('accountLocked');
+    localStorage.removeItem('lockoutEndTime');
   };
 
   // Check if the current user is an admin
@@ -180,6 +274,11 @@ export const AuthProvider = ({ children }) => {
 
       // Clear all auth-related data from storage
       localStorage.removeItem('pinVerified');
+      localStorage.removeItem('pinAttempts');
+      localStorage.removeItem('accountLocked');
+      localStorage.removeItem('lockoutEndTime');
+      localStorage.removeItem('sessionActive');
+      localStorage.removeItem('lastPing');
       localStorage.removeItem('firebase:authUser:AIzaSyBWE_d3k6Zs9P1XQL-bI2Ywmrkx_DdYKQ8:[DEFAULT]');
       sessionStorage.removeItem('firebase:authUser:AIzaSyBWE_d3k6Zs9P1XQL-bI2Ywmrkx_DdYKQ8:[DEFAULT]');
 
@@ -189,6 +288,78 @@ export const AuthProvider = ({ children }) => {
       console.error("Error signing out:", error);
     }
   };
+
+  // Check if lockout period has expired on component mount
+  useEffect(() => {
+    if (accountLocked && lockoutEndTime) {
+      const now = new Date();
+      const lockoutEnd = new Date(lockoutEndTime);
+
+      if (now >= lockoutEnd) {
+        // Lockout period has expired, reset lockout state
+        setAccountLocked(false);
+        setLockoutEndTime(null);
+        setPinAttempts(0);
+
+        // Clear lockout info from localStorage
+        localStorage.removeItem('accountLocked');
+        localStorage.removeItem('lockoutEndTime');
+        localStorage.removeItem('pinAttempts');
+
+        console.log("Account lockout period has expired on component mount, allowing new attempts");
+      }
+    }
+  }, [accountLocked, lockoutEndTime]);
+
+  // Set up session tracking for auto-logout when page is closed
+  useEffect(() => {
+    if (currentUser) {
+      // Set a flag indicating the user is logged in
+      localStorage.setItem('sessionActive', 'true');
+
+      // Set up a ping mechanism to indicate the app is still running
+      const pingInterval = setInterval(() => {
+        localStorage.setItem('lastPing', new Date().toISOString());
+      }, 5000); // Update every 5 seconds
+
+      return () => {
+        clearInterval(pingInterval);
+      };
+    }
+  }, [currentUser]);
+
+  // Check if the previous session was terminated abnormally (page closed)
+  useEffect(() => {
+    const checkPreviousSession = () => {
+      const sessionActive = localStorage.getItem('sessionActive');
+      const lastPing = localStorage.getItem('lastPing');
+
+      if (sessionActive === 'true' && lastPing) {
+        const lastPingTime = new Date(lastPing);
+        const now = new Date();
+        const timeDiff = now - lastPingTime;
+
+        // If the last ping was more than 10 seconds ago, the page was likely closed
+        // without proper logout (browser/tab closed)
+        if (timeDiff > 10000) {
+          console.log("Detected abnormal session termination, clearing auth data");
+          // Clear auth data
+          localStorage.removeItem('pinVerified');
+          localStorage.removeItem('pinAttempts');
+          localStorage.removeItem('accountLocked');
+          localStorage.removeItem('lockoutEndTime');
+          localStorage.removeItem('firebase:authUser:AIzaSyBWE_d3k6Zs9P1XQL-bI2Ywmrkx_DdYKQ8:[DEFAULT]');
+          sessionStorage.removeItem('firebase:authUser:AIzaSyBWE_d3k6Zs9P1XQL-bI2Ywmrkx_DdYKQ8:[DEFAULT]');
+        }
+      }
+
+      // Reset the session tracking
+      localStorage.removeItem('sessionActive');
+    };
+
+    // Check for abnormal termination when the component mounts
+    checkPreviousSession();
+  }, []);
 
   // Listen for auth state changes
   useEffect(() => {
@@ -205,7 +376,16 @@ export const AuthProvider = ({ children }) => {
         setUserProfile(null);
         setHasPin(false);
         setPinVerified(false);
+        setPinAttempts(0);
+        setAccountLocked(false);
+        setLockoutEndTime(null);
+        // Clear all PIN-related localStorage items
         localStorage.removeItem('pinVerified');
+        localStorage.removeItem('pinAttempts');
+        localStorage.removeItem('accountLocked');
+        localStorage.removeItem('lockoutEndTime');
+        localStorage.removeItem('sessionActive');
+        localStorage.removeItem('lastPing');
         setLoading(false);
         return false;
       }
@@ -250,7 +430,16 @@ export const AuthProvider = ({ children }) => {
             setUserProfile(null);
             setHasPin(false);
             setPinVerified(false);
+            setPinAttempts(0);
+            setAccountLocked(false);
+            setLockoutEndTime(null);
+            // Clear all PIN-related localStorage items
             localStorage.removeItem('pinVerified');
+            localStorage.removeItem('pinAttempts');
+            localStorage.removeItem('accountLocked');
+            localStorage.removeItem('lockoutEndTime');
+            localStorage.removeItem('sessionActive');
+            localStorage.removeItem('lastPing');
             console.log("User signed out due to missing Firestore document");
 
             // Don't set currentUser since we're signing them out
@@ -267,7 +456,16 @@ export const AuthProvider = ({ children }) => {
         setUserProfile(null);
         setHasPin(false);
         setPinVerified(false);
+        setPinAttempts(0);
+        setAccountLocked(false);
+        setLockoutEndTime(null);
+        // Clear all PIN-related localStorage items
         localStorage.removeItem('pinVerified');
+        localStorage.removeItem('pinAttempts');
+        localStorage.removeItem('accountLocked');
+        localStorage.removeItem('lockoutEndTime');
+        localStorage.removeItem('sessionActive');
+        localStorage.removeItem('lastPing');
       }
 
       setLoading(false);
@@ -289,6 +487,9 @@ export const AuthProvider = ({ children }) => {
     loading,
     hasPin,
     pinVerified,
+    pinAttempts,
+    accountLocked,
+    lockoutEndTime,
     checkUserPin,
     createPin,
     verifyPin,

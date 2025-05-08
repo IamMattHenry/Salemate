@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaLock, FaCheck, FaTimes, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaLock, FaCheck, FaTimes, FaEye, FaEyeSlash, FaExclamationTriangle } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const InitialPinVerification = () => {
-  const { hasPin, verifyPin, createPin, userProfile, pinVerified, currentUser } = useAuth();
+  const { hasPin, verifyPin, createPin, userProfile, pinVerified, currentUser, accountLocked, lockoutEndTime, pinAttempts } = useAuth();
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [error, setError] = useState('');
@@ -16,6 +16,7 @@ const InitialPinVerification = () => {
   const [showPin, setShowPin] = useState(false);
   const [showConfirmPin, setShowConfirmPin] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [remainingLockoutTime, setRemainingLockoutTime] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -67,6 +68,34 @@ const InitialPinVerification = () => {
     }
   }, [hasPin, showVerification]);
 
+  // Update remaining lockout time
+  useEffect(() => {
+    if (accountLocked && lockoutEndTime) {
+      const updateRemainingTime = () => {
+        const now = new Date();
+        const lockoutEnd = new Date(lockoutEndTime);
+
+        if (now >= lockoutEnd) {
+          setRemainingLockoutTime(null);
+          return;
+        }
+
+        const remainingMs = lockoutEnd - now;
+        const remainingSeconds = Math.ceil(remainingMs / 1000);
+        setRemainingLockoutTime(remainingSeconds);
+      };
+
+      // Update immediately
+      updateRemainingTime();
+
+      // Then update every second
+      const interval = setInterval(updateRemainingTime, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setRemainingLockoutTime(null);
+    }
+  }, [accountLocked, lockoutEndTime]);
+
   const handlePinChange = async (e) => {
     const value = e.target.value;
     // Only allow numbers and limit to 4 digits
@@ -78,13 +107,32 @@ const InitialPinVerification = () => {
         setError('');
         setIsVerifying(true);
         try {
-          const verified = await verifyPin(value);
-          if (verified) {
+          const result = await verifyPin(value);
+
+          if (result.success) {
             setSuccess('PIN verified successfully');
             // Close the modal immediately - the welcome modal will show instead
             setShowVerification(false);
+          } else if (result.locked) {
+            // Account is locked
+            const lockoutEnd = new Date(result.remainingTime);
+            const formattedTime = lockoutEnd.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            if (result.maxAttemptsReached) {
+              setError(`Maximum PIN attempts reached. Account locked for 1 minute.`);
+            } else {
+              setError(`Account is locked. Try again after ${formattedTime}.`);
+            }
+
+            // Clear the PIN field
+            setPin('');
           } else {
-            setError('Invalid PIN. Please try again.');
+            // PIN is incorrect but account not locked
+            if (result.remainingAttempts) {
+              setError(`Invalid PIN. ${result.remainingAttempts} attempts remaining.`);
+            } else {
+              setError('Invalid PIN. Please try again.');
+            }
             // Clear the PIN field for another attempt
             setPin('');
           }
@@ -147,13 +195,32 @@ const InitialPinVerification = () => {
 
     setIsVerifying(true);
     try {
-      const verified = await verifyPin(pin);
-      if (verified) {
+      const result = await verifyPin(pin);
+
+      if (result.success) {
         setSuccess('PIN verified successfully');
         // Close the modal immediately - the welcome modal will show instead
         setShowVerification(false);
+      } else if (result.locked) {
+        // Account is locked
+        const lockoutEnd = new Date(result.remainingTime);
+        const formattedTime = lockoutEnd.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        if (result.maxAttemptsReached) {
+          setError(`Maximum PIN attempts reached. Account locked for 1 minute.`);
+        } else {
+          setError(`Account is locked. Try again after ${formattedTime}.`);
+        }
+
+        // Clear the PIN field
+        setPin('');
       } else {
-        setError('Invalid PIN. Please try again.');
+        // PIN is incorrect but account not locked
+        if (result.remainingAttempts) {
+          setError(`Invalid PIN. ${result.remainingAttempts} attempts remaining.`);
+        } else {
+          setError('Invalid PIN. Please try again.');
+        }
         // Clear the PIN field for another attempt
         setPin('');
       }
@@ -324,6 +391,19 @@ const InitialPinVerification = () => {
               </div>
             )}
 
+            {/* Account lockout message */}
+            {accountLocked && remainingLockoutTime && (
+              <div className="flex flex-col items-center text-amber-600 text-sm bg-amber-50 p-3 rounded-lg border border-amber-200 mt-2">
+                <div className="flex items-center mb-2">
+                  <FaExclamationTriangle className="mr-2 flex-shrink-0" />
+                  <span className="font-medium">Account temporarily locked</span>
+                </div>
+                <p className="text-center">
+                  Too many failed PIN attempts. Please wait {Math.floor(remainingLockoutTime / 60)}:{(remainingLockoutTime % 60).toString().padStart(2, '0')} before trying again.
+                </p>
+              </div>
+            )}
+
             {/* Welcome message */}
             {showWelcome && (
               <div className="mt-4 text-center p-4 bg-amber-50 rounded-xl border border-amber-200 shadow-md animate-welcome-pulse">
@@ -344,8 +424,8 @@ const InitialPinVerification = () => {
             {!success && (
               <button
                 type="submit"
-                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-3 px-4 rounded-xl transition duration-200 mt-4 flex items-center justify-center"
-                disabled={isVerifying || success}
+                className={`w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-3 px-4 rounded-xl transition duration-200 mt-4 flex items-center justify-center ${accountLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={isVerifying || success || accountLocked}
               >
                 {isVerifying ? (
                   <>
