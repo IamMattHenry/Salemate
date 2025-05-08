@@ -623,15 +623,14 @@ const InventoryDaily = () => {
 
       <section className="bg-white rounded-2xl shadow-feat w-[1180px] mx-auto my-4 px-4">
         <div className="w-full overflow-x-auto">
-          <div className="flex items-center text-[1.28rem] tracking-tight font-bold py-3 px-4 font-latrue border-b-[0.5px] min-w-max justify-around">
-            <div className="w-[30px] min-w-[30px]"></div> {/* Spacer for edit buttons */}
-            <div className="w-[180px] min-w-[180px]">Raw Materials</div>
-            <div className="w-[100px] min-w-[100px] text-center pl-2">Purchased</div>
-            <div className="w-[100px] min-w-[100px] text-center pl-2">Processed<br />/Used</div>
-            <div className="w-[100px] min-w-[100px] text-center pl-2">Waste</div>
-            <div className="w-[100px] min-w-[100px] pl-2 text-center">Beginning Inventory</div>
-            <div className="w-[100px] min-w-[100px] pl-4 text-center">Ending Inventory</div>
-            <div className="w-[140px] min-w-[140px] text-center pl-2">Status</div>
+          <div className="flex items-center text-[1.28rem] tracking-tight font-bold py-3 px-4 font-latrue border-b-[0.5px] min-w-max">
+            <div className="w-[18px] min-w-[180px] mr-17">Raw Materials</div>
+            <div className="w-[100px] min-w-[100px] text-center mr-14">Purchased</div>
+            <div className="w-[100px] min-w-[100px] text-center mr-18">Processed<br />/Used</div>
+            <div className="w-[100px] min-w-[100px] mr-8">Waste</div>
+            <div className="w-[100px] min-w-[100px] text-center mr-7">Beginning Inventory</div>
+            <div className="w-[100px] min-w-[100px] text-center mr-7">Ending Inventory</div>
+            <div className="w-[140px] min-w-[140px] text-center">Status</div>
           </div>
 
           {/* Map through inventory data from Firebase */}
@@ -648,14 +647,14 @@ const InventoryDaily = () => {
                 <div className="flex items-center justify-center w-[30px] min-w-[30px]">
                   <button
                     onClick={() => setEditingId(item.id)}
-                    className="p-1 rounded hover:bg-gray-100 transition-colors text-gray-600"
+                    className="p-1 rounded hover:bg-gray-100 transition-colors"
                   >
                     <Edit2 className="size-4" />
                   </button>
                 </div>
 
                 {/* Raw Materials - with edit functionality */}
-                <div className="flex items-center w-[180px] min-w-[180px]">
+                <div className="flex items-center w-[130px] min-w-[130px]">
                   {editingId === item.id ? (
                     <form
                       onSubmit={(e) => {
@@ -680,17 +679,17 @@ const InventoryDaily = () => {
                       />
                     </form>
                   ) : (
-                    <span className="truncate font-medium text-gray-700">{item.raw_mats}</span>
+                    <span className="truncate font-medium text-black">{item.raw_mats}</span>
                   )}
                 </div>
 
                 {/* Purchased - Editable */}
-                <div className="flex justify-center w-[100px] min-w-[100px]">
+                <div className="flex justify-center w-[100px] min-w-[100px] mx-3">
                   <input
                     type="number"
                     value={editedItems[item.id]?.purchased !== undefined ? editedItems[item.id]?.purchased : ''}
                     onChange={(e) => handleInputChange(item.id, 'purchased', e.target.value)}
-                    className="bg-white text-sm text-gray-700 w-32 h-9 px-3 text-center
+                    className="bg-white text-sm text-gray-700 w-32  h-9 px-3 text-center
                       rounded-lg border border-gray-300
                       focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200
                       hover:border-amber-300 transition-all duration-200
@@ -701,12 +700,12 @@ const InventoryDaily = () => {
                 </div>
 
                 {/* Processed/Used - Editable */}
-                <div className="flex justify-center w-[100px] min-w-[100px]">
+                <div className="flex justify-center w-[100px] min-w-[100px] mx-3">
                   <input
                     type="number"
                     value={editedItems[item.id]?.used !== undefined ? editedItems[item.id]?.used : ''}
                     onChange={(e) => handleInputChange(item.id, 'used', e.target.value)}
-                    className="bg-white text-sm text-gray-700 w-32 h-9 px-3 text-center
+                    className="bg-white text-sm text-gray-700 w-32  h-9 px-3 text-center
                       rounded-lg border border-gray-300
                       focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200
                       hover:border-amber-300 transition-all duration-200
@@ -717,12 +716,12 @@ const InventoryDaily = () => {
                 </div>
 
                 {/* Waste - Editable */}
-                <div className="flex justify-center w-[100px] min-w-[100px]">
+                <div className="flex justify-center w-[100px] min-w-[100px] mx-3">
                   <input
                     type="number"
                     value={editedItems[item.id]?.waste !== undefined ? editedItems[item.id]?.waste : ''}
                     onChange={(e) => handleInputChange(item.id, 'waste', e.target.value)}
-                    className="bg-white text-sm text-gray-700 w-32 h-9 px-3 text-center
+                    className="bg-white text-sm text-gray-700 w-32  h-9 px-3 text-center
                       rounded-lg border border-gray-300
                       focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200
                       hover:border-amber-300 transition-all duration-200
@@ -759,14 +758,14 @@ const InventoryDaily = () => {
                 </div>
 
                 {/* Status - Show actual status even when ending inventory is hidden */}
-                <div className="flex justify-center w-[120px] min-w-[120px]">
+                <div className="flex justify-center w-[130px]">
                   <div
-                    className={`flex items-center justify-center px-4 py-1.5 rounded-full text-sm font-medium
+                    className={`flex items-center justify-center font-latrue w-9/12 py-1.5 rounded-full text-sm border-[1px] font-bold
                       ${currentStatus === 'High'
-                        ? 'bg-[#0CD742] text-green-800 border-[#067a25]'
+                        ? 'bg-[#0CD742] border-[#067a25]'
                         : currentStatus === 'Moderate'
-                          ? 'bg-[#FFCF50] text-amber-800 border-[#B3861A]'
-                          : 'bg-[#FF3434] text-red-800 border-[#B82323]'
+                          ? 'bg-[#FFCF50] border-[#B3861A]'
+                          : 'bg-[#FF3434] border-[#B82323]'
                       }`}
                   >
                     {currentStatus}
