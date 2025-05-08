@@ -91,7 +91,7 @@ const SideRoutes = ({ isMinimized }) => {
       )}
 
       <div className="w-full font-lato font-semibold space-y-3 h-full flex flex-col items-center justify-center">
-        <div className="flex flex-col -mt-20 w-full">
+        <div className="flex flex-col w-full">
           {routes.map((route) => {
             const hasRouteAccess = hasAccess(route.module);
 

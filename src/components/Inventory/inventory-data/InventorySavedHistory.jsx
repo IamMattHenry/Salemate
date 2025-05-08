@@ -317,7 +317,7 @@ const InventorySavedHistory = () => {
   }, [checkAndCreateDailyReport, fetchSavedHistories]);
 
   return (
-    <div className="w-full min-h-screen bg-gray-50/50 py-6">
+    <div className="w-full overflow-auto h-9/12 bg-gray-50/50 py-6">
       <section className="w-[94.5%] mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Inventory History</h1>

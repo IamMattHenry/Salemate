@@ -621,13 +621,13 @@ const InventoryDaily = () => {
         )}
       </AnimatePresence>
 
-      <section className="bg-white rounded-2xl shadow-feat w-[1180px] mx-auto my-4 px-4">
-        <div className="w-full overflow-x-auto">
+      <section className="bg-white overflow-y-hidden rounded-2xl shadow-feat w-[1180px] h-auto mx-auto mt-4 py-2 px-4">
+        <div className="w-full overflow-y-scroll overflow-x-hidden h-10/12">
           <div className="flex items-center text-[1.28rem] tracking-tight font-bold py-3 px-4 font-latrue border-b-[0.5px] min-w-max">
-            <div className="w-[18px] min-w-[180px] mr-17">Raw Materials</div>
+            <div className="w-[18px] min-w-[180px] mr-16">Raw Materials</div>
             <div className="w-[100px] min-w-[100px] text-center mr-14">Purchased</div>
             <div className="w-[100px] min-w-[100px] text-center mr-18">Processed<br />/Used</div>
-            <div className="w-[100px] min-w-[100px] mr-8">Waste</div>
+            <div className="w-[100px] min-w-[100px] mr-6">Waste</div>
             <div className="w-[100px] min-w-[100px] text-center mr-7">Beginning Inventory</div>
             <div className="w-[100px] min-w-[100px] text-center mr-7">Ending Inventory</div>
             <div className="w-[140px] min-w-[140px] text-center">Status</div>
