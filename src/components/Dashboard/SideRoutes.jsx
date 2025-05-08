@@ -56,11 +56,11 @@ const SideRoutes = ({ isMinimized }) => {
     },
   ];
 
-  // Add Admin route for admin users only
+  // Add User Accounts route for admin users only
   if (isAdmin()) {
     routes.push({
       path: "/admin",
-      label: "Admin",
+      label: "User Accounts",
       icon: <FaUserShield />,
       requiresPin: false,
       module: "admin"
