@@ -9,6 +9,7 @@ import {
 import { SidebarProvider } from "./context/SidebarContext";
 import { AuthProvider } from "./context/AuthContext";
 import { LoadingProvider } from "./context/LoadingContext";
+import { AnalyticsProvider } from "./context/AnalyticsContext";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import InitialPinVerification from "./components/Auth/InitialPinVerification";
 import WelcomeBackModal from "./components/Auth/WelcomeBackModal";
@@ -85,7 +86,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           {/* Analytics section route - with PIN */}
           <Route path="/analytics" element={
             <ProtectedRoute>
-              <AnalyticsLayout />
+              <AnalyticsProvider>
+                <AnalyticsLayout />
+              </AnalyticsProvider>
             </ProtectedRoute>
           }>
             <Route index element={<Navigate to="daily-sales" replace />} />

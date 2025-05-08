@@ -106,38 +106,71 @@ const QRPaymentModal = ({
 
             {/* Reference Number Input */}
             <div className="mb-6">
-              <label htmlFor="referenceNumber" className="block text-sm font-medium text-gray-700 text-left mb-1">
-                Last 6 digits of reference number:
+              <label htmlFor="reference-number" className="block text-sm font-medium text-gray-700 text-left mb-1">
+                Reference Number
               </label>
               <input
                 type="text"
-                id="referenceNumber"
+                id="reference-number"
                 value={referenceNumber}
                 onChange={(e) => {
-                  // Only allow numbers and limit to 6 digits
-                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  // Only allow digits and limit to 6 characters
+                  const value = e.target.value.replace(/\D/g, '');
                   if (value.length <= 6) {
                     setReferenceNumber(value);
                   }
                 }}
-                placeholder="Enter last 6 digits"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                maxLength="6"
+                onKeyDown={(e) => {
+                  // Allow only numbers, backspace, delete, tab, arrows
+                  const allowedKeys = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+                  if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                maxLength={6}
+                placeholder="Enter 6-digit reference number"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-center text-xl tracking-wider"
                 required
               />
+              <p className="text-xs text-gray-500 mt-1 text-left">
+                Please enter the 6-digit reference number from your payment app
+              </p>
+              <p className="text-xs text-blue-500 mt-1 text-left">
+                Note: Exactly 6 digits are required for verification
+              </p>
             </div>
 
             <div className="flex justify-center">
               <motion.button
-                onClick={() => onComplete(referenceNumber)}
-                disabled={referenceNumber.length < 6}
+                onClick={() => {
+                  if (!referenceNumber.trim()) {
+                    alert("Please enter a reference number to complete your payment");
+                    return;
+                  }
+
+                  if (referenceNumber.trim().length !== 6 || !/^\d{6}$/.test(referenceNumber.trim())) {
+                    alert("Please enter exactly 6 digits for the reference number");
+                    return;
+                  }
+
+                  // Log the reference number before passing it to the parent component
+                  const finalRefNumber = referenceNumber.trim();
+                  console.log("QRPaymentModal - Sending reference number:", finalRefNumber);
+
+                  // Store the reference number in localStorage as a backup
+                  localStorage.setItem('lastReferenceNumber', finalRefNumber);
+                  console.log("Reference number saved to localStorage:", finalRefNumber);
+
+                  // Pass the reference number to the parent component
+                  onComplete(finalRefNumber);
+                }}
                 className={`px-6 py-3 rounded-xl font-medium
-                         flex items-center justify-center gap-2
-                         ${referenceNumber.length < 6
-                           ? 'bg-gray-400 cursor-not-allowed'
+                         flex items-center justify-center gap-2 transition-all
+                         ${!referenceNumber.trim() || referenceNumber.trim().length !== 6 || !/^\d{6}$/.test(referenceNumber.trim())
+                           ? 'bg-gray-400 text-white cursor-not-allowed'
                            : 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-500/30'}`}
-                whileHover={referenceNumber.length >= 6 ? { scale: 1.03 } : {}}
-                whileTap={referenceNumber.length >= 6 ? { scale: 0.98 } : {}}
+                whileHover={referenceNumber.trim() && referenceNumber.trim().length === 6 && /^\d{6}$/.test(referenceNumber.trim()) ? { scale: 1.03 } : {}}
+                whileTap={referenceNumber.trim() && referenceNumber.trim().length === 6 && /^\d{6}$/.test(referenceNumber.trim()) ? { scale: 0.98 } : {}}
               >
                 <FaCheckCircle className="w-5 h-5" />
                 Payment Complete
