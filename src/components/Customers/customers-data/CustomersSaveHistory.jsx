@@ -427,9 +427,9 @@ const CustomersSaveHistory = () => {
 
   // Update the return section with modern styling
   return (
-    <div className="w-full min-h-screen bg-gray-50/50 p-6">
+    <div className="w-full min-h-screen bg-gray-50/50 py-6">
       <CustomersNav />
-      <section className="max-w-5xl mx-auto">
+      <section className="w-[94.5%] mx-auto">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Customer Activity Reports</h1>
