@@ -564,12 +564,11 @@ const UserAccounts = () => {
     >
       <AdminNav onSearch={handleSearch} />
 
-      {/* Header */}
+      {/* Header - Table text removed */}
       <motion.div
         className="flex justify-between items-center mb-6"
         variants={itemVariants}
       >
-        <h1 className="text-2xl font-bold font-league text-gray-800">Table</h1>
       </motion.div>
 
       {/* Users Section */}
