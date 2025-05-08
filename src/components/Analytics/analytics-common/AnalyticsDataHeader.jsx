@@ -1,7 +1,7 @@
 import React from 'react'
 
 const AnalyticsDataHeader = ({ sectionHeader }) => (
-  <div className="bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 p-5 md:p-6 rounded-t-2xl border-b border-amber-200/50">
+  <div className="bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 p-5 md:p-6 rounded-tl-2xl border-b border-amber-200/50">
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
       <div className="flex items-center gap-3">
         <div className="bg-amber-600/10 p-2.5 rounded-lg shadow-sm">

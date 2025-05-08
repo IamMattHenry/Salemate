@@ -614,7 +614,7 @@ const ProductSales = () => {
   }
 
   return (
-    <section className="bg-white rounded-2xl shadow-feat w-full mx-auto block">
+    <section className="bg-white rounded-2xl shadow-feat w-full overflow-auto h-110 mx-auto block">
       <AnalyticsDataHeader sectionHeader={sectionHeader} />
       <div className="my-4 mx-7 w-auto">
         <div className="grid grid-cols-2 gap-4 mb-6">
