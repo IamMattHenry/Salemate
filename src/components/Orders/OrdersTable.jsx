@@ -106,7 +106,11 @@ const OrdersTable = () => {
           if (data.items && data.items.length > 0) {
             // For orders with items array (new format)
             orderName = data.items
-              .map(item => item.title === "Meal" ? "Katsu" : item.title)
+              .map(item => {
+                // Make sure to display "Classic" correctly
+                if (item.title === "Meal") return "Katsu";
+                return item.title; // Return the original title for all other items
+              })
               .filter((value, index, self) => self.indexOf(value) === index) // Remove duplicates
               .join(' / ');
           } else {
@@ -129,6 +133,7 @@ const OrdersTable = () => {
               year: "numeric",
             }),
             mop: data.mop || 'Cash',
+            reference_number: data.reference_number || '', // Include reference number for online payments
             quantity: data.items
               ? data.items.reduce((total, item) => total + (item.quantity || 0), 0)
               : (data.no_order || 0), // Support both new and old formats
@@ -557,7 +562,9 @@ const OrdersTable = () => {
                       {selectedOrder.items && selectedOrder.items.length > 0 ? (
                         selectedOrder.items.map((item, index) => (
                           <div key={index} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0">
-                            <span className="text-gray-800 font-medium">{item.title === "Meal" ? "Katsu" : item.title}</span>
+                            <span className="text-gray-800 font-medium">
+                              {item.title === "Meal" ? "Katsu" : item.title}
+                            </span>
                             <span className="bg-emerald-50 text-emerald-700 font-medium px-3 py-1 rounded-full">×{item.quantity}</span>
                           </div>
                         ))
@@ -585,10 +592,16 @@ const OrdersTable = () => {
                         <span className="text-gray-600">Payment Method</span>
                         <span className="font-medium text-gray-900">{selectedOrder.mop}</span>
                       </div>
-                      {selectedOrder.mop === "Online" && selectedOrder.reference_number && (
-                        <div className="flex justify-between items-center px-4 py-3 bg-gray-50 rounded-xl">
-                          <span className="text-gray-600">Reference Number</span>
-                          <span className="font-medium text-gray-900">******{selectedOrder.reference_number}</span>
+
+                      {selectedOrder.mop === "Online" && (
+                        <div className="flex justify-between items-center px-4 py-3 bg-blue-50 rounded-xl">
+                          <span className="text-blue-600">Reference Number</span>
+                          <span className="font-medium text-blue-700">
+                            {selectedOrder.reference_number ?
+                              selectedOrder.reference_number :
+                              <span className="text-red-500 text-sm italic">Not provided</span>
+                            }
+                          </span>
                         </div>
                       )}
                       <div className="flex justify-between items-center px-4 py-3 bg-emerald-50 rounded-xl">

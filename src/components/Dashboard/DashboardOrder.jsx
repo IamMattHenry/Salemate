@@ -9,7 +9,7 @@ import useSuccessModal from "../../hooks/Modal/SuccessModal";
 import useQRPaymentModal from "../../hooks/Modal/QRPaymentModal";
 import QRPaymentModal from "../Dashboard/QRPaymentModal";
 import { AnimatePresence, motion } from "framer-motion";
-import { collection, addDoc, serverTimestamp, getFirestore, query, where, getDocs, orderBy, updateDoc, doc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, getFirestore, query, where, getDocs, orderBy, updateDoc, doc, getDoc } from "firebase/firestore";
 import firebaseApp from "../../firebaseConfig";
 
 const DashboardOrder = ({ product, orderList, setOrderList }) => {
@@ -251,7 +251,8 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
         recipient: customerName,
         status: true,
         updated_at: new Date(), // Use a regular Date for size estimation
-        order_id: "1" // Placeholder for size estimation
+        order_id: "1", // Placeholder for size estimation
+        reference_number: paymentMode === "Online" ? "" : null // Include reference_number field in size estimation
       };
 
       // Check if the document size exceeds 32KB (32,768 bytes)
@@ -340,7 +341,8 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
         recipient: customerName,
         status: true,
         updated_at: serverTimestamp(),
-        order_id: orderIdString // Add the incremental order_id
+        order_id: orderIdString, // Add the incremental order_id
+        reference_number: paymentMode === "Online" ? "" : null // Initialize reference_number field for online payments
       });
 
       console.log("Order saved to order_transaction:", orderTransactionRef.id);
@@ -363,7 +365,9 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
         dateSaved: new Date(), // Use regular Date for size estimation
         lastUpdated: new Date(), // Use regular Date for size estimation
         orderItems: orderItems,
-        order_id: orderIdString
+        order_id: orderIdString,
+        mop: paymentMode, // Include payment method
+        reference_number: paymentMode === "Online" ? "" : null // Include reference_number field
       };
 
       const historySize = estimateDocumentSize(customerHistoryDoc);
@@ -398,7 +402,9 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
         dateSaved: serverTimestamp(),
         lastUpdated: serverTimestamp(),
         orderItems: customerHistoryDoc.orderItems, // Use potentially simplified items
-        order_id: orderIdString // Add the order_id to customer_history as well
+        order_id: orderIdString, // Add the order_id to customer_history as well
+        mop: paymentMode, // Include payment method
+        reference_number: paymentMode === "Online" ? "" : null // Include reference_number field
       });
 
       console.log("Order saved to customer_history:", customerHistorySnapshot.id);
@@ -580,6 +586,25 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
       });
 
       if (currentTransactions.length > 0) {
+        // Make sure all transactions have the reference_number field
+        currentTransactions = currentTransactions.map(transaction => {
+          // If it's an online payment and doesn't have a reference_number field, add an empty string
+          if (transaction.mop === "Online" && !transaction.hasOwnProperty('reference_number')) {
+            return {
+              ...transaction,
+              reference_number: ""
+            };
+          }
+          // If it's not an online payment and doesn't have a reference_number field, add null
+          if (transaction.mop !== "Online" && !transaction.hasOwnProperty('reference_number')) {
+            return {
+              ...transaction,
+              reference_number: null
+            };
+          }
+          return transaction;
+        });
+
         if (existingRecord) {
           // Update existing record
           await updateDoc(doc(db, "saved_history", existingRecord.id), {
@@ -706,42 +731,321 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
   const [referenceNumber, setReferenceNumber] = useState("");
 
   // Handle QR payment completion
-  const handleQRPaymentComplete = async (refNumber) => {
-    if (refNumber && refNumber.length === 6) {
-      setReferenceNumber(refNumber);
+  const handleQRPaymentComplete = async (referenceNumber) => {
+    console.log("DashboardOrder - Received reference number:", referenceNumber);
 
-      try {
-        // Get today's start timestamp (midnight)
-        const today = new Date();
-        const startOfDay = new Date(today);
-        startOfDay.setHours(0, 0, 0, 0);
+    // Get the reference number from localStorage as a backup
+    const storedRefNumber = localStorage.getItem('lastReferenceNumber');
+    console.log("Reference number from localStorage:", storedRefNumber);
 
-        // Find the order we just created (most recent order with current order number - 1)
-        const orderQuery = query(
-          collection(db, "order_transaction"),
-          where("created_at", ">=", startOfDay),
-          where("order_id", "==", (orderNumber - 1).toString()),
-          orderBy("created_at", "desc")
-        );
+    // Use the passed reference number, or fall back to localStorage if it's invalid
+    let finalRefNumber = referenceNumber;
 
-        const orderSnapshot = await getDocs(orderQuery);
+    // Validate the reference number
+    if (!finalRefNumber || typeof finalRefNumber !== 'string' || finalRefNumber.length !== 6 || !/^\d{6}$/.test(finalRefNumber)) {
+      console.warn("Invalid reference number received:", finalRefNumber);
 
-        if (!orderSnapshot.empty) {
-          // Update the order with the reference number
-          const orderDoc = orderSnapshot.docs[0];
-          await updateDoc(doc(db, "order_transaction", orderDoc.id), {
-            reference_number: refNumber,
-            updated_at: serverTimestamp()
-          });
-
-          console.log("Order updated with reference number:", refNumber);
-        }
-      } catch (error) {
-        console.error("Error updating order with reference number:", error);
+      // Try to use the stored reference number instead
+      if (storedRefNumber && storedRefNumber.length === 6 && /^\d{6}$/.test(storedRefNumber)) {
+        console.log("Using reference number from localStorage instead:", storedRefNumber);
+        finalRefNumber = storedRefNumber;
+      } else {
+        console.error("No valid reference number available");
+        alert("Invalid reference number. Please try again.");
+        return;
       }
     }
 
+    // Final check to ensure we have a valid reference number
+    if (!finalRefNumber || finalRefNumber.length !== 6 || !/^\d{6}$/.test(finalRefNumber)) {
+      console.error("Still no valid reference number. Aborting update.");
+      alert("Invalid reference number. Please try again with a 6-digit number.");
+      return;
+    }
+
+    console.log("Final reference number to be used:", finalRefNumber);
     hideQRPaymentModal(); // Hide QR payment modal
+
+    // Update the latest order with the reference number
+    try {
+      // Get today's start timestamp (midnight)
+      const today = new Date();
+      const startOfDay = new Date(today);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      console.log("Searching for order with ID:", (orderNumber - 1).toString());
+
+      // Use a simpler query approach to avoid index requirements
+      // First, just query by order_id without the date filter or ordering
+      const orderQuery = query(
+        collection(db, "order_transaction"),
+        where("order_id", "==", (orderNumber - 1).toString())
+      );
+
+      try {
+        const orderSnapshot = await getDocs(orderQuery);
+        console.log("Found matching orders:", orderSnapshot.size);
+
+        if (!orderSnapshot.empty) {
+        // Get the first matching order
+        const orderDoc = orderSnapshot.docs[0];
+        console.log("Found order document:", orderDoc.id);
+
+        // Use the validated reference number
+        console.log("Using reference number for update:", finalRefNumber);
+
+        // Update the order with the reference number
+        try {
+          const docRef = doc(db, "order_transaction", orderDoc.id);
+          console.log("Updating document:", docRef.path);
+
+          // DIRECT UPDATE: Set the reference_number field directly with the finalRefNumber
+          await updateDoc(docRef, {
+            reference_number: finalRefNumber,
+            updated_at: serverTimestamp()
+          });
+
+          // Verify the update by fetching the document again
+          const updatedDoc = await getDoc(docRef);
+          const updatedData = updatedDoc.data();
+          console.log("Updated document data:", updatedData);
+          console.log("Saved reference_number:", updatedData.reference_number);
+
+          // Double-check if the reference number was saved correctly
+          if (updatedData.reference_number !== finalRefNumber) {
+            console.error("Reference number mismatch! Expected:", finalRefNumber, "Got:", updatedData.reference_number);
+
+            // Try one more time with a direct set operation
+            await updateDoc(docRef, {
+              reference_number: finalRefNumber
+            });
+
+            console.log("Attempted direct reference number update again");
+          } else {
+            console.log("Reference number verified successfully:", updatedData.reference_number);
+          }
+
+          console.log("Order successfully updated with reference number:", finalRefNumber);
+        } catch (updateError) {
+          console.error("Error during document update:", updateError);
+          throw updateError; // Re-throw to be caught by the outer try-catch
+        }
+
+        // Also update the reference number in customer_history collection
+        try {
+          const orderData = orderDoc.data();
+          console.log("Order data for customer history update:", orderData);
+
+          const customerHistoryQuery = query(
+            collection(db, "customer_history"),
+            where("order_id", "==", orderData.order_id)
+          );
+          console.log("Searching for customer history with order_id:", orderData.order_id);
+
+          const customerHistorySnapshot = await getDocs(customerHistoryQuery);
+          console.log("Found customer history records:", customerHistorySnapshot.size);
+
+          if (!customerHistorySnapshot.empty) {
+            const customerHistoryDoc = customerHistorySnapshot.docs[0];
+            console.log("Updating customer history document:", customerHistoryDoc.id);
+
+            const customerHistoryRef = doc(db, "customer_history", customerHistoryDoc.id);
+            await updateDoc(customerHistoryRef, {
+              reference_number: finalRefNumber,
+              lastUpdated: serverTimestamp()
+            });
+
+            // Verify the update
+            const updatedHistoryDoc = await getDoc(customerHistoryRef);
+            const updatedHistoryData = updatedHistoryDoc.data();
+            console.log("Updated customer history reference_number:", updatedHistoryData.reference_number);
+
+            console.log("Customer history successfully updated with reference number:", finalRefNumber);
+          } else {
+            console.log("No matching customer history record found for order_id:", orderData.order_id);
+          }
+        } catch (error) {
+          console.error("Error updating customer_history with reference number:", error);
+        }
+
+        // Update the reference number in saved_history collection
+        try {
+          const currentDate = new Date();
+          const currentMonthYear = currentDate.toLocaleDateString('en-US', {
+            month: 'long',
+            year: 'numeric'
+          });
+          console.log("Searching for saved history for month:", currentMonthYear);
+
+          const savedHistoryQuery = query(
+            collection(db, "saved_history"),
+            where("monthYear", "==", currentMonthYear)
+          );
+
+          const savedHistorySnapshot = await getDocs(savedHistoryQuery);
+          console.log("Found saved history records:", savedHistorySnapshot.size);
+
+          if (!savedHistorySnapshot.empty) {
+            const savedHistoryDoc = savedHistorySnapshot.docs[0];
+            console.log("Found saved history document:", savedHistoryDoc.id);
+
+            const savedHistoryData = savedHistoryDoc.data();
+
+            if (savedHistoryData.transactions && Array.isArray(savedHistoryData.transactions)) {
+              console.log("Number of transactions in saved history:", savedHistoryData.transactions.length);
+
+              // Make sure orderData is defined
+              if (!orderData) {
+                console.error("orderData is undefined in saved_history update");
+                return;
+              }
+
+              console.log("Looking for transaction with order_id:", orderData.order_id);
+
+              // Find the transaction to update
+              const transactionToUpdate = savedHistoryData.transactions.find(
+                transaction => transaction.order_id === orderData.order_id
+              );
+
+              if (transactionToUpdate) {
+                console.log("Found transaction to update:", transactionToUpdate);
+                console.log("Current reference_number:", transactionToUpdate.reference_number);
+
+                // Create updated transactions array
+                const updatedTransactions = savedHistoryData.transactions.map(transaction => {
+                  if (transaction.order_id === orderData.order_id) {
+                    return {
+                      ...transaction,
+                      reference_number: finalRefNumber
+                    };
+                  }
+                  return transaction;
+                });
+
+                const savedHistoryRef = doc(db, "saved_history", savedHistoryDoc.id);
+                await updateDoc(savedHistoryRef, {
+                  transactions: updatedTransactions,
+                  lastUpdated: serverTimestamp()
+                });
+
+                console.log("Saved history successfully updated with reference number");
+              } else {
+                console.log("No matching transaction found in saved history for order_id:", orderData.order_id);
+              }
+            } else {
+              console.log("No transactions array found in saved history document");
+            }
+          } else {
+            console.log("No saved history found for current month");
+          }
+        } catch (error) {
+          console.error("Error updating saved_history with reference number:", error);
+        }
+        }
+      } catch (queryError) {
+        console.error("Error querying for order:", queryError);
+
+        // FALLBACK: Try a direct approach if the query fails due to indexing issues
+        console.log("Attempting fallback approach with direct document update...");
+
+        try {
+          // Get all orders from today
+          const allOrdersQuery = query(collection(db, "order_transaction"));
+          const allOrdersSnapshot = await getDocs(allOrdersQuery);
+
+          // Find the order with matching order_id manually
+          const matchingOrders = allOrdersSnapshot.docs.filter(doc => {
+            const data = doc.data();
+            return data.order_id === (orderNumber - 1).toString();
+          });
+
+          console.log("Found matching orders through fallback:", matchingOrders.length);
+
+          if (matchingOrders.length > 0) {
+            // Use the first matching order
+            const orderDoc = matchingOrders[0];
+            console.log("Found order document through fallback:", orderDoc.id);
+
+            // Get the order data
+            const orderData = orderDoc.data();
+            console.log("Order data from fallback:", orderData);
+
+            // Update the order with the reference number
+            const docRef = doc(db, "order_transaction", orderDoc.id);
+            await updateDoc(docRef, {
+              reference_number: finalRefNumber,
+              updated_at: serverTimestamp()
+            });
+
+            console.log("Order successfully updated with reference number through fallback");
+
+            // Also update customer_history and saved_history
+            try {
+              // Update customer_history
+              const customerHistoryQuery = query(
+                collection(db, "customer_history"),
+                where("order_id", "==", orderData.order_id)
+              );
+
+              const customerHistorySnapshot = await getDocs(customerHistoryQuery);
+              if (customerHistorySnapshot.size > 0) {
+                const customerHistoryDoc = customerHistorySnapshot.docs[0];
+                await updateDoc(doc(db, "customer_history", customerHistoryDoc.id), {
+                  reference_number: finalRefNumber,
+                  lastUpdated: serverTimestamp()
+                });
+                console.log("Customer history updated through fallback");
+              }
+
+              // Update saved_history
+              const currentDate = new Date();
+              const currentMonthYear = currentDate.toLocaleDateString('en-US', {
+                month: 'long',
+                year: 'numeric'
+              });
+
+              const savedHistoryQuery = query(
+                collection(db, "saved_history"),
+                where("monthYear", "==", currentMonthYear)
+              );
+
+              const savedHistorySnapshot = await getDocs(savedHistoryQuery);
+              if (savedHistorySnapshot.size > 0) {
+                const savedHistoryDoc = savedHistorySnapshot.docs[0];
+                const savedHistoryData = savedHistoryDoc.data();
+
+                if (savedHistoryData.transactions && Array.isArray(savedHistoryData.transactions)) {
+                  // Find and update the transaction with matching order_id
+                  const updatedTransactions = savedHistoryData.transactions.map(transaction => {
+                    if (transaction.order_id === orderData.order_id) {
+                      return {
+                        ...transaction,
+                        reference_number: finalRefNumber
+                      };
+                    }
+                    return transaction;
+                  });
+
+                  await updateDoc(doc(db, "saved_history", savedHistoryDoc.id), {
+                    transactions: updatedTransactions,
+                    lastUpdated: serverTimestamp()
+                  });
+                  console.log("Saved history updated through fallback");
+                }
+              }
+            } catch (updateError) {
+              console.error("Error updating related collections in fallback:", updateError);
+            }
+          } else {
+            console.error("No matching orders found through fallback approach");
+          }
+        } catch (fallbackError) {
+          console.error("Error in fallback approach:", fallbackError);
+        }
+      }
+    } catch (error) {
+      console.error("Error updating order with reference number:", error);
+    }
 
     setTimeout(() => {
       showSuccessModal(); // Show success modal

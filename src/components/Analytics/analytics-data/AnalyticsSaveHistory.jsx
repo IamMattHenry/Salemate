@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { 
-  collection, 
-  query, 
-  orderBy, 
-  getDocs, 
-  addDoc, 
-  serverTimestamp, 
+import {
+  collection,
+  query,
+  orderBy,
+  getDocs,
+  addDoc,
+  serverTimestamp,
   getFirestore,
   where,  // Add this
   limit,    // Add this too since it was missing
@@ -25,7 +25,7 @@ const db = getFirestore(firebaseApp);
 const getWeekDates = (date) => {
   const monday = new Date(date);
   monday.setDate(date.getDate() - date.getDay() + 1);
-  
+
   const week = [];
   for (let i = 0; i < 7; i++) {
     const day = new Date(monday);
@@ -44,185 +44,272 @@ const AnalyticsSaveHistory = () => {
   const [loading, setLoading] = useState(false);
   const [savedHistories, setSavedHistories] = useState([]);
   const [analyticsData, setAnalyticsData] = useState([]);
+  const [error, setError] = useState(null);
 
   // Fetch saved histories
   const fetchSavedHistories = async () => {
     try {
-      const historyQuery = query(
-        collection(db, "analyticReportSaved"), // Updated collection name
-        orderBy("dateSaved", "desc")
+      console.log("Fetching saved histories...");
+      setLoading(true);
+      setError(null);
+
+      // Set a timeout to prevent getting stuck in loading state
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout fetching histories")), 10000)
       );
-      const snapshot = await getDocs(historyQuery);
-      const histories = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        dateSaved: new Date(doc.data().dateSaved?.seconds * 1000).toLocaleDateString()
-      }));
-      setSavedHistories(histories);
-    } catch (error) {
-      console.error("Error fetching histories:", error);
-    }
-  };
 
-  // Generate PDF function
-  const generatePDF = async (monthYear, weekData) => {
-    setLoading(true);
-    try {
-      const pdfDoc = new jsPDF();
-      const today = new Date();
-      const weekNumber = getWeekNumber(today);
-      const weekDates = getWeekDates(today);
+      const fetchPromise = async () => {
+        const historyQuery = query(
+          collection(db, "analyticReportSaved"), // Updated collection name
+          orderBy("dateSaved", "desc")
+        );
+        const snapshot = await getDocs(historyQuery);
+        console.log(`Found ${snapshot.size} saved histories`);
 
-      // Title
-      pdfDoc.setFont("helvetica", "bold");
-      pdfDoc.setFontSize(20);
-      pdfDoc.text(`Weekly Analytics Summary - Week ${weekNumber}`, 20, 30);
+        const histories = snapshot.docs.map(doc => {
+          const data = doc.data();
+          // Handle case where dateSaved might be missing or invalid
+          let formattedDate = "Unknown date";
+          if (data.dateSaved) {
+            if (data.dateSaved.seconds) {
+              formattedDate = new Date(data.dateSaved.seconds * 1000).toLocaleDateString();
+            } else if (data.dateSaved instanceof Date) {
+              formattedDate = data.dateSaved.toLocaleDateString();
+            }
+          }
 
-      // Date Range
-      pdfDoc.setFontSize(12);
-      pdfDoc.setTextColor(107, 114, 128);
-      const dateRange = `${weekDates[0].toLocaleDateString('en-US', { 
-        month: 'long', 
-        day: 'numeric' 
-      })} - ${weekDates[6].toLocaleDateString('en-US', { 
-        month: 'long', 
-        day: 'numeric',
-        year: 'numeric'
-      })}`;
-      pdfDoc.text(dateRange, 20, 40);
+          return {
+            id: doc.id,
+            ...data,
+            dateSaved: formattedDate
+          };
+        });
 
-      // Summary Box
-      pdfDoc.setDrawColor(255, 191, 0);
-      pdfDoc.setFillColor(255, 251, 235);
-      pdfDoc.roundedRect(15, 50, 180, 60, 3, 3, 'FD');
+        return histories;
+      };
 
-      // Summary Content
-      pdfDoc.setFontSize(12);
-      pdfDoc.setTextColor(0, 0, 0);
-      const summaryStats = [
-        `Weekly Revenue: PHP ${weekData.totalRevenue?.toLocaleString() || '0'}`,
-        `Total Orders: ${weekData.totalOrders || '0'}`
-      ];
-
-      summaryStats.forEach((stat, index) => {
-        pdfDoc.text(stat, 20, 70 + (index * 15));
-      });
-
-      // Daily Sales Table
-      autoTable(pdfDoc, {
-        startY: 125,
-        head: [['Date', 'Day', 'Orders', 'Sales']],
-        body: weekDates.map(date => {
-          const dayData = weekData.dailySales?.[date.toISOString().split('T')[0]] || {};
-          return [
-            date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            date.toLocaleDateString('en-US', { weekday: 'long' }),
-            dayData.orders || '0',
-            `PHP ${dayData.sales?.toLocaleString() || '0'}`
-          ];
-        }),
-        styles: {
-          fontSize: 10,
-          cellPadding: 6,
-          lineColor: [255, 191, 0],
-          lineWidth: 0.1,
-        },
-        headStyles: {
-          fillColor: [255, 191, 0],
-          textColor: [0, 0, 0],
-          fontSize: 10,
-          fontStyle: 'bold',
-          halign: 'center',
-        },
-        columnStyles: {
-          0: { halign: 'center', cellWidth: 25 },
-          1: { halign: 'left', cellWidth: 40 },
-          2: { halign: 'center', cellWidth: 30 },
-          3: { halign: 'right', cellWidth: 40 }
-        },
-        alternateRowStyles: {
-          fillColor: [255, 251, 235]
-        }
-      });
-
-      const fileName = `${monthYear.replace(' ', '')}Week${weekNumber}_${today.getFullYear()}.pdf`;
-      pdfDoc.save(fileName);
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      alert("Error generating PDF. Please try again.");
+      // Race between the fetch and the timeout
+      const histories = await Promise.race([fetchPromise(), timeoutPromise]);
+      setSavedHistories(Array.isArray(histories) ? histories : []);
+      console.log("Histories fetched successfully");
+    } catch (err) {
+      console.error("Error fetching histories:", err);
+      setError(`Failed to load analytics history: ${err.message}`);
+      // Set empty array to avoid undefined errors
+      setSavedHistories([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Update the handleDownload function
-  const handleDownload = async (history) => {
+  // Optimized PDF generation function
+  const generatePDF = async (monthYear, weekData) => {
+    setLoading(true);
     try {
-      setLoading(true);
-      
-      const weekDates = getWeekDates(new Date(history.dateSaved));
-      const startDate = new Date(weekDates[0]);
-      const endDate = new Date(weekDates[6]);
-      
-      startDate.setHours(0, 0, 0, 0);
-      endDate.setHours(23, 59, 59, 999);
+      console.log("Starting PDF generation...");
+      const startTime = performance.now();
 
-      const startTimestamp = Timestamp.fromDate(startDate);
-      const endTimestamp = Timestamp.fromDate(endDate);
-
-      const ordersQuery = query(
-        collection(db, "order_transaction"),
-        where("order_date", ">=", startTimestamp),
-        where("order_date", "<=", endTimestamp),
-        orderBy("order_date", "desc")
-      );
-
-      const ordersSnapshot = await getDocs(ordersQuery);
-      const orders = ordersSnapshot.docs.map(doc => ({
-        orderDate: doc.data().order_date.toDate(),
-        total: doc.data().order_total || 0,
-        status: doc.data().order_status || ''
-      }));
-
-      // Process orders data
-      const dailySales = {};
-      let totalRevenue = 0;
-      let totalOrders = 0;
-
-      // Initialize dailySales for all week dates
-      weekDates.forEach(date => {
-        const dateKey = date.toISOString().split('T')[0];
-        dailySales[dateKey] = {
-          orders: 0,
-          sales: 0
-        };
+      // Create PDF document with compression
+      const pdfDoc = new jsPDF({
+        compress: true,
+        precision: 2 // Lower precision for faster generation
       });
 
-      // Process orders
-      orders.forEach(order => {
-        if (order.status === 'Delivered') {
-          const dateKey = order.orderDate.toISOString().split('T')[0];
-          
-          if (dailySales[dateKey]) {
-            dailySales[dateKey].orders++;
-            dailySales[dateKey].sales += parseFloat(order.total);
-            totalRevenue += parseFloat(order.total);
-            totalOrders++;
-          }
+      const today = new Date();
+      const weekNumber = getWeekNumber(today);
+      const weekDates = getWeekDates(today);
+
+      // Title - use a smaller font size
+      pdfDoc.setFont("helvetica", "bold");
+      pdfDoc.setFontSize(18);
+      pdfDoc.text(`Weekly Analytics Summary - Week ${weekNumber}`, 20, 30);
+
+      // Date Range - simplified
+      pdfDoc.setFontSize(10);
+      pdfDoc.setTextColor(107, 114, 128);
+      const dateRange = `${weekDates[0].toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
+      })} - ${weekDates[6].toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      })}`;
+      pdfDoc.text(dateRange, 20, 40);
+
+      // Summary Box - simplified
+      pdfDoc.setDrawColor(255, 191, 0);
+      pdfDoc.setFillColor(255, 251, 235);
+      pdfDoc.roundedRect(15, 50, 180, 40, 3, 3, 'FD');
+
+      // Summary Content - combined for fewer operations
+      pdfDoc.setFontSize(11);
+      pdfDoc.setTextColor(0, 0, 0);
+      pdfDoc.text(`Weekly Revenue: PHP ${weekData.totalRevenue?.toLocaleString() || '0'}`, 20, 65);
+      pdfDoc.text(`Total Orders: ${weekData.totalOrders || '0'}`, 20, 80);
+
+      // Daily Sales Table - optimized
+      autoTable(pdfDoc, {
+        startY: 105, // Reduced spacing
+        head: [['Date', 'Day', 'Orders', 'Sales']],
+        body: weekDates.map(date => {
+          const dayData = weekData.dailySales?.[date.toISOString().split('T')[0]] || {};
+          return [
+            date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            date.toLocaleDateString('en-US', { weekday: 'short' }), // Use short weekday names
+            dayData.orders || '0',
+            `₱${dayData.sales?.toLocaleString() || '0'}`
+          ];
+        }),
+        styles: {
+          fontSize: 9, // Smaller font
+          cellPadding: 4, // Reduced padding
+          lineWidth: 0.1,
+        },
+        headStyles: {
+          fillColor: [255, 191, 0],
+          textColor: [0, 0, 0],
+          fontSize: 9,
+          fontStyle: 'bold',
+          halign: 'center',
+        },
+        columnStyles: {
+          0: { halign: 'center', cellWidth: 20 }, // Reduced widths
+          1: { halign: 'left', cellWidth: 30 },
+          2: { halign: 'center', cellWidth: 20 },
+          3: { halign: 'right', cellWidth: 30 }
+        },
+        alternateRowStyles: {
+          fillColor: [255, 251, 235]
+        },
+        didDrawPage: () => {
+          // Add footer with timestamp
+          const pageCount = pdfDoc.internal.getNumberOfPages();
+          pdfDoc.setFontSize(8);
+          pdfDoc.setTextColor(150, 150, 150);
+          pdfDoc.text(`Generated on ${new Date().toLocaleString()} | Page ${pageCount}`, 20, pdfDoc.internal.pageSize.height - 10);
         }
       });
 
-      const weekData = {
-        totalRevenue,
-        totalOrders,
-        dailySales
+      const fileName = `${monthYear.replace(' ', '')}Week${weekNumber}_${today.getFullYear()}.pdf`;
+      pdfDoc.save(fileName);
+
+      const endTime = performance.now();
+      console.log(`PDF generated in ${(endTime - startTime).toFixed(2)}ms`);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      setError("Error generating PDF. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Optimized handleDownload function for faster performance
+  const handleDownload = async (history) => {
+    try {
+      console.log("Starting download process for history:", history.id);
+      const startTime = performance.now();
+
+      setLoading(true);
+      setError(null);
+
+      // Check if we already have the data in the history object
+      if (history.totalRevenue !== undefined && history.dailySales) {
+        console.log("Using cached data from history object");
+        // Use the data directly from the history object
+        const weekData = {
+          totalRevenue: history.totalRevenue,
+          totalOrders: history.totalOrders,
+          dailySales: history.dailySales
+        };
+
+        // Generate PDF with the cached data
+        await generatePDF(history.monthYear, weekData);
+
+        const endTime = performance.now();
+        console.log(`Download completed in ${(endTime - startTime).toFixed(2)}ms using cached data`);
+        return;
+      }
+
+      // If we don't have cached data, fetch it from Firestore
+      console.log("No cached data found, fetching from Firestore");
+
+      // Set a timeout to prevent getting stuck
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout fetching order data")), 10000)
+      );
+
+      const fetchDataPromise = async () => {
+        const weekDates = getWeekDates(new Date(history.dateSaved));
+        const startDate = new Date(weekDates[0]);
+        const endDate = new Date(weekDates[6]);
+
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+
+        // Optimize query to fetch only necessary fields and limit results
+        const ordersQuery = query(
+          collection(db, "order_transaction"),
+          where("order_status", "==", "Delivered"),
+          limit(100) // Limit to 100 orders for faster processing
+        );
+
+        const ordersSnapshot = await getDocs(ordersQuery);
+        console.log(`Fetched ${ordersSnapshot.size} orders`);
+
+        // Process orders data more efficiently
+        const dailySales = {};
+        let totalRevenue = 0;
+        let totalOrders = 0;
+
+        // Initialize dailySales for all week dates
+        weekDates.forEach(date => {
+          const dateKey = date.toISOString().split('T')[0];
+          dailySales[dateKey] = { orders: 0, sales: 0 };
+        });
+
+        // Process orders in a single loop
+        ordersSnapshot.forEach(doc => {
+          const data = doc.data();
+
+          // Skip if no order_date or not delivered
+          if (!data.order_date || data.order_status !== 'Delivered') return;
+
+          // Convert Firestore timestamp to Date
+          const orderDate = data.order_date.toDate ? data.order_date.toDate() : new Date(data.order_date);
+
+          // Check if the order is within our date range
+          if (orderDate < startDate || orderDate > endDate) return;
+
+          const dateKey = orderDate.toISOString().split('T')[0];
+          const orderTotal = parseFloat(data.order_total || 0);
+
+          if (dailySales[dateKey]) {
+            dailySales[dateKey].orders++;
+            dailySales[dateKey].sales += orderTotal;
+            totalRevenue += orderTotal;
+            totalOrders++;
+          }
+        });
+
+        return {
+          totalRevenue,
+          totalOrders,
+          dailySales
+        };
       };
+
+      // Race between the fetch and the timeout
+      const weekData = await Promise.race([fetchDataPromise(), timeoutPromise]);
 
       // Generate PDF with the fetched data
       await generatePDF(history.monthYear, weekData);
+
+      const endTime = performance.now();
+      console.log(`Download completed in ${(endTime - startTime).toFixed(2)}ms`);
     } catch (error) {
       console.error("Error generating report:", error);
-      alert("Error generating report. Please try again.");
+      setError(`Error generating report: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -256,65 +343,90 @@ const AnalyticsSaveHistory = () => {
     }
   };
 
-  // Update the fetchWeeklyData function to properly format dates for Firestore
+  // Optimized fetchWeeklyData function for faster performance
 const fetchWeeklyData = async () => {
   try {
-    const weekDates = getWeekDates(new Date());
+    console.log("Starting fetchWeeklyData...");
+    const startTime = performance.now();
+
+    // Get the current date
+    const today = new Date();
+
+    // Get the dates for the current week
+    const weekDates = getWeekDates(today);
+
+    // Set the start and end dates for the query
     const startDate = new Date(weekDates[0]);
     const endDate = new Date(weekDates[6]);
-    
+
     startDate.setHours(0, 0, 0, 0);
     endDate.setHours(23, 59, 59, 999);
 
-    const startTimestamp = Timestamp.fromDate(startDate);
-    const endTimestamp = Timestamp.fromDate(endDate);
-
-    // Query delivered orders for the week
+    // Use a more efficient query with caching
     const ordersQuery = query(
       collection(db, "order_transaction"),
       where("order_status", "==", "Delivered"),
-      where("order_date", ">=", startTimestamp),
-      where("order_date", "<=", endTimestamp),
-      orderBy("order_date", "desc") // Changed to desc to match your index
+      limit(100) // Limit to 100 orders for faster processing
     );
 
-    const ordersSnapshot = await getDocs(ordersQuery);
-    console.log('Found orders:', ordersSnapshot.size);
+    // Set a timeout to prevent getting stuck
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Timeout fetching weekly data")), 5000)
+    );
 
-    // Initialize tracking objects
-    const dailySales = {};
-    let totalRevenue = 0;
-    let totalOrders = 0;
+    const fetchPromise = async () => {
+      const ordersSnapshot = await getDocs(ordersQuery);
+      console.log(`Fetched ${ordersSnapshot.size} orders in fetchWeeklyData`);
 
-    // Initialize dailySales for each day
-    weekDates.forEach(date => {
-      const dateKey = date.toISOString().split('T')[0];
-      dailySales[dateKey] = {
-        orders: 0,
-        sales: 0
+      // Initialize tracking objects
+      const dailySales = {};
+      let totalRevenue = 0;
+      let totalOrders = 0;
+
+      // Initialize dailySales for each day (more efficiently)
+      const dateKeys = weekDates.map(date => date.toISOString().split('T')[0]);
+      dateKeys.forEach(dateKey => {
+        dailySales[dateKey] = { orders: 0, sales: 0 };
+      });
+
+      // Process each order (more efficiently)
+      ordersSnapshot.forEach(docSnapshot => {
+        const orderData = docSnapshot.data();
+
+        // Skip if no order_date
+        if (!orderData.order_date) return;
+
+        // Convert Firestore timestamp to Date
+        const orderDate = orderData.order_date.toDate ? orderData.order_date.toDate() : new Date(orderData.order_date);
+
+        // Check if the order is within our date range
+        if (orderDate < startDate || orderDate > endDate) return;
+
+        const dateKey = orderDate.toISOString().split('T')[0];
+        const orderTotal = parseFloat(orderData.order_total || 0);
+
+        if (dailySales[dateKey]) {
+          dailySales[dateKey].orders++;
+          dailySales[dateKey].sales += orderTotal;
+          totalRevenue += orderTotal;
+          totalOrders++;
+        }
+      });
+
+      return {
+        totalRevenue,
+        totalOrders,
+        dailySales
       };
-    });
-
-    // Process each order
-    ordersSnapshot.forEach(docSnapshot => {
-      const orderData = docSnapshot.data();
-      const orderDate = orderData.order_date.toDate();
-      const dateKey = orderDate.toISOString().split('T')[0];
-
-      if (dailySales[dateKey] && orderData.items) {
-        dailySales[dateKey].orders++;
-        dailySales[dateKey].sales += parseFloat(orderData.order_total || 0);
-        totalRevenue += parseFloat(orderData.order_total || 0);
-        totalOrders++;
-      }
-    });
-
-    return {
-      totalRevenue,
-      totalOrders,
-      dailySales
     };
 
+    // Race between the fetch and the timeout
+    const result = await Promise.race([fetchPromise(), timeoutPromise]);
+
+    const endTime = performance.now();
+    console.log(`fetchWeeklyData completed in ${(endTime - startTime).toFixed(2)}ms`);
+
+    return result;
   } catch (error) {
     console.error('Error fetching weekly data:', error);
     throw error;
@@ -325,49 +437,115 @@ const fetchWeeklyData = async () => {
 useEffect(() => {
   const checkAndUpdateWeeklyReport = async () => {
     try {
+      // Get the current date
       const today = new Date();
+      console.log("Current date:", today.toLocaleDateString());
+
       const weekNumber = getWeekNumber(today);
       const monthYear = today.toLocaleDateString('en-US', {
         month: 'long',
         year: 'numeric'
       });
 
-      // Query for existing report for current week
-      const weeklyReportQuery = query(
-        collection(db, "analyticReportSaved"),
-        where("weekNumber", "==", weekNumber),
-        where("monthYear", "==", monthYear),
-        limit(1)
+      console.log("Current month/year:", monthYear);
+      console.log("Current week number:", weekNumber);
+
+      // Set a timeout to prevent getting stuck
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout updating weekly report")), 15000)
       );
 
-      const snapshot = await getDocs(weeklyReportQuery);
-      const weekData = await fetchWeeklyData();
+      const updatePromise = async () => {
+        // Query for existing report for current week
+        const weeklyReportQuery = query(
+          collection(db, "analyticReportSaved"),
+          where("weekNumber", "==", weekNumber),
+          where("monthYear", "==", monthYear),
+          limit(1)
+        );
 
-      if (!snapshot.empty) {
-        // Update existing report
-        const docRef = doc(db, "analyticReportSaved", snapshot.docs[0].id);
-        await updateDoc(docRef, {
-          ...weekData,
-          lastUpdated: serverTimestamp()
-        });
-      } else {
-        // Create new report
-        await addDoc(collection(db, "analyticReportSaved"), {
-          monthYear,
-          weekNumber,
-          dateSaved: serverTimestamp(),
-          ...weekData
-        });
-      }
+        const snapshot = await getDocs(weeklyReportQuery);
+        console.log("Found existing reports:", snapshot.size);
 
+        // Fetch the weekly data
+        const weekData = await fetchWeeklyData();
+        console.log("Fetched week data:", weekData);
+
+        if (!snapshot.empty) {
+          // Update existing report
+          const docRef = doc(db, "analyticReportSaved", snapshot.docs[0].id);
+          console.log("Updating existing report:", snapshot.docs[0].id);
+
+          await updateDoc(docRef, {
+            ...weekData,
+            lastUpdated: serverTimestamp()
+          });
+
+          console.log("Report updated successfully");
+        } else {
+          // Create new report
+          console.log("Creating new report for:", monthYear, "Week:", weekNumber);
+
+          const newDocRef = await addDoc(collection(db, "analyticReportSaved"), {
+            monthYear,
+            weekNumber,
+            dateSaved: serverTimestamp(),
+            ...weekData
+          });
+
+          console.log("New report created with ID:", newDocRef.id);
+        }
+
+        return true;
+      };
+
+      // Race between the update and the timeout
+      await Promise.race([updatePromise(), timeoutPromise]);
+
+      // Refresh the list of saved histories
       await fetchSavedHistories();
     } catch (error) {
       console.error("Error checking/updating weekly report:", error);
+      setError(`Failed to update analytics report: ${error.message}`);
+    } finally {
+      // Ensure loading is set to false even if there's an error
+      setLoading(false);
     }
   };
 
-  fetchSavedHistories();
-  checkAndUpdateWeeklyReport();
+  // Use a more efficient approach to initialize data
+  const initializeData = async () => {
+    try {
+      // Start with just fetching the histories (faster)
+      await fetchSavedHistories();
+
+      // Check if we need to update the weekly report
+      // Only do this if there are no histories or if it's been more than a day since the last update
+      const needsUpdate = savedHistories.length === 0 ||
+        (savedHistories[0]?.dateSaved &&
+         new Date(savedHistories[0].dateSaved).getTime() < Date.now() - 86400000);
+
+      if (needsUpdate) {
+        console.log("Weekly report needs update, running checkAndUpdateWeeklyReport");
+        await checkAndUpdateWeeklyReport();
+      } else {
+        console.log("Weekly report is up to date, skipping update");
+      }
+    } catch (err) {
+      console.error("Error in analytics initialization:", err);
+      setError(`Failed to initialize analytics: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Start the initialization process
+  initializeData();
+
+  // Cleanup function to ensure loading state is reset if component unmounts
+  return () => {
+    setLoading(false);
+  };
 }, []);
 
   return (
@@ -413,7 +591,7 @@ useEffect(() => {
                     <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => handleDownload(history)}
-                        className="inline-flex items-center justify-center p-2 text-amber-600 hover:text-amber-700 
+                        className="inline-flex items-center justify-center p-2 text-amber-600 hover:text-amber-700
                                  hover:bg-amber-50 rounded-lg transition-colors group-hover:bg-amber-100/50"
                         title="Download Report"
                       >
@@ -437,12 +615,39 @@ useEffect(() => {
           )}
         </div>
 
+        {/* Error State */}
+        {error && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              <p className="text-sm font-medium text-red-800">{error}</p>
+            </div>
+            <button
+              onClick={() => {
+                setError(null);
+                fetchSavedHistories();
+              }}
+              className="mt-2 text-sm font-medium text-red-600 hover:text-red-800"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
         {/* Loading State */}
         {loading && (
           <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white rounded-2xl shadow-xl p-6 flex items-center gap-4">
-              <div className="animate-spin rounded-full h-6 w-6 border-[3px] border-amber-500/30 border-t-amber-500" />
+            <div className="bg-white rounded-2xl shadow-xl p-6 flex flex-col items-center gap-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-[3px] border-amber-500/30 border-t-amber-500" />
               <p className="text-sm font-medium text-gray-900">Generating analytics report...</p>
+              <button
+                onClick={() => setLoading(false)}
+                className="mt-2 text-xs text-amber-600 hover:text-amber-800"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         )}
