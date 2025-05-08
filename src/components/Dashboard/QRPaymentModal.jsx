@@ -13,6 +13,7 @@ const QRPaymentModal = ({
 }) => {
   const [totalAmount, setTotalAmount] = useState(initialTotalAmount);
   const [currentOrderNumber, setCurrentOrderNumber] = useState(orderNumber);
+  const [referenceNumber, setReferenceNumber] = useState("");
 
   // Listen for updates to the QR Payment Modal props
   useEffect(() => {
@@ -99,18 +100,44 @@ const QRPaymentModal = ({
               </motion.div>
             </div>
 
-            <p className="text-gray-600 text-sm mb-6">
+            <p className="text-gray-600 text-sm mb-4">
               Scan this QR code with your mobile payment app to complete your purchase
             </p>
 
+            {/* Reference Number Input */}
+            <div className="mb-6">
+              <label htmlFor="referenceNumber" className="block text-sm font-medium text-gray-700 text-left mb-1">
+                Last 6 digits of reference number:
+              </label>
+              <input
+                type="text"
+                id="referenceNumber"
+                value={referenceNumber}
+                onChange={(e) => {
+                  // Only allow numbers and limit to 6 digits
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  if (value.length <= 6) {
+                    setReferenceNumber(value);
+                  }
+                }}
+                placeholder="Enter last 6 digits"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                maxLength="6"
+                required
+              />
+            </div>
+
             <div className="flex justify-center">
               <motion.button
-                onClick={onComplete}
-                className="px-6 py-3 bg-emerald-500 text-white rounded-xl font-medium
-                         hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/30
-                         flex items-center justify-center gap-2"
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.98 }}
+                onClick={() => onComplete(referenceNumber)}
+                disabled={referenceNumber.length < 6}
+                className={`px-6 py-3 rounded-xl font-medium
+                         flex items-center justify-center gap-2
+                         ${referenceNumber.length < 6
+                           ? 'bg-gray-400 cursor-not-allowed'
+                           : 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-500/30'}`}
+                whileHover={referenceNumber.length >= 6 ? { scale: 1.03 } : {}}
+                whileTap={referenceNumber.length >= 6 ? { scale: 0.98 } : {}}
               >
                 <FaCheckCircle className="w-5 h-5" />
                 Payment Complete

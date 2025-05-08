@@ -7,8 +7,7 @@ import {
   orderBy,
   doc,
   getDoc,
-  updateDoc,
-  deleteDoc
+  updateDoc
 } from "firebase/firestore";
 import { getAuth, sendPasswordResetEmail } from "firebase/auth";
 import { FiSearch, FiRefreshCw } from "react-icons/fi";
@@ -34,8 +33,6 @@ const UserAccounts = () => {
   const [lastRefreshed, setLastRefreshed] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showRefreshIndicator, setShowRefreshIndicator] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [showPins, setShowPins] = useState({});
   const [newPin, setNewPin] = useState("");
@@ -406,15 +403,7 @@ const UserAccounts = () => {
           fetchUsers();
           break;
 
-        case "delete":
-          await deleteDoc(doc(db, "users", selectedUser.id));
-          setActionResult({
-            success: true,
-            message: `Account ${selectedUser.formattedUserId} (${selectedUser.email}) has been deleted`
-          });
-          // Refresh the user list
-          fetchUsers();
-          break;
+
 
         default:
           throw new Error("Invalid action");
@@ -527,10 +516,7 @@ const UserAccounts = () => {
     };
   }, []);
 
-  // Reset to first page when date filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [startDate, endDate]);
+
 
   // Redirect non-admin users
   if (!isAdmin()) {
@@ -640,37 +626,11 @@ const UserAccounts = () => {
           </div>
         </motion.div>
 
-        {/* Date Range and Search */}
+        {/* Search */}
         <motion.div
           className="flex flex-wrap gap-4 mb-6 items-center"
           variants={itemVariants}
         >
-          <div className="flex items-center bg-white/80 border border-yellowsm/20 rounded-lg shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md hover:border-yellowsm/30">
-            <div className="flex items-center px-3 py-2 border-r border-yellowsm/20 bg-yellowsm/5">
-              <span className="text-sm font-medium text-gray-700">Start Date:</span>
-            </div>
-            <input
-              type="date"
-              id="startDate"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-yellowsm/50 bg-transparent"
-            />
-          </div>
-
-          <div className="flex items-center bg-white/80 border border-yellowsm/20 rounded-lg shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md hover:border-yellowsm/30">
-            <div className="flex items-center px-3 py-2 border-r border-yellowsm/20 bg-yellowsm/5">
-              <span className="text-sm font-medium text-gray-700">End Date:</span>
-            </div>
-            <input
-              type="date"
-              id="endDate"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-yellowsm/50 bg-transparent"
-            />
-          </div>
-
           <div className="relative ml-auto group">
             <input
               type="text"
@@ -878,18 +838,7 @@ const UserAccounts = () => {
                           </motion.button>
                         )}
 
-                        {/* Delete Button */}
-                        <motion.button
-                          className="action-button text-gray-500 hover:text-red-500 bg-white hover:bg-red-50 rounded-full p-2 shadow-sm transition-all duration-200 border border-gray-100 hover:border-red-200"
-                          onClick={() => handleUserAction(user, "delete")}
-                          whileHover={{ scale: 1.1, boxShadow: "0 4px 8px rgba(0,0,0,0.1)" }}
-                          whileTap={{ scale: 0.9 }}
-                          title="Delete Account"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </motion.button>
+
                       </div>
                     </td>
                   </motion.tr>
@@ -1019,8 +968,7 @@ const UserAccounts = () => {
               <h3 className="text-xl font-bold mb-4 text-gray-800">
                 {actionType === "privacySettings" ? "Privacy Settings" :
                  actionType === "disable" ? "Disable Account" :
-                 actionType === "enable" ? "Enable Account" :
-                 "Delete Account"}
+                 "Enable Account"}
               </h3>
 
               {selectedUser && (
@@ -1233,19 +1181,15 @@ const UserAccounts = () => {
               ) : (
                 <div className={`p-4 mb-6 rounded-lg ${
                   actionType === "disable" ? 'bg-orange-50 border border-orange-100' :
-                  actionType === "enable" ? 'bg-green-50 border border-green-100' :
-                  'bg-red-50 border border-red-100'
+                  'bg-green-50 border border-green-100'
                 }`}>
                   <p className={`${
                     actionType === "disable" ? 'text-orange-700' :
-                    actionType === "enable" ? 'text-green-700' :
-                    'text-red-700'
+                    'text-green-700'
                   }`}>
                     {actionType === "disable"
                       ? `Are you sure you want to disable this account? The user will no longer be able to log in.`
-                      : actionType === "enable"
-                      ? `Are you sure you want to enable this account? The user will be able to log in again.`
-                      : `Are you sure you want to delete this account? This action cannot be undone.`}
+                      : `Are you sure you want to enable this account? The user will be able to log in again.`}
                   </p>
                 </div>
               )}
@@ -1265,9 +1209,7 @@ const UserAccounts = () => {
                     onClick={executeAction}
                     disabled={isActionLoading}
                     className={`px-5 py-2 text-white rounded-lg shadow-md transition-all duration-200 font-medium relative ${
-                      actionType === "delete"
-                        ? 'bg-red-500 hover:bg-red-600'
-                        : actionType === "disable"
+                      actionType === "disable"
                         ? 'bg-orange-500 hover:bg-orange-600'
                         : actionType === "enable"
                         ? 'bg-green-500 hover:bg-green-600'

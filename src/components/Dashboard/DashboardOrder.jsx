@@ -702,8 +702,45 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
     }
   };
 
+  // State for reference number
+  const [referenceNumber, setReferenceNumber] = useState("");
+
   // Handle QR payment completion
-  const handleQRPaymentComplete = () => {
+  const handleQRPaymentComplete = async (refNumber) => {
+    if (refNumber && refNumber.length === 6) {
+      setReferenceNumber(refNumber);
+
+      try {
+        // Get today's start timestamp (midnight)
+        const today = new Date();
+        const startOfDay = new Date(today);
+        startOfDay.setHours(0, 0, 0, 0);
+
+        // Find the order we just created (most recent order with current order number - 1)
+        const orderQuery = query(
+          collection(db, "order_transaction"),
+          where("created_at", ">=", startOfDay),
+          where("order_id", "==", (orderNumber - 1).toString()),
+          orderBy("created_at", "desc")
+        );
+
+        const orderSnapshot = await getDocs(orderQuery);
+
+        if (!orderSnapshot.empty) {
+          // Update the order with the reference number
+          const orderDoc = orderSnapshot.docs[0];
+          await updateDoc(doc(db, "order_transaction", orderDoc.id), {
+            reference_number: refNumber,
+            updated_at: serverTimestamp()
+          });
+
+          console.log("Order updated with reference number:", refNumber);
+        }
+      } catch (error) {
+        console.error("Error updating order with reference number:", error);
+      }
+    }
+
     hideQRPaymentModal(); // Hide QR payment modal
 
     setTimeout(() => {

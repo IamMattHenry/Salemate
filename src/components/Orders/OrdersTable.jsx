@@ -100,7 +100,7 @@ const OrdersTable = () => {
         .map((doc) => {
           const data = doc.data();
           const orderDate = new Date(data.order_date.seconds * 1000);
-          
+
           // Handle order name formatting based on whether we have items array or just order_name
           let orderName = '';
           if (data.items && data.items.length > 0) {
@@ -160,7 +160,7 @@ const OrdersTable = () => {
         // Sort by order_id (lowest to highest)
         sortedOrders = ordersList.sort((a, b) => a.order_id_num - b.order_id_num);
       }
-      
+
       setOrders(sortedOrders);
     } catch (error) {
       setError(error.message);
@@ -181,7 +181,7 @@ const OrdersTable = () => {
 
   const handleSort = (sortType) => {
     let sortedOrders = [...orders];
-    
+
     switch (sortType) {
       case "timestamp":
         sortedOrders.sort((a, b) => b.timestamp - a.timestamp);
@@ -201,7 +201,7 @@ const OrdersTable = () => {
       default:
         break;
     }
-    
+
     setSortConfig({ type: sortType });
     setOrders(sortedOrders);
   };
@@ -243,7 +243,7 @@ const OrdersTable = () => {
       const orderRef = doc(db, "order_transaction", orderId);
       const orderSnapshot = await getDoc(orderRef);
       const currentOrder = orderSnapshot.data();
-  
+
       // Check if all items in the order are ready before marking as Delivered
       if (newStatus === "Delivered" && currentOrder.items) {
         // If any items are still preparing, prevent status change
@@ -252,13 +252,13 @@ const OrdersTable = () => {
           return;
         }
       }
-  
+
       // If all checks pass, update the order status
       await updateDoc(orderRef, {
         order_status: newStatus,
         updated_at: new Date(),
       });
-      
+
       await fetchOrders();
     } catch (error) {
       setError("Failed to update order status. Please try again.");
@@ -348,15 +348,15 @@ const OrdersTable = () => {
         </h2>
         {/* Modern Sort Dropdown */}
         <div className="relative inline-block">
-          <select 
-            onChange={(e) => handleSort(e.target.value)} 
+          <select
+            onChange={(e) => handleSort(e.target.value)}
             className="appearance-none bg-white border border-amber-200 text-amber-700 px-4 py-2.5 pr-10 rounded-xl
                       hover:bg-amber-50 transition-all cursor-pointer font-medium shadow-sm
                       focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
           >
             {sortOptions.map((option) => (
-              <option 
-                key={option.value} 
+              <option
+                key={option.value}
                 value={option.value}
                 className="text-gray-700 bg-white hover:bg-amber-50"
               >
@@ -365,16 +365,16 @@ const OrdersTable = () => {
             ))}
           </select>
           <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-            <svg 
-              className="w-5 h-5 text-amber-500" 
-              fill="none" 
-              stroke="currentColor" 
+            <svg
+              className="w-5 h-5 text-amber-500"
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
                 d="M8 9l4 4 4-4"
               />
             </svg>
@@ -431,8 +431,8 @@ const OrdersTable = () => {
                       <div className="flex justify-center">
                         <div className={`
                           flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium
-                          ${order.order_status === 'Delivered' 
-                            ? 'bg-emerald-100 text-emerald-700' 
+                          ${order.order_status === 'Delivered'
+                            ? 'bg-emerald-100 text-emerald-700'
                             : order.order_status === 'Preparing'
                             ? 'bg-amber-100 text-amber-700'
                             : 'bg-red-100 text-red-700'}
@@ -460,8 +460,8 @@ const OrdersTable = () => {
                   {searchQuery ? (
                     <p>No results found for "{searchQuery}"</p>
                   ) : (
-                    <p>No {location.pathname.includes("completed") ? "completed" : 
-                        location.pathname.includes("pending") ? "pending" : 
+                    <p>No {location.pathname.includes("completed") ? "completed" :
+                        location.pathname.includes("pending") ? "pending" :
                         location.pathname.includes("cancelled") ? "cancelled" : ""} orders found</p>
                   )}
                 </div>
@@ -514,8 +514,8 @@ const OrdersTable = () => {
                     <div className="space-y-2">
                       <span className={`
                         inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium
-                        ${selectedOrder.order_status === 'Delivered' 
-                          ? 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-700/20' 
+                        ${selectedOrder.order_status === 'Delivered'
+                          ? 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-700/20'
                           : selectedOrder.order_status === 'Preparing'
                           ? 'bg-amber-100 text-amber-700 ring-1 ring-amber-700/20'
                           : 'bg-red-100 text-red-700 ring-1 ring-red-700/20'}
@@ -585,6 +585,12 @@ const OrdersTable = () => {
                         <span className="text-gray-600">Payment Method</span>
                         <span className="font-medium text-gray-900">{selectedOrder.mop}</span>
                       </div>
+                      {selectedOrder.mop === "Online" && selectedOrder.reference_number && (
+                        <div className="flex justify-between items-center px-4 py-3 bg-gray-50 rounded-xl">
+                          <span className="text-gray-600">Reference Number</span>
+                          <span className="font-medium text-gray-900">******{selectedOrder.reference_number}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between items-center px-4 py-3 bg-emerald-50 rounded-xl">
                         <span className="font-medium text-emerald-800">Total Amount</span>
                         <span className="font-bold text-emerald-700 text-lg">₱{selectedOrder.order_total}</span>
