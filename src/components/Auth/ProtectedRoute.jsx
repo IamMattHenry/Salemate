@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLoading } from '../../context/LoadingContext';
 import AccessDeniedModal from './AccessDeniedModal';
 import LoadingSpinner from '../common/LoadingSpinner';
+import { auth } from '../../firebaseConfig';
 
 // Extract the module name from the path
 const getModuleFromPath = (path) => {
@@ -29,7 +30,7 @@ const getModuleFromPath = (path) => {
 };
 
 const ProtectedRoute = ({ children }) => {
-  const { currentUser, pinVerified, hasAccess, loading: authLoading } = useAuth();
+  const { currentUser, pinVerified, hasAccess, loading: authLoading, emailVerified } = useAuth();
   const { showLoading, hideLoading } = useLoading();
   const location = useLocation();
   const [showAccessDenied, setShowAccessDenied] = useState(false);
@@ -67,6 +68,20 @@ const ProtectedRoute = ({ children }) => {
   if (!currentUser) {
     console.log("User not authenticated, redirecting to signin");
     // Use Navigate component instead of window.location to avoid full page refresh
+    return <Navigate to="/signin" replace />;
+  }
+
+  // If email is not verified, sign out and redirect to sign in
+  if (currentUser && !emailVerified) {
+    console.log("Email not verified, signing out and redirecting to signin");
+    // Sign out the user
+    (async () => {
+      try {
+        await auth.signOut();
+      } catch (err) {
+        console.error("Error signing out:", err);
+      }
+    })();
     return <Navigate to="/signin" replace />;
   }
 

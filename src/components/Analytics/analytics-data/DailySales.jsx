@@ -104,6 +104,13 @@ const DailySales = () => {
       // When a new delivered order is detected, refresh the data
       if (isMounted) {
         fetchDailySales();
+
+        // Also trigger a refresh of the monthly data by dispatching a custom event
+        // This will ensure the monthly data is updated when daily data changes
+        const refreshEvent = new CustomEvent('refreshAnalyticsData');
+        window.dispatchEvent(refreshEvent);
+
+        console.log("Triggered analytics data refresh event");
       }
     });
 

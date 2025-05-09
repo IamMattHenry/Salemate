@@ -5,10 +5,10 @@ import { sendEmailVerification } from 'firebase/auth';
 import { auth } from '../../firebaseConfig';
 
 /**
- * Modal that appears when a user tries to sign in without verifying their email
+ * Modal that appears when a user tries to access protected pages without verifying their email
  * Provides an option to resend the verification email
  */
-const EmailVerificationModal = ({ isOpen, onClose, email, password }) => {
+const EmailVerificationModal = ({ isOpen, onClose, email, onResendVerification }) => {
   const [isResending, setIsResending] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -20,19 +20,12 @@ const EmailVerificationModal = ({ isOpen, onClose, email, password }) => {
     setResendSuccess(false);
 
     try {
-      // Get the current user
-      const user = auth.currentUser;
+      const result = await onResendVerification();
 
-      if (user) {
-        // Send verification email
-        await sendEmailVerification(user, {
-          url: window.location.origin + "/signin", // Redirect URL after verification
-          handleCodeInApp: false,
-        });
-
+      if (result.success) {
         setResendSuccess(true);
       } else {
-        setError('Unable to resend verification email. Please try signing in again.');
+        setError(result.error || 'Unable to resend verification email. Please try signing in again.');
       }
     } catch (err) {
       console.error('Error sending verification email:', err);

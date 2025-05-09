@@ -55,13 +55,16 @@ const CACHE_EXPIRATION = {
 
 /**
  * Get monthly sales data with caching
+ * @param {boolean} forceRefresh - Whether to bypass cache and force a fresh fetch
  * @returns {Promise<Object>} Monthly sales data
  */
-export const getMonthlyData = async () => {
+export const getMonthlyData = async (forceRefresh = false) => {
   try {
-    // Check if we have cached data that's still valid
+    // Check if we have cached data that's still valid and we're not forcing a refresh
     const now = Date.now();
-    if (cache.monthlyData && cache.monthlyDataTimestamp &&
+    if (!forceRefresh &&
+        cache.monthlyData &&
+        cache.monthlyDataTimestamp &&
         (now - cache.monthlyDataTimestamp) < CACHE_EXPIRATION.MONTHLY) {
       // Only log in development environment
       if (process.env.NODE_ENV === 'development') {
@@ -70,7 +73,7 @@ export const getMonthlyData = async () => {
       return cache.monthlyData;
     }
 
-    console.log('Fetching fresh monthly data');
+    console.log(`Fetching fresh monthly data${forceRefresh ? ' (forced)' : ''}`);
 
     // Get current date
     const today = new Date();
@@ -424,13 +427,16 @@ export const getDailyData = async (date = new Date(), forceRefresh = false) => {
 
 /**
  * Get product sales data with caching
+ * @param {boolean} forceRefresh - Whether to bypass cache and force a fresh fetch
  * @returns {Promise<Object>} Product sales data
  */
-export const getProductData = async () => {
+export const getProductData = async (forceRefresh = false) => {
   try {
-    // Check if we have cached data that's still valid
+    // Check if we have cached data that's still valid and we're not forcing a refresh
     const now = Date.now();
-    if (cache.productData && cache.productDataTimestamp &&
+    if (!forceRefresh &&
+        cache.productData &&
+        cache.productDataTimestamp &&
         (now - cache.productDataTimestamp) < CACHE_EXPIRATION.PRODUCT) {
       // Only log in development environment
       if (process.env.NODE_ENV === 'development') {
@@ -439,7 +445,7 @@ export const getProductData = async () => {
       return cache.productData;
     }
 
-    console.log('Fetching fresh product data');
+    console.log(`Fetching fresh product data${forceRefresh ? ' (forced)' : ''}`);
 
     // Get current date
     const today = new Date();
@@ -568,11 +574,21 @@ export const subscribeToNewDeliveredOrders = (callback) => {
             delete cache.dailyData[dateString];
           }
 
+          // Also clear the monthly data cache to ensure consistency
+          cache.monthlyData = null;
+          cache.monthlyDataTimestamp = 0;
+
+          // Clear the product data cache as well
+          cache.productData = null;
+          cache.productDataTimestamp = 0;
+
           // Also clear localStorage cache
           try {
             const storedCache = JSON.parse(localStorage.getItem('analyticsCache') || '{}');
             if (storedCache.dailyData && storedCache.dailyData[dateString]) {
               delete storedCache.dailyData[dateString];
+              // Also clear monthly data in localStorage
+              delete storedCache.monthlyData;
               localStorage.setItem('analyticsCache', JSON.stringify(storedCache));
             }
           } catch (e) {

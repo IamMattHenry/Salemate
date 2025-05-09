@@ -68,6 +68,12 @@ const InitialPinVerification = () => {
       // Update the last shown time
       lastModalShownTime.current = now;
 
+      // Reset state when showing the modal
+      setPin('');
+      setConfirmPin('');
+      setError('');
+      setSuccess('');
+
       // Small delay to ensure this runs after navigation
       setTimeout(() => {
         setShowVerification(true);
@@ -90,12 +96,24 @@ const InitialPinVerification = () => {
       // If PIN verification status changes to false, reset the modal shown flag
       // This ensures the modal will show again if the user logs out and back in
       setPinModalShownInSession(false);
+
+      // Reset all form state when PIN verification status changes to false
+      setPin('');
+      setConfirmPin('');
+      setError('');
+      setSuccess('');
     }
   }, [pinVerified]);
 
   useEffect(() => {
     // If user doesn't have a PIN, show the create PIN form
     if (showVerification) {
+      // Reset form state when modal is shown
+      setPin('');
+      setConfirmPin('');
+      setError('');
+      setSuccess('');
+
       if (hasPin === false) {
         // Only if we explicitly know the user doesn't have a PIN
         console.log("User doesn't have a PIN, showing create PIN form");
@@ -140,6 +158,11 @@ const InitialPinVerification = () => {
     const value = e.target.value;
     // Only allow numbers and limit to 4 digits
     if (/^\d*$/.test(value) && value.length <= 4) {
+      // Clear any success message when user starts typing
+      if (success) {
+        setSuccess('');
+      }
+
       setPin(value);
 
       // If the PIN is 4 digits, automatically try to verify it
@@ -190,6 +213,11 @@ const InitialPinVerification = () => {
     const value = e.target.value;
     // Only allow numbers and limit to 4 digits
     if (/^\d*$/.test(value) && value.length <= 4) {
+      // Clear any success message when user starts typing
+      if (success) {
+        setSuccess('');
+      }
+
       setConfirmPin(value);
 
       // If both PINs are 4 digits and match, automatically create the PIN
@@ -227,6 +255,7 @@ const InitialPinVerification = () => {
   const handleVerifyPin = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess(''); // Clear any existing success message
 
     if (pin.length !== 4) {
       setError('PIN must be 4 digits');
@@ -279,6 +308,7 @@ const InitialPinVerification = () => {
     }
 
     setError('');
+    setSuccess(''); // Clear any existing success message
 
     if (pin.length !== 4) {
       setError('PIN must be 4 digits');

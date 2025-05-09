@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, useLocation } from "react-router-dom";
 import { BsBoxArrowRight, BsAt, BsFillLockFill } from "react-icons/bs";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification } from "firebase/auth";
@@ -9,6 +9,7 @@ import firebaseApp, { auth } from "../../firebaseConfig"; // Import both app and
 import useModal from "../../hooks/Modal/UseModal"; // Import your custom hook
 import DisabledAccountModal from "../../components/Auth/DisabledAccountModal"; // Import the disabled account modal
 import DeletedAccountModal from "../../components/Auth/DeletedAccountModal"; // Import the deleted account modal
+import SignInVerificationReminder from "../../components/Auth/SignInVerificationReminder"; // Import the verification reminder modal
 
 function SignIn() {
   const [email, setEmail] = useState("");
@@ -19,18 +20,56 @@ function SignIn() {
   const [verificationSent, setVerificationSent] = useState(false);
   const [showDisabledModal, setShowDisabledModal] = useState(false);
   const [showDeletedModal, setShowDeletedModal] = useState(false);
+  const [showVerificationReminder, setShowVerificationReminder] = useState(false);
   const [redirectToDashboard, setRedirectToDashboard] = useState(false);
   const { modal, toggleModal } = useModal(); // Use the custom modal hook
   const navigate = useNavigate();
+  const location = useLocation();
   const { resetPinVerification, currentUser } = useAuth();
 
-  // Check if user is already logged in
+  // Check for verification reminder parameter
   useEffect(() => {
-    if (currentUser) {
-      console.log("User already logged in, redirecting to dashboard");
-      setRedirectToDashboard(true);
+    // Check if we have a 'verify' query parameter
+    const queryParams = new URLSearchParams(location.search);
+    if (queryParams.get('verify') === 'true') {
+      // Show the verification reminder modal
+      setShowVerificationReminder(true);
+
+      // Remove the query parameter to prevent showing the modal again on refresh
+      // This creates a new URL without the query parameter
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
     }
-  }, [currentUser]);
+  }, [location]);
+
+  // Check if user is already logged in and email is verified
+  useEffect(() => {
+    const checkUserStatus = async () => {
+      if (currentUser) {
+        // Only redirect to dashboard if email is verified
+        if (currentUser.emailVerified) {
+          console.log("User already logged in with verified email, redirecting to dashboard");
+          setRedirectToDashboard(true);
+        } else {
+          console.log("User logged in but email not verified, signing out");
+          // Sign out the user to prevent the redirect loop
+          try {
+            await auth.signOut();
+            // Show the verification reminder modal if it's not already visible
+            if (!showVerificationReminder) {
+              setShowVerificationReminder(true);
+            }
+            // Clear any existing error message
+            setError("");
+          } catch (err) {
+            console.error("Error signing out:", err);
+          }
+        }
+      }
+    };
+
+    checkUserStatus();
+  }, [currentUser, showVerificationReminder]);
 
   const db = getFirestore(firebaseApp);
 
@@ -67,8 +106,12 @@ function SignIn() {
         handleCodeInApp: false,
       });
 
+      // Sign out the user after sending verification email
+      await auth.signOut();
+
+      // Show success modal
       setVerificationSent(true);
-      toggleModal(); // Show success modal
+      toggleModal();
     } catch (err) {
       if (err.code === "auth/user-not-found") {
         setError("No account found with this email.");
@@ -89,6 +132,27 @@ function SignIn() {
     setIsLoading(true);
 
     try {
+      // First, check if the user exists and get their email verification status
+      // This is a temporary sign-in to check verification status
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Check if email is verified
+      if (!user.emailVerified) {
+        console.log("Email not verified, showing verification modal");
+        // Sign out the user immediately
+        await auth.signOut();
+        // Show the verification reminder modal
+        setShowVerificationReminder(true);
+        // Clear any existing error message
+        setError("");
+        setIsLoading(false);
+        return;
+      }
+
+      // If we get here, email is verified, so we can proceed with the actual login
+      console.log("Email verified, proceeding with login");
+
       // Reset PIN verification status before login
       resetPinVerification();
 
@@ -98,21 +162,10 @@ function SignIn() {
       // Use the correct API key for the storage key
       const storageKey = `firebase:authUser:${apiKey}:[DEFAULT]`;
 
-      // Clear any existing auth state
-      localStorage.removeItem(storageKey);
-      sessionStorage.removeItem(storageKey);
-
-      console.log("Attempting to sign in with:", email);
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      // We don't need to sign in again since we already did it above
       console.log("Sign in successful, user:", user.uid);
 
-      // Check if email is verified
-      if (!user.emailVerified) {
-        setError("Please verify your email before signing in. Check your inbox for a verification link.");
-        setIsLoading(false);
-        return;
-      }
+      console.log("Email verification status:", user.emailVerified);
 
       // Get user data to check department and disabled status
       const userDocRef = doc(db, "users", user.uid);
@@ -398,6 +451,12 @@ function SignIn() {
         isOpen={showDeletedModal}
         onClose={() => setShowDeletedModal(false)}
         email={email}
+      />
+
+      {/* Verification Reminder Modal */}
+      <SignInVerificationReminder
+        isOpen={showVerificationReminder}
+        onClose={() => setShowVerificationReminder(false)}
       />
    </div>
   );
