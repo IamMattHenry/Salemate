@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { collection, query, where, getDocs, Timestamp, getFirestore, orderBy, limit } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 import firebaseApp from "../../../firebaseConfig";
+import analyticsService from "../../../services/analyticsService";
 import AnalyticsDataHeader from "../analytics-common/AnalyticsDataHeader";
 import { BsCash } from "react-icons/bs";
 import { HiMiniSignal } from "react-icons/hi2";
@@ -13,10 +14,12 @@ const DailySales = () => {
   const [totalCash, setTotalCash] = useState(0);
   const [totalOnline, setTotalOnline] = useState(0);
   const db = getFirestore(firebaseApp);
+  // Use a date object that updates each time the component renders
   const today = new Date();
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const currentDay = days[today.getDay()];
 
+  // Format the date for display
   const formattedDate = today.toLocaleDateString('en-US', {
     month: '2-digit',
     day: '2-digit',
@@ -28,70 +31,88 @@ const DailySales = () => {
     date: formattedDate
   };
 
-  useEffect(() => {
-    const fetchDailySales = async () => {
-      try {
-        const startOfDay = new Date(today);
-        startOfDay.setHours(0, 0, 0, 0);
-        const endOfDay = new Date(today);
-        endOfDay.setHours(23, 59, 59, 999);
+  // Function to fetch daily sales data
+  const fetchDailySales = async () => {
+    try {
+      setLoading(true);
 
-        const ordersRef = collection(db, 'order_transaction');
-        // Get all orders for today first
-        const dailyQuery = query(
-          ordersRef,
-          where('order_date', '>=', Timestamp.fromDate(startOfDay)),
-          where('order_date', '<=', Timestamp.fromDate(endOfDay)),
-          orderBy('order_date', 'desc')
-        );
-
-        const querySnapshot = await getDocs(dailyQuery);
-        const sales = [];
-        let totalCashSales = 0;
-        let totalOnlineSales = 0;
-
-        // Only process delivered orders
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          // Only include if status is "Delivered"
-          if (data.order_status === "Delivered") {
-            if (data.mop === "Online") {
-              totalOnlineSales += data.order_total;
-            } else {
-              totalCashSales += data.order_total;
-            }
-
-            sales.push({
-              quantity: data.no_order,
-              recipient: data.recipient,
-              amount: data.order_total,
-              time: new Date(data.order_date.toDate()).toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-              }),
-              mop: data.mop,
-              status: data.order_status
-            });
-          }
-        });
-
-        // Get only the 3 most recent delivered orders
-        const recentSales = sales.slice(0, 3);
-
-        setSalesData(recentSales);
-        setTotalOnline(totalOnlineSales);
-        setTotalCash(totalCashSales);
-
-      } catch (error) {
-        console.error("Error fetching sales data:", error);
-      } finally {
-        setLoading(false);
+      // Only log in development to reduce console noise
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Fetching daily sales data...');
       }
-    };
 
+      // Force refresh of daily data by passing true as the second parameter
+      const dailyData = await analyticsService.getDailyData(new Date(), true);
+
+      // Extract the data we need
+      const { sales, totalCashSales, totalOnlineSales } = dailyData;
+
+      // Double-check that we only have "Delivered" orders
+      const deliveredSales = sales.filter(sale => sale.status === 'Delivered');
+
+      // Log the totals for debugging
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`DailySales component received totals - Cash: ₱${totalCashSales}, Online: ₱${totalOnlineSales}`);
+      }
+
+      // Log any non-delivered orders that might have slipped through
+      if (process.env.NODE_ENV === 'development' && deliveredSales.length !== sales.length) {
+        console.warn(`Filtered out ${sales.length - deliveredSales.length} non-delivered orders`);
+      }
+
+      // Get only the 3 most recent orders (already filtered for "Delivered" status)
+      // Make sure they're properly sorted by time first
+      const sortedSales = [...deliveredSales].sort((a, b) => {
+        // Convert time strings to Date objects for comparison
+        const timeA = new Date(`${new Date().toDateString()} ${a.time}`);
+        const timeB = new Date(`${new Date().toDateString()} ${b.time}`);
+        return timeB - timeA; // Most recent first
+      });
+
+      // Log the sorted sales for debugging
+      if (process.env.NODE_ENV === 'development') {
+        console.log("All sales data:", sortedSales);
+      }
+
+      const recentSales = sortedSales.slice(0, 3);
+
+      // Update state
+      setSalesData(recentSales);
+      setTotalOnline(totalOnlineSales);
+      setTotalCash(totalCashSales);
+
+      // Only log in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Daily sales data fetched successfully");
+      }
+    } catch (error) {
+      console.error("Error fetching sales data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Track if component is mounted to prevent state updates after unmount
+    let isMounted = true;
+
+    // Initial fetch when component mounts
     fetchDailySales();
-  }, [today, db]);
+
+    // Set up a listener for new delivered orders
+    const unsubscribe = analyticsService.subscribeToNewDeliveredOrders(() => {
+      // When a new delivered order is detected, refresh the data
+      if (isMounted) {
+        fetchDailySales();
+      }
+    });
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+      if (unsubscribe) unsubscribe();
+    };
+  }, []); // Empty dependency array - only run once on mount
 
   if (loading) {
     return <div className="text-center p-4">Loading...</div>;
@@ -102,16 +123,17 @@ const DailySales = () => {
       <AnalyticsDataHeader sectionHeader={sectionHeader} />
       <div className="mt-7 mx-7 w-auto">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {/* Only delivered orders are included in these totals */}
           <Card
             icon={<BsCash />}
             label="Total Sales: "
-            subLabel="Cash Payment"
+            subLabel="Cash Payment (Delivered)"
             amount={`₱${totalCash.toLocaleString()}`}
           />
           <Card
             icon={<HiMiniSignal />}
             label="Total Sales: "
-            subLabel="Online Payment"
+            subLabel="Online Payment (Delivered)"
             amount={`₱${totalOnline.toLocaleString()}`}
           />
           <Card
@@ -123,7 +145,7 @@ const DailySales = () => {
             icon={<RiCustomerServiceFill />}
             label="Customer Summary:"
             amount={salesData.length}
-            subLabel="Showing top 3 orders"
+            subLabel="Showing delivered orders"
           />
         </div>
         <div className="rounded-xl shadow-lg overflow-hidden border border-yellowsm/20">
@@ -166,8 +188,8 @@ const DailySales = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center w-32">
-                      <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-medium min-w-[80px] bg-amber-100 text-amber-800">
-                        {sale.status}
+                      <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-medium min-w-[80px] bg-green-100 text-green-800">
+                        Delivered
                       </span>
                     </td>
                   </tr>

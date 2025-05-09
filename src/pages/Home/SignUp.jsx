@@ -8,9 +8,9 @@ import {
   BsPeopleFill,
   BsCheckCircleFill,
 } from "react-icons/bs";
-import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
-import firebaseApp from "../../firebaseConfig"; // Adjust the path to your Firebase config file
+import firebaseApp, { auth } from "../../firebaseConfig"; // Import both app and auth
 import { useNavigate } from "react-router-dom";
 import useModal from "../../hooks/Modal/UseModal"; // Import your custom hook
 
@@ -34,7 +34,7 @@ function SignUp() {
 
   const { modal, toggleModal } = useModal();
   const navigate = useNavigate();
-  const auth = getAuth(firebaseApp);
+  // Using the imported auth instance directly
   const db = getFirestore(firebaseApp);
 
   // Check password requirements as user types
@@ -113,6 +113,8 @@ function SignUp() {
     }
 
     try {
+      console.log("Attempting to create user with email:", email);
+
       // Create user with email and password
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -120,6 +122,8 @@ function SignUp() {
         password
       );
       const user = userCredential.user;
+
+      console.log("User created successfully with UID:", user.uid);
 
       // Send email verification
       await sendEmailVerification(user, {
@@ -153,14 +157,30 @@ function SignUp() {
 
       // We won't redirect automatically since they need to verify email first
     } catch (err) {
+      console.error("Firebase error code:", err.code);
+      console.error("Firebase error message:", err.message);
+
       if (err.code === "auth/email-already-in-use") {
         setError(
-          "This email is already registered. Please use a different email."
+          "This email is already registered. Please use a different email or sign in with your existing account."
         );
+        console.error("Error during registration: Email already in use");
+      } else if (err.code === "auth/invalid-email") {
+        setError("Please enter a valid email address.");
+        console.error("Error during registration: Invalid email format");
+      } else if (err.code === "auth/weak-password") {
+        setError("Password is too weak. Please choose a stronger password.");
+        console.error("Error during registration: Weak password");
+      } else if (err.code === "auth/network-request-failed") {
+        setError("Network error. Please check your internet connection and try again.");
+        console.error("Error during registration: Network request failed");
+      } else if (err.code === "auth/too-many-requests") {
+        setError("Too many attempts. Please try again later.");
+        console.error("Error during registration: Too many requests");
       } else {
-        setError(err.message);
+        setError(`Registration failed: ${err.message}`);
+        console.error("Error during registration:", err);
       }
-      console.error("Error during registration:", err);
     } finally {
       setIsLoading(false);
     }
@@ -385,16 +405,26 @@ function SignUp() {
                   <li>Check your spam folder if you don't see the email</li>
                   <li>The verification link expires in 24 hours</li>
                   <li>You must verify your email before signing in</li>
+                  <li>If you don't receive the email, you can request another one on the Sign In page</li>
                 </ul>
               </div>
 
-              <button
-                type="button"
-                className="bg-green-500 text-white w-full py-3 rounded-full font-medium"
-                onClick={() => navigate('/signin')}
-              >
-                Go to Sign In
-              </button>
+              <div className="flex flex-col space-y-3">
+                <button
+                  type="button"
+                  className="bg-green-500 text-white w-full py-3 rounded-full font-medium hover:bg-green-600 transition-colors"
+                  onClick={() => navigate('/signin')}
+                >
+                  Go to Sign In
+                </button>
+                <button
+                  type="button"
+                  className="bg-white border border-gray-300 text-gray-700 w-full py-3 rounded-full font-medium hover:bg-gray-50 transition-colors"
+                  onClick={() => toggleModal()}
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>

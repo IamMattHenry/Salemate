@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaLock, FaCheck, FaTimes, FaEye, FaEyeSlash, FaExclamationTriangle } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
@@ -17,6 +17,9 @@ const InitialPinVerification = () => {
   const [showConfirmPin, setShowConfirmPin] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [remainingLockoutTime, setRemainingLockoutTime] = useState(null);
+
+  // Add a ref to track the last time the modal was shown
+  const lastModalShownTime = useRef(0);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -31,18 +34,51 @@ const InitialPinVerification = () => {
            path.startsWith('/admin');
   };
 
+  // Track if we've already shown the PIN verification modal in this session
+  const [pinModalShownInSession, setPinModalShownInSession] = useState(false);
+
+  // Track if we're in the middle of a navigation
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  // Set up a navigation tracker
   useEffect(() => {
-    // Only show PIN verification if user is logged in, PIN is not verified, and we're on a protected page
-    if (currentUser && !pinVerified && isProtectedPage()) {
+    // When location changes, set isNavigating to true
+    setIsNavigating(true);
+
+    // After a short delay, set it back to false
+    const timer = setTimeout(() => {
+      setIsNavigating(false);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    // Only show PIN verification if:
+    // 1. User is logged in
+    // 2. PIN is not verified
+    // 3. We're on a protected page
+    // 4. We haven't already shown the modal in this session
+    // 5. It's been at least 2 seconds since we last showed the modal
+    const now = Date.now();
+    const timeSinceLastShown = now - lastModalShownTime.current;
+    const debounceTime = 2000; // 2 seconds debounce
+
+    if (currentUser && !pinVerified && isProtectedPage() && !pinModalShownInSession && timeSinceLastShown > debounceTime && !isNavigating) {
+      // Update the last shown time
+      lastModalShownTime.current = now;
+
       // Small delay to ensure this runs after navigation
       setTimeout(() => {
         setShowVerification(true);
+        setPinModalShownInSession(true);
         console.log("Showing PIN verification modal");
       }, 100);
-    } else {
+    } else if (pinVerified) {
+      // If PIN is verified, hide the modal
       setShowVerification(false);
     }
-  }, [currentUser, pinVerified, location.pathname, hasPin]);
+  }, [currentUser, pinVerified, location.pathname, hasPin, pinModalShownInSession, isNavigating]);
 
   // Close the modal when PIN is verified
   useEffect(() => {
@@ -50,6 +86,10 @@ const InitialPinVerification = () => {
       // Close the modal immediately to let the WelcomeBackModal take over
       setShowVerification(false);
       console.log("PIN is verified, hiding verification modal");
+    } else {
+      // If PIN verification status changes to false, reset the modal shown flag
+      // This ensures the modal will show again if the user logs out and back in
+      setPinModalShownInSession(false);
     }
   }, [pinVerified]);
 

@@ -66,9 +66,8 @@ const ProtectedRoute = ({ children }) => {
   // If user is not logged in, redirect to sign in
   if (!currentUser) {
     console.log("User not authenticated, redirecting to signin");
-    // Use window.location for a full page refresh to ensure clean state
-    window.location.href = "/signin";
-    return null;
+    // Use Navigate component instead of window.location to avoid full page refresh
+    return <Navigate to="/signin" replace />;
   }
 
   // Note: We don't need to check if the user document exists in Firestore here

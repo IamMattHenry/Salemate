@@ -1,20 +1,56 @@
-import React, { useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 function NavBar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { currentUser, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const auth = getAuth();
 
   // Check if we're on the signin or signup page
   const isAuthPage = location.pathname === "/signin" || location.pathname === "/signup";
 
+  // Verify authentication status directly with Firebase
+  useEffect(() => {
+    // Create a safe reference to handleLogout that won't cause dependency issues
+    const handleAuthMismatch = async () => {
+      try {
+        await logout();
+        navigate('/signin');
+      } catch (error) {
+        console.error("Error logging out during auth check:", error);
+        navigate('/signin');
+      }
+    };
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsAuthenticated(!!user);
+
+      // If auth state doesn't match context state, force a refresh
+      if (!!user !== !!currentUser) {
+        console.log("Auth state mismatch detected");
+        if (!user && currentUser) {
+          // Force logout if Firebase says not authenticated but context says authenticated
+          handleAuthMismatch();
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [auth, currentUser, logout, navigate]);
+
   const handleLogout = async () => {
     try {
       await logout();
+      navigate('/signin');
     } catch (error) {
       console.error("Error logging out:", error);
+      // Force navigation even if logout fails
+      navigate('/signin');
     }
   };
 
@@ -45,7 +81,7 @@ function NavBar() {
             </li>
             {/* Don't show auth buttons on signin/signup pages */}
             {!isAuthPage && (
-              currentUser ? (
+              isAuthenticated ? (
                 <>
                   <li>
                     <NavLink
@@ -111,7 +147,7 @@ function NavBar() {
 
           {/* Don't show auth buttons on signin/signup pages */}
           {!isAuthPage && (
-            currentUser ? (
+            isAuthenticated ? (
               <>
                 <li>
                   <NavLink

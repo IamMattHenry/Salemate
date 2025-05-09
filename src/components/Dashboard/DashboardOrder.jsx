@@ -9,8 +9,9 @@ import useSuccessModal from "../../hooks/Modal/SuccessModal";
 import useQRPaymentModal from "../../hooks/Modal/QRPaymentModal";
 import QRPaymentModal from "../Dashboard/QRPaymentModal";
 import { AnimatePresence, motion } from "framer-motion";
-import { collection, addDoc, serverTimestamp, getFirestore, query, where, getDocs, orderBy, updateDoc, doc, getDoc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, getFirestore, query, where, getDocs, orderBy, updateDoc, doc, getDoc, setDoc } from "firebase/firestore";
 import firebaseApp from "../../firebaseConfig";
+import customerService from "../../services/customerService";
 
 const DashboardOrder = ({ product, orderList, setOrderList }) => {
   const [orderNumber, setOrderNumber] = useState(1);
@@ -27,6 +28,10 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
   const [customerSuffix, setCustomerSuffix] = useState("");
   const [lastGeneratedId, setLastGeneratedId] = useState(0);
   const [existingCustomers, setExistingCustomers] = useState([]);
+  const [showDisambiguationModal, setShowDisambiguationModal] = useState(false);
+  const [customerVariants, setCustomerVariants] = useState([]);
+  const [selectedCustomerName, setSelectedCustomerName] = useState("");
+  const [isStudentLocked, setIsStudentLocked] = useState(false);
 
   // Initialize Firestore
   const db = getFirestore(firebaseApp);
@@ -122,37 +127,166 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
 
       const snapshot = await getDocs(customersQuery);
       const customers = [];
+      const customerMap = new Map(); // Map to track customers by name for deduplication
       let maxCustomerId = 0;
 
       snapshot.docs.forEach(doc => {
         const data = doc.data();
         if (data.recipient && data.customer_id) {
-          // Check if this is a non-student ID (starts with 'C')
-          if (data.customer_id.toString().startsWith('C')) {
-            const idNumber = parseInt(data.customer_id.substring(1));
+          // Convert customer ID to string once
+          const customerIdStr = data.customer_id.toString();
+
+          // Check if this is a non-student ID
+          // For backward compatibility, handle both old format (starting with 'C') and new format (numeric only)
+          if (customerIdStr.startsWith('C')) {
+            // Old format: C followed by a number
+            const idNumber = parseInt(customerIdStr.substring(1));
             if (idNumber > maxCustomerId) {
+              maxCustomerId = idNumber;
+            }
+          } else if (!data.is_student && /^\d+$/.test(customerIdStr)) {
+            // New format: just a number (for non-students)
+            const idNumber = parseInt(customerIdStr);
+            if (idNumber >= 500000 && idNumber > maxCustomerId) {
               maxCustomerId = idNumber;
             }
           }
 
-          // Add to customers list if not already there
-          const existingCustomer = customers.find(c =>
-            c.name.toLowerCase() === data.recipient.toLowerCase()
-          );
+          const customerName = data.recipient.toLowerCase();
+          // Determine if this is a student based on the is_student flag or ID format
+          // A customer is a student if:
+          // 1. The is_student flag is explicitly true, OR
+          // 2. The ID is not a number >= 500000 and doesn't start with 'C'
+          let isStudentCustomer = false;
 
-          if (!existingCustomer) {
-            customers.push({
+          // First check if we have an explicit is_student flag
+          if (data.is_student !== undefined) {
+            // Use the explicit flag if available
+            isStudentCustomer = data.is_student === true;
+            console.log(`Customer ${data.recipient} has explicit is_student flag: ${isStudentCustomer}`);
+          } else if (customerIdStr.startsWith('C')) {
+            // Old format non-student ID
+            isStudentCustomer = false;
+            console.log(`Customer ${data.recipient} has old format non-student ID: ${customerIdStr}`);
+          } else if (/^\d+$/.test(customerIdStr)) {
+            // Numeric ID - student if < 500000, non-student if >= 500000
+            isStudentCustomer = parseInt(customerIdStr) < 500000;
+            console.log(`Customer ${data.recipient} has numeric ID ${customerIdStr}, determined isStudent: ${isStudentCustomer}`);
+          } else {
+            // Non-numeric ID that doesn't start with 'C' - assume student
+            isStudentCustomer = true;
+            console.log(`Customer ${data.recipient} has non-standard ID ${customerIdStr}, assuming student`);
+          }
+          const orderDate = data.created_at ? new Date(data.created_at.seconds * 1000) : new Date();
+
+          // If we haven't seen this customer before, add them
+          if (!customerMap.has(customerName)) {
+            customerMap.set(customerName, {
               name: data.recipient,
-              id: data.customer_id
+              id: customerIdStr,
+              isStudent: isStudentCustomer,
+              lastOrder: orderDate,
+              variants: [{
+                id: customerIdStr,
+                isStudent: isStudentCustomer,
+                lastOrder: orderDate
+              }]
             });
+          } else {
+            // If we've seen this customer before, check if this is a different ID
+            const existingCustomer = customerMap.get(customerName);
+            const existingVariant = existingCustomer.variants.find(v => v.id === customerIdStr);
+
+            if (!existingVariant) {
+              // This is a new variant of the same name
+              existingCustomer.variants.push({
+                id: customerIdStr,
+                isStudent: isStudentCustomer,
+                lastOrder: orderDate
+              });
+
+              // Update the "main" record if this order is more recent
+              if (orderDate > existingCustomer.lastOrder) {
+                existingCustomer.id = customerIdStr;
+                existingCustomer.isStudent = isStudentCustomer;
+                existingCustomer.lastOrder = orderDate;
+              }
+            } else if (orderDate > existingVariant.lastOrder) {
+              // Update the last order date for this variant
+              existingVariant.lastOrder = orderDate;
+
+              // Update the "main" record if this order is more recent
+              if (orderDate > existingCustomer.lastOrder) {
+                existingCustomer.id = customerIdStr;
+                existingCustomer.isStudent = isStudentCustomer;
+                existingCustomer.lastOrder = orderDate;
+              }
+            }
           }
         }
       });
 
+      // Convert the map to an array
+      customers.push(...customerMap.values());
+
+      // Check if we have a customer_id_counter in the system_counters collection
+      try {
+        // Check if we have a local counter in localStorage
+        const localCounter = localStorage.getItem('lastCustomerId');
+        let localCounterValue = localCounter ? parseInt(localCounter) : 500000;
+
+        // Use the higher of maxCustomerId and localCounterValue
+        maxCustomerId = Math.max(maxCustomerId, localCounterValue);
+
+        try {
+          const counterRef = doc(db, "system_counters", "customer_id_counter");
+          const counterDoc = await getDoc(counterRef);
+
+          if (counterDoc.exists()) {
+            const nextId = counterDoc.data().next_id;
+            console.log(`Found customer ID counter in system_counters: ${nextId}`);
+
+            // Use the highest value among all sources
+            if (nextId > maxCustomerId) {
+              maxCustomerId = nextId - 1; // Subtract 1 because next_id is the NEXT ID to use
+            }
+
+            // Update localStorage with the latest value
+            localStorage.setItem('lastCustomerId', maxCustomerId.toString());
+          } else {
+            // If the counter doesn't exist yet, create it with the current max + 1
+            // or 500001 if no customer IDs exist yet
+            const startId = Math.max(maxCustomerId, 500000);
+            try {
+              await setDoc(counterRef, { next_id: startId + 1 });
+              console.log(`Created customer ID counter starting at: ${startId + 1}`);
+
+              // Update localStorage with the latest value
+              localStorage.setItem('lastCustomerId', startId.toString());
+            } catch (writeError) {
+              console.warn("Could not create Firestore counter, but will continue with local counter:", writeError);
+
+              // Update localStorage with the current max value
+              localStorage.setItem('lastCustomerId', maxCustomerId.toString());
+            }
+          }
+        } catch (firestoreError) {
+          console.warn("Firestore access failed, using local counter:", firestoreError);
+
+          // Update localStorage with the current max value
+          localStorage.setItem('lastCustomerId', maxCustomerId.toString());
+        }
+      } catch (error) {
+        console.error("Error checking customer ID counter:", error);
+
+        // Ensure we have a reasonable value in maxCustomerId
+        maxCustomerId = Math.max(maxCustomerId, 500000);
+      }
+
       setExistingCustomers(customers);
       setLastGeneratedId(maxCustomerId);
       console.log(`Loaded ${customers.length} existing customers`);
-      console.log(`Last generated customer ID: C${maxCustomerId}`);
+      console.log(`Last generated customer ID: ${maxCustomerId}`);
     } catch (error) {
       console.error("Error fetching existing customers:", error);
     }
@@ -378,18 +512,42 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
       // Convert to string for consistency
       const orderIdString = nextOrderId.toString();
 
-      // Ensure we have a valid customer ID for non-students
-      if (!isStudent && (!studentId || studentId === '')) {
-        // Generate a new customer ID for non-students if none exists
-        const newCustomerId = generateCustomerId();
-        setStudentId(newCustomerId);
-        console.log(`Generated new customer ID for order: ${newCustomerId}`);
+      // Generate a customer ID for non-students if needed
+      let finalCustomerId = studentId;
+
+      if (!isStudent && (studentId === "Pending ID" || !studentId || studentId === '')) {
+        // Generate a new customer ID for non-students
+        try {
+          const newCustomerId = await generateCustomerId();
+          finalCustomerId = newCustomerId;
+          setStudentId(newCustomerId);
+          console.log(`Generated new customer ID for order: ${newCustomerId}`);
+        } catch (error) {
+          console.error("Error generating customer ID:", error);
+          // Use a fallback ID if generation fails
+          finalCustomerId = "500001"; // Default fallback
+        }
+      }
+
+      // Create or update customer in the customers collection
+      try {
+        console.log("Creating or updating customer in customers collection");
+        await customerService.createOrUpdateCustomer({
+          name: customerName,
+          customerId: finalCustomerId,
+          isStudent: isStudent,
+          orderTotal: orderTotal
+        });
+        console.log("Customer record created/updated successfully");
+      } catch (error) {
+        console.error("Error creating/updating customer record:", error);
+        // Continue with order creation even if customer record fails
       }
 
       // Save to "order_transaction" collection with exact format as specified
       const orderTransactionRef = await addDoc(collection(db, "order_transaction"), {
         created_at: serverTimestamp(),
-        customer_id: studentId,
+        customer_id: finalCustomerId, // Use the generated or existing customer ID
         is_student: isStudent,
         items: orderItems,
         mop: paymentMode,
@@ -456,7 +614,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
         totalOrders: 1, // This is one order
         totalSpent: orderTotal,
         customerName: customerName,
-        customer_id: studentId,
+        customer_id: finalCustomerId, // Use the generated or existing customer ID
         is_student: isStudent,
         orderDate: formattedDate,
         orderTime: timeToday,
@@ -479,9 +637,9 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
       if (!existingCustomer) {
         setExistingCustomers([
           ...existingCustomers,
-          { name: customerName, id: studentId }
+          { name: customerName, id: finalCustomerId }
         ]);
-        console.log(`Added new customer to existing customers list: ${customerName} (${studentId})`);
+        console.log(`Added new customer to existing customers list: ${customerName} (${finalCustomerId})`);
       }
 
       return true;
@@ -507,20 +665,75 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
     // Allow only letters, spaces, dots, and hyphens
     // This regex allows for names with suffixes like "Jr.", "Sr.", "III", etc.
     if (/^[A-Za-z\s.\-]*$/.test(value) || value === '') {
+      // If the name is being cleared or changed completely, reset the student lock
+      if (value === '' || !value.toLowerCase().includes(customerName.toLowerCase())) {
+        setIsStudentLocked(false);
+        console.log("Resetting student type lock due to name change");
+      }
+
       setCustomerName(value);
 
       // Check if this customer already exists
       if (value.trim() !== '') {
-        const existingCustomer = existingCustomers.find(
+        const matchingCustomer = existingCustomers.find(
           c => c.name.toLowerCase() === value.toLowerCase()
         );
 
-        if (existingCustomer) {
-          console.log(`Found existing customer: ${existingCustomer.name} with ID: ${existingCustomer.id}`);
-          setStudentId(existingCustomer.id.toString());
+        if (matchingCustomer) {
+          console.log(`Found existing customer: ${matchingCustomer.name} with ID: ${matchingCustomer.id}, isStudent: ${matchingCustomer.isStudent}`);
 
-          // Determine if this is a student or non-student based on ID format
-          setIsStudent(!existingCustomer.id.toString().startsWith('C'));
+          // Check if this customer has multiple variants (same name, different IDs)
+          if (matchingCustomer.variants && matchingCustomer.variants.length > 1) {
+            // Set up the disambiguation modal
+            setSelectedCustomerName(matchingCustomer.name);
+            setCustomerVariants(matchingCustomer.variants);
+            setShowDisambiguationModal(true);
+          } else {
+            // Only one variant, use it directly
+            setStudentId(matchingCustomer.id.toString());
+
+            // Properly set the customer type based on the isStudent property
+            // This fixes the bug where non-students were being treated as students
+            if (matchingCustomer.isStudent !== undefined) {
+              // If we have explicit isStudent property, use it
+              setIsStudent(matchingCustomer.isStudent);
+
+              // If this is a student, lock the customer type to prevent switching to non-student
+              if (matchingCustomer.isStudent === true) {
+                setIsStudentLocked(true);
+                console.log(`Locking customer type to Student for ${matchingCustomer.name}`);
+              } else {
+                setIsStudentLocked(false);
+              }
+
+              console.log(`Setting customer type based on isStudent property: ${matchingCustomer.isStudent}`);
+            } else {
+              // Fallback to ID-based detection if isStudent property is not available
+              const isStudentBasedOnId = !matchingCustomer.id.toString().startsWith('C') &&
+                                        !(parseInt(matchingCustomer.id) >= 500000);
+              setIsStudent(isStudentBasedOnId);
+
+              // If this is determined to be a student, lock the customer type
+              if (isStudentBasedOnId) {
+                setIsStudentLocked(true);
+                console.log(`Locking customer type to Student for ${matchingCustomer.name} based on ID`);
+              } else {
+                setIsStudentLocked(false);
+              }
+
+              console.log(`Setting customer type based on ID: ${isStudentBasedOnId}`);
+            }
+          }
+        } else {
+          // Reset student ID if customer name doesn't match any existing customer
+          if (!isStudent) {
+            // For non-students, just set a temporary placeholder
+            // The actual ID will be generated when the order is completed
+            setStudentId("Pending ID");
+          } else {
+            // For students, clear the ID field
+            setStudentId('');
+          }
         }
       }
     }
@@ -529,26 +742,8 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
     if (nameError) setNameError("");
   };
 
-  // Function to handle suffix selection
-  const handleSuffixChange = (suffix) => {
-    setCustomerSuffix(suffix);
-
-    // Append suffix to name if not already there
-    if (suffix && !customerName.endsWith(suffix)) {
-      // Remove any existing suffix first
-      let baseName = customerName;
-      const suffixes = [" Jr.", " Sr.", " I", " II", " III", " IV", " V"];
-
-      for (const s of suffixes) {
-        if (baseName.endsWith(s)) {
-          baseName = baseName.substring(0, baseName.length - s.length);
-          break;
-        }
-      }
-
-      setCustomerName(baseName.trim() + " " + suffix);
-    }
-  };
+  // This function is used directly in the JSX for suffix buttons
+  // See the onClick handler in the suffix buttons section
 
   // Function to check if student ID already exists in the database
   // Returns true if ID exists but with a different name (is a duplicate)
@@ -583,11 +778,71 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
     }
   };
 
-  // Generate a unique customer ID for non-students
-  const generateCustomerId = () => {
-    const newId = lastGeneratedId + 1;
-    setLastGeneratedId(newId);
-    return `C${newId}`;
+  // Generate a unique customer ID for non-students starting from 500001
+  const generateCustomerId = async () => {
+    try {
+      // Check if we have a local counter in localStorage
+      const localCounter = localStorage.getItem('lastCustomerId');
+      let localCounterValue = localCounter ? parseInt(localCounter) : 500000;
+
+      try {
+        // Try to get the customer_counter document from Firestore
+        const counterRef = doc(db, "system_counters", "customer_id_counter");
+        const counterDoc = await getDoc(counterRef);
+
+        let nextId = 500001; // Default starting value
+
+        if (counterDoc.exists()) {
+          // Get the current counter value
+          nextId = counterDoc.data().next_id;
+
+          // If the Firestore counter is less than our local counter, use the local counter
+          if (nextId <= localCounterValue) {
+            nextId = localCounterValue + 1;
+          }
+        } else {
+          // If the counter doesn't exist, use the local counter + 1
+          nextId = Math.max(500001, localCounterValue + 1);
+        }
+
+        // Try to update the counter in Firestore (increment by 1)
+        try {
+          await setDoc(counterRef, { next_id: nextId + 1 }, { merge: true });
+        } catch (writeError) {
+          console.warn("Could not update Firestore counter, but will continue with generated ID:", writeError);
+        }
+
+        // Update local state and localStorage
+        setLastGeneratedId(nextId);
+        localStorage.setItem('lastCustomerId', nextId.toString());
+
+        console.log(`Generated sequential customer ID: ${nextId}`);
+        return nextId.toString();
+      } catch (firestoreError) {
+        // If Firestore access fails, use the local counter
+        console.warn("Firestore access failed, using local counter:", firestoreError);
+
+        // Increment the local counter
+        const nextId = Math.max(500001, localCounterValue + 1);
+
+        // Update local state and localStorage
+        setLastGeneratedId(nextId);
+        localStorage.setItem('lastCustomerId', nextId.toString());
+
+        console.log(`Using local counter for customer ID: ${nextId}`);
+        return nextId.toString();
+      }
+    } catch (error) {
+      console.error("Error generating customer ID:", error);
+
+      // Ultimate fallback - generate a random ID in the correct range
+      const fallbackId = 500000 + Math.floor(Math.random() * 1000) + 1;
+      setLastGeneratedId(fallbackId);
+      localStorage.setItem('lastCustomerId', fallbackId.toString());
+
+      console.log(`Emergency fallback to random customer ID: ${fallbackId}`);
+      return fallbackId.toString();
+    }
   };
 
   // Validate form inputs
@@ -636,14 +891,65 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
         // Use existing customer ID
         setStudentId(existingCustomer.id.toString());
       } else if (!studentId || studentId === '') {
-        // Generate new customer ID
-        const newCustomerId = generateCustomerId();
-        setStudentId(newCustomerId);
-        console.log(`Generated new customer ID: ${newCustomerId}`);
+        // Set a temporary placeholder - the actual ID will be generated when the order is completed
+        setStudentId("Pending ID");
       }
     }
 
     return isValid;
+  };
+
+  // Handle selection of a customer variant from the disambiguation modal
+  const handleSelectCustomerVariant = (variant) => {
+    setStudentId(variant.id.toString());
+
+    // Explicitly set the customer type based on the variant's isStudent property
+    if (variant.isStudent !== undefined) {
+      setIsStudent(variant.isStudent);
+
+      // If this is a student, lock the customer type to prevent switching to non-student
+      if (variant.isStudent === true) {
+        setIsStudentLocked(true);
+        console.log(`Locking customer type to Student for variant with ID ${variant.id}`);
+      } else {
+        setIsStudentLocked(false);
+      }
+
+      console.log(`Selected variant with ID ${variant.id}, setting isStudent to ${variant.isStudent}`);
+    } else {
+      // Fallback to ID-based detection if isStudent property is not available
+      const isStudentBasedOnId = !variant.id.toString().startsWith('C') &&
+                                !(parseInt(variant.id) >= 500000);
+      setIsStudent(isStudentBasedOnId);
+
+      // If this is determined to be a student, lock the customer type
+      if (isStudentBasedOnId) {
+        setIsStudentLocked(true);
+        console.log(`Locking customer type to Student for variant with ID ${variant.id} based on ID`);
+      } else {
+        setIsStudentLocked(false);
+      }
+
+      console.log(`Selected variant with ID ${variant.id}, determined isStudent as ${isStudentBasedOnId} based on ID`);
+    }
+
+    setShowDisambiguationModal(false);
+  };
+
+  // Close the disambiguation modal without selecting a customer
+  const handleCloseDisambiguationModal = () => {
+    setShowDisambiguationModal(false);
+    // Reset the student lock when creating a new customer
+    setIsStudentLocked(false);
+
+    // Reset to default state for new customer
+    if (!isStudent) {
+      // For non-students, just set a temporary placeholder
+      // The actual ID will be generated when the order is completed
+      setStudentId("Pending ID");
+    } else {
+      setStudentId('');
+    }
   };
 
   // Modified toggleModal function to reset form state
@@ -656,6 +962,8 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
     setIsValidating(false);
     setIsStudent(true);
     setCustomerSuffix("");
+    setShowDisambiguationModal(false);
+    setIsStudentLocked(false); // Reset the student lock when closing the modal
 
     // Close the modal
     toggleModal();
@@ -876,8 +1184,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
     }
   };
 
-  // State for reference number
-  const [referenceNumber, setReferenceNumber] = useState("");
+  // We already have a formatDate function defined below, so we'll remove this duplicate
 
   // Handle QR payment completion
   const handleQRPaymentComplete = async (referenceNumber) => {
@@ -940,6 +1247,10 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
         const orderDoc = orderSnapshot.docs[0];
         console.log("Found order document:", orderDoc.id);
 
+        // Get the order data early so it's available for all updates
+        const orderData = orderDoc.data();
+        console.log("Order data:", orderData);
+
         // Use the validated reference number
         console.log("Using reference number for update:", finalRefNumber);
 
@@ -982,7 +1293,6 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
 
         // Also update the reference number in customer_history collection
         try {
-          const orderData = orderDoc.data();
           console.log("Order data for customer history update:", orderData);
 
           const customerHistoryQuery = query(
@@ -1115,7 +1425,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
             const orderDoc = matchingOrders[0];
             console.log("Found order document through fallback:", orderDoc.id);
 
-            // Get the order data
+            // Get the order data - make sure it's available in the outer scope
             const orderData = orderDoc.data();
             console.log("Order data from fallback:", orderData);
 
@@ -1212,8 +1522,104 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
   // Determine which items to display based on props
   const displayItems = orderList || (product ? [product] : []);
 
+  // Format date for display
+  const formatDate = (date) => {
+    if (!date) return "Unknown";
+
+    // If date is a Firebase timestamp
+    if (date.seconds) {
+      date = new Date(date.seconds * 1000);
+    } else if (!(date instanceof Date)) {
+      // If it's not already a Date object, try to convert it
+      date = new Date(date);
+    }
+
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return "Unknown";
+    }
+
+    // Format the date
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
     <>
+      {/* Customer Disambiguation Modal */}
+      {showDisambiguationModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 overflow-hidden animate-fade-in">
+            <div className="bg-amber-500 p-4 flex justify-between items-center">
+              <h3 className="text-white font-bold text-lg">Multiple Customers Found</h3>
+              <button
+                onClick={handleCloseDisambiguationModal}
+                className="text-white hover:text-amber-100 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-5">
+              <div className="mb-4">
+                <p className="text-gray-700">
+                  We found multiple customers with the name <span className="font-semibold">{selectedCustomerName}</span>.
+                  Please select the correct customer:
+                </p>
+              </div>
+
+              <div className="space-y-3 max-h-60 overflow-y-auto">
+                {customerVariants.map((variant, index) => (
+                  <div
+                    key={index}
+                    onClick={() => handleSelectCustomerVariant(variant)}
+                    className="p-3 border border-gray-200 rounded-lg hover:bg-amber-50 cursor-pointer transition-colors"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <span className="font-medium">{selectedCustomerName}</span>
+                        <div className="text-sm text-gray-500 mt-1">
+                          {variant.isStudent ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                              Student ID: {variant.id}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                              Customer ID: {variant.id.startsWith('C') ? variant.id : variant.id}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs text-gray-500">Last Order</div>
+                        <div className="text-sm">{formatDate(variant.lastOrder)}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-5 flex justify-between">
+                <button
+                  onClick={handleCloseDisambiguationModal}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Create New
+                </button>
+                <div className="text-sm text-gray-500 italic">
+                  Select the correct customer record
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Order Section */}
       <div className="flex flex-col h-full bg-white rounded-2xl shadow-lg overflow-hidden">
         {/* Header Section - Fixed height */}
@@ -1407,33 +1813,57 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
               <div className="px-8 py-6 space-y-5">
                 {/* Customer Type Toggle */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2">
-                    Customer Type
-                  </label>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-medium text-gray-900">
+                      Customer Type
+                    </label>
+                    {isStudentLocked && (
+                      <div className="flex items-center text-xs text-amber-600 font-medium">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <span>Student type locked</span>
+                      </div>
+                    )}
+                  </div>
                   <div className="flex gap-3">
                     <button
                       type="button"
                       onClick={() => setIsStudent(true)}
-                      className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all ${
+                      className={`flex-1 py-3 px-3 rounded-xl text-sm transition-all ${
                         isStudent
                           ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
-                      Student
+                      <div className="flex flex-col items-center">
+                        <span className="font-medium">Student</span>
+                        <span className="text-xs mt-1 opacity-80">6-digit ID required</span>
+                      </div>
                     </button>
                     <button
                       type="button"
-                      onClick={() => setIsStudent(false)}
-                      className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all ${
+                      onClick={() => !isStudentLocked && setIsStudent(false)}
+                      disabled={isStudentLocked}
+                      className={`flex-1 py-3 px-3 rounded-xl text-sm transition-all ${
                         !isStudent
                           ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          : isStudentLocked
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-70'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
-                      Non-Student
+                      <div className="flex flex-col items-center">
+                        <span className="font-medium">Non-Student</span>
+                        <span className="text-xs mt-1 opacity-80">Auto-generated ID</span>
+                      </div>
                     </button>
                   </div>
+                  <p className="mt-2 text-xs text-gray-500">
+                    {isStudent
+                      ? "For students with a valid 6-digit student ID number."
+                      : "For regular customers. A unique 6-digit ID starting from 500001 will be automatically assigned when the order is completed."}
+                  </p>
                 </div>
 
                 {/* Customer Name */}
@@ -1537,21 +1967,43 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                       }}
                     />
                   ) : (
-                    // Non-student ID display (read-only if exists)
-                    <div className="flex items-center">
-                      <input
-                        type="text"
-                        placeholder="Auto-generated for new customers"
-                        className="w-full px-4 py-2.5 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2
-                        focus:ring-emerald-500/20 transition-all text-sm"
-                        value={studentId}
-                        readOnly
-                      />
-                      {studentId && (
-                        <div className="ml-2 px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs">
-                          {existingCustomers.find(c => c.name.toLowerCase() === customerName.toLowerCase())
-                            ? "Existing"
-                            : "New"}
+                    // Non-student ID display with enhanced information
+                    <div className="flex flex-col">
+                      <div className="flex items-center">
+                        <input
+                          type="text"
+                          placeholder="Will be generated when order is completed"
+                          className="w-full px-4 py-2.5 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2
+                          focus:ring-emerald-500/20 transition-all text-sm"
+                          value={studentId}
+                          readOnly
+                        />
+                        {studentId && (
+                          <div className={`ml-2 px-2 py-1 rounded-lg text-xs font-medium ${
+                            existingCustomers.find(c => c.name.toLowerCase() === customerName.toLowerCase())
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-emerald-100 text-emerald-700"
+                          }`}>
+                            {existingCustomers.find(c => c.name.toLowerCase() === customerName.toLowerCase())
+                              ? "Existing"
+                              : "New"}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Informational text for non-student customers */}
+                      <div className="mt-2 text-xs text-gray-500">
+                        {existingCustomers.find(c => c.name.toLowerCase() === customerName.toLowerCase())
+                          ? "This customer already exists in our records. Their existing ID will be used."
+                          : "A unique 6-digit ID starting from 500001 will be automatically assigned when the order is completed."}
+                      </div>
+
+                      {/* Show last order date for existing customers */}
+                      {existingCustomers.find(c => c.name.toLowerCase() === customerName.toLowerCase()) && (
+                        <div className="mt-1 text-xs text-gray-600">
+                          Last order: {formatDate(
+                            existingCustomers.find(c => c.name.toLowerCase() === customerName.toLowerCase())?.lastOrder
+                          )}
                         </div>
                       )}
                     </div>

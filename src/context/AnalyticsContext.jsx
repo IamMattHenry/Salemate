@@ -1,7 +1,8 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { collection, query, where, Timestamp, getFirestore, onSnapshot, orderBy } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 import firebaseApp from "../firebaseConfig";
 import { fetchProducts } from "../services/productService";
+import analyticsService from "../services/analyticsService";
 
 // Create the context
 const AnalyticsContext = createContext();
@@ -61,159 +62,89 @@ export const AnalyticsProvider = ({ children }) => {
     loadProducts();
   }, []);
 
-  // Fetch order data
+  // Fetch order data using optimized service
   useEffect(() => {
-    // Removed console logs to prevent spam
     let isSubscribed = true;
 
-    // Get the current date
-    const now = new Date();
-
-    // Create first and last day of the current month
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-    const ordersRef = collection(db, 'order_transaction');
-
-    // Use a simpler query to avoid index requirements
-    const monthQuery = query(
-      ordersRef
-    );
-
-    const unsubscribe = onSnapshot(monthQuery, (snapshot) => {
-      if (!isSubscribed) return;
-
+    const fetchAnalyticsData = async () => {
       try {
-        const sales = [];
-        let totalMonthSales = 0;
-        const weekTotals = [0, 0, 0, 0];
+        setLoading(true);
+        console.log("AnalyticsContext: Fetching analytics data...");
 
-        // Create dynamic product sales and quantities objects based on all products
-        const productSales = {};
-        const productQty = {};
+        // Get monthly data (includes weekly breakdown)
+        const monthlyData = await analyticsService.getMonthlyData();
 
-        // Initialize product week sales
-        const productWeekSales = [{}, {}, {}, {}];
+        // Get product data
+        const productData = await analyticsService.getProductData();
 
-        // First, initialize with products from the product collection
-        allProducts.forEach(product => {
-          if (product.title) {
-            productSales[product.title] = 0;
-            productQty[product.title] = 0;
+        if (!isSubscribed) return;
 
-            // Initialize in weekly sales tracking
-            for (let i = 0; i < 4; i++) {
-              productWeekSales[i][product.title] = 0;
-            }
-          }
-        });
+        // Extract weekly totals
+        const weeklyTotals = monthlyData.weeklyData.map(week => week.sales);
 
-        // Filter orders for the current month
-        const now = new Date();
-        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        // Extract monthly total
+        const monthlyTotal = monthlyData.totalRevenue;
 
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-
-          // Skip if no items or no order_date or not delivered
-          if (!data.items || !data.order_date || data.order_status !== "Delivered") {
-            return;
-          }
-
-          // Convert Firestore timestamp to Date
-          const orderDate = data.order_date.toDate ? data.order_date.toDate() : new Date(data.order_date);
-
-          // Check if order is in the current month
-          if (orderDate < firstDay || orderDate > lastDay) {
-            return;
-          }
-
-          const weekNum = getWeekNumber(orderDate);
-
-          // Only include delivered orders
-          weekTotals[weekNum] += data.order_total || 0;
-          totalMonthSales += data.order_total || 0;
-
-          // Process all items dynamically
-          data.items.forEach(item => {
-            // Get the item title, checking for different property names
-            const itemTitle = item.title || item.name || '';
-
-            if (!itemTitle) {
-              return;
-            }
-
-            // Calculate the total for this item
-            // Make sure we're using the correct price calculation
-            const itemPrice = parseFloat(item.price) || 0;
-            const itemQuantity = parseInt(item.quantity) || 0;
-            const itemTotal = parseFloat(item.subtotal) || (itemPrice * itemQuantity);
-
-            // If this is a new product we haven't seen before, add it to our tracking
-            if (!productSales.hasOwnProperty(itemTitle)) {
-              productSales[itemTitle] = 0;
-              productQty[itemTitle] = 0;
-
-              // Add to all week sales tracking
-              for (let i = 0; i < 4; i++) {
-                productWeekSales[i][itemTitle] = 0;
-              }
-            }
-
-            // Update product sales
-            productSales[itemTitle] += itemTotal;
-
-            // Update product quantities
-            productQty[itemTitle] += itemQuantity;
-
-            // Update weekly product sales
-            productWeekSales[weekNum][itemTitle] += itemTotal;
-          });
-        });
-
-        // Sort products by quantity sold (not by sales volume)
-        const sortedByQuantity = Object.entries(productQty)
+        // Sort products by quantity sold
+        const sortedByQuantity = Object.entries(productData.productQuantities)
           .sort(([,a], [,b]) => b - a);
 
         // Convert to object format with price values for display
         const sortedProducts = sortedByQuantity.reduce((obj, [key]) => ({
           ...obj,
-          [key]: productSales[key]
+          [key]: productData.productSales[key] || 0
         }), {});
 
-        // Prepare chart data dynamically
-        const chartData = [
-          { name: 'Week 1', sales: weekTotals[0], ...productWeekSales[0] },
-          { name: 'Week 2', sales: weekTotals[1], ...productWeekSales[1] },
-          { name: 'Week 3', sales: weekTotals[2], ...productWeekSales[2] },
-          { name: 'Week 4', sales: weekTotals[3], ...productWeekSales[3] }
-        ];
+        // Prepare chart data
+        const chartData = monthlyData.weeklyData.map((week, index) => {
+          // Create a base object with week name and sales
+          const weekData = {
+            name: week.name,
+            sales: week.sales
+          };
 
-        setWeeklyTotals(weekTotals);
-        setMonthlyTotal(totalMonthSales);
+          // Add product data for each product
+          allProducts.forEach(product => {
+            if (product.title) {
+              // For each product, calculate its contribution to this week
+              // This is an approximation based on the product's overall percentage
+              const productTotal = productData.productSales[product.title] || 0;
+              const productPercentage = monthlyTotal > 0 ? productTotal / monthlyTotal : 0;
+              weekData[product.title] = week.sales * productPercentage;
+            }
+          });
+
+          return weekData;
+        });
+
+        // Update state with all the data
+        setWeeklyTotals(weeklyTotals);
+        setMonthlyTotal(monthlyTotal);
         setTopSellingProducts(sortedProducts);
-        setProductQuantities(productQty);
+        setProductQuantities(productData.productQuantities);
         setChartData(chartData);
         setDataFetched(true);
         setLoading(false);
 
+        console.log("AnalyticsContext: Data fetching complete");
       } catch (error) {
-        console.error("AnalyticsContext: Error processing sales data:", error);
-        setLoading(false);
+        console.error("AnalyticsContext: Error fetching analytics data:", error);
+        if (isSubscribed) {
+          setLoading(false);
+        }
       }
-    }, (error) => {
-      if (!isSubscribed) return;
-      console.error("AnalyticsContext: Error fetching monthly sales:", error);
-      setLoading(false);
-    });
+    };
+
+    fetchAnalyticsData();
+
+    // Set up a refresh interval (every 5 minutes)
+    const refreshInterval = setInterval(fetchAnalyticsData, 5 * 60 * 1000);
 
     return () => {
-      // Removed console logs to prevent spam
       isSubscribed = false;
-      unsubscribe();
+      clearInterval(refreshInterval);
     };
-  }, [db, allProducts, getWeekNumber]);
+  }, [db, allProducts]);
 
   // Value to be provided to consumers
   const value = {

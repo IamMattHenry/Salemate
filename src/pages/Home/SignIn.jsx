@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Navigate } from "react-router-dom";
 import { BsBoxArrowRight, BsAt, BsFillLockFill } from "react-icons/bs";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification } from "firebase/auth";
@@ -19,9 +19,18 @@ function SignIn() {
   const [verificationSent, setVerificationSent] = useState(false);
   const [showDisabledModal, setShowDisabledModal] = useState(false);
   const [showDeletedModal, setShowDeletedModal] = useState(false);
+  const [redirectToDashboard, setRedirectToDashboard] = useState(false);
   const { modal, toggleModal } = useModal(); // Use the custom modal hook
   const navigate = useNavigate();
-  const { resetPinVerification } = useAuth();
+  const { resetPinVerification, currentUser } = useAuth();
+
+  // Check if user is already logged in
+  useEffect(() => {
+    if (currentUser) {
+      console.log("User already logged in, redirecting to dashboard");
+      setRedirectToDashboard(true);
+    }
+  }, [currentUser]);
 
   const db = getFirestore(firebaseApp);
 
@@ -83,9 +92,15 @@ function SignIn() {
       // Reset PIN verification status before login
       resetPinVerification();
 
+      // Get the API key from the firebaseConfig
+      const apiKey = "AIzaSyDo2u1X6qkJkfc9VLgrhZTx4Y-TjKiOSi0";
+
+      // Use the correct API key for the storage key
+      const storageKey = `firebase:authUser:${apiKey}:[DEFAULT]`;
+
       // Clear any existing auth state
-      localStorage.removeItem('firebase:authUser:AIzaSyBWE_d3k6Zs9P1XQL-bI2Ywmrkx_DdYKQ8:[DEFAULT]');
-      sessionStorage.removeItem('firebase:authUser:AIzaSyBWE_d3k6Zs9P1XQL-bI2Ywmrkx_DdYKQ8:[DEFAULT]');
+      localStorage.removeItem(storageKey);
+      sessionStorage.removeItem(storageKey);
 
       console.log("Attempting to sign in with:", email);
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -135,12 +150,11 @@ function SignIn() {
         resetPinVerification();
         console.log("PIN verification reset for new login session");
 
-        // Add a small delay before redirecting to ensure auth state is updated
+        // Set redirect state to trigger navigation
         console.log("Setting up redirect to dashboard...");
         setTimeout(() => {
           console.log("Now redirecting to dashboard...");
-          // Use window.location for a full page refresh to ensure clean state
-          window.location.href = "/dashboard";
+          setRedirectToDashboard(true);
         }, 1000);
       } else {
         // User document doesn't exist in Firestore - this means the user was deleted from the admin panel
@@ -187,6 +201,11 @@ function SignIn() {
       console.error("Error during password reset:", err.message);
     }
   };
+
+  // Redirect to dashboard if user is authenticated
+  if (redirectToDashboard) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <div className="relative">
@@ -236,17 +255,30 @@ function SignIn() {
                 </div>
               </div>
               {error && (
-                <div className="text-red-500 text-[0.9rem] bg-red-50 p-3 rounded-lg">
+                <div className={`text-[0.9rem] p-3 rounded-lg ${error.includes("verify your email") ? "bg-yellow-50 text-yellow-700 border border-yellow-200" : "bg-red-50 text-red-500"}`}>
                   <p>{error}</p>
                   {error.includes("verify your email") && (
-                    <button
-                      type="button"
-                      onClick={resendVerificationEmail}
-                      className="mt-2 text-blue-600 underline font-medium"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? "Sending..." : "Resend verification email"}
-                    </button>
+                    <div className="mt-2">
+                      <p className="text-gray-600 text-sm mb-2">
+                        If you can't find the verification email, check your spam folder or request a new one.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={resendVerificationEmail}
+                        className="bg-blue-500 text-white py-1 px-3 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <span className="flex items-center">
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Sending...
+                          </span>
+                        ) : "Resend verification email"}
+                      </button>
+                    </div>
                   )}
                 </div>
               )}
@@ -309,14 +341,33 @@ function SignIn() {
               {verificationSent ? (
                 <>
                   <h4 className="font-bold text-lg mb-1">Verification Email Sent</h4>
-                  <p className="text-sm text-gray-600 mb-5">
-                    We've sent a new verification link to your email address. Please check your inbox and spam folder.
+                  <p className="text-sm text-gray-600 mb-3">
+                    We've sent a new verification link to <span className="font-semibold">{email}</span>.
                   </p>
+                  <div className="bg-blue-50 p-3 rounded-lg mb-4 text-left">
+                    <p className="text-sm text-blue-800 font-medium">Important:</p>
+                    <ul className="text-sm text-blue-700 list-disc pl-5 mt-1">
+                      <li>Check your spam folder if you don't see the email</li>
+                      <li>The verification link expires in 24 hours</li>
+                      <li>You must verify your email before signing in</li>
+                    </ul>
+                  </div>
                 </>
               ) : (
                 <>
-                  <h4 className="font-bold text-lg mb-1">We've sent a reset link to your email address</h4>
-                  <p className="text-sm text-gray-600 mb-5">Please check your email account.</p>
+                  <h4 className="font-bold text-lg mb-1">Password Reset Email Sent</h4>
+                  <p className="text-sm text-gray-600 mb-3">
+                    We've sent a password reset link to <span className="font-semibold">{email}</span>.
+                  </p>
+                  <div className="bg-blue-50 p-3 rounded-lg mb-4 text-left">
+                    <p className="text-sm text-blue-800 font-medium">Next steps:</p>
+                    <ul className="text-sm text-blue-700 list-disc pl-5 mt-1">
+                      <li>Check your inbox and spam folder</li>
+                      <li>Click the reset link in the email</li>
+                      <li>Create a new password</li>
+                      <li>Return to this page to sign in</li>
+                    </ul>
+                  </div>
                 </>
               )}
 
