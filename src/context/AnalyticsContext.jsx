@@ -72,10 +72,12 @@ export const AnalyticsProvider = ({ children }) => {
         console.log("AnalyticsContext: Fetching analytics data...");
 
         // Get monthly data (includes weekly breakdown)
-        const monthlyData = await analyticsService.getMonthlyData();
+        // Force refresh to ensure we get the latest data
+        const monthlyData = await analyticsService.getMonthlyData(true);
 
         // Get product data
-        const productData = await analyticsService.getProductData();
+        // Force refresh to ensure we get the latest data
+        const productData = await analyticsService.getProductData(true);
 
         if (!isSubscribed) return;
 
@@ -140,9 +142,20 @@ export const AnalyticsProvider = ({ children }) => {
     // Set up a refresh interval (every 5 minutes)
     const refreshInterval = setInterval(fetchAnalyticsData, 5 * 60 * 1000);
 
+    // Listen for the custom refresh event from DailySales component
+    const handleRefreshEvent = () => {
+      console.log("AnalyticsContext: Received refresh event, updating data...");
+      fetchAnalyticsData();
+    };
+
+    // Add event listener for the custom event
+    window.addEventListener('refreshAnalyticsData', handleRefreshEvent);
+
     return () => {
       isSubscribed = false;
       clearInterval(refreshInterval);
+      // Remove event listener when component unmounts
+      window.removeEventListener('refreshAnalyticsData', handleRefreshEvent);
     };
   }, [db, allProducts]);
 

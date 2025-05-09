@@ -13,6 +13,7 @@ import { AnalyticsProvider } from "./context/AnalyticsContext";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import InitialPinVerification from "./components/Auth/InitialPinVerification";
 import WelcomeBackModal from "./components/Auth/WelcomeBackModal";
+import EmailVerificationCheck from "./components/Auth/EmailVerificationCheck";
 import HomeLayout from "./layouts/HomeLayout";
 import Home from "./pages/Home/Home";
 import SignIn from "./pages/Home/SignIn";
@@ -50,6 +51,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <LoadingProvider>
           <InitialPinVerification />
           <WelcomeBackModal />
+          <EmailVerificationCheck />
           <Routes>
           <Route path="/" element={<HomeLayout />}>
             <Route index element={<Home />} />

@@ -44,6 +44,7 @@ export const AuthProvider = ({ children }) => {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [hasPin, setHasPin] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
   // Initialize pinVerified from sessionStorage if available
   const [pinVerified, setPinVerified] = useState(() => {
     const savedPinStatus = sessionStorage.getItem('pinVerified');
@@ -552,6 +553,17 @@ export const AuthProvider = ({ children }) => {
             setUserProfile(userData);
             setCurrentUser(user);
 
+            // Check if email is verified
+            setEmailVerified(user.emailVerified);
+
+            // Update Firestore with the latest email verification status from Firebase Auth
+            if (userData.emailVerified !== user.emailVerified) {
+              await updateDoc(userDocRef, {
+                emailVerified: user.emailVerified
+              });
+              console.log("Updated email verification status in Firestore");
+            }
+
             // Explicitly check if user has a PIN
             if (userData.pin) {
               setHasPin(true);
@@ -653,6 +665,7 @@ export const AuthProvider = ({ children }) => {
     pinAttempts,
     accountLocked,
     lockoutEndTime,
+    emailVerified,
     checkUserPin,
     createPin,
     verifyPin,

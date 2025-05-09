@@ -8,11 +8,11 @@ import {
   BsPeopleFill,
   BsCheckCircleFill,
 } from "react-icons/bs";
-import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+import { createUserWithEmailAndPassword, sendEmailVerification, signOut } from "firebase/auth";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
 import firebaseApp, { auth } from "../../firebaseConfig"; // Import both app and auth
 import { useNavigate } from "react-router-dom";
-import useModal from "../../hooks/Modal/UseModal"; // Import your custom hook
+import PostSignupVerificationModal from "../../components/Auth/PostSignupVerificationModal";
 
 function SignUp() {
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -31,8 +31,9 @@ function SignUp() {
     special: false
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
 
-  const { modal, toggleModal } = useModal();
   const navigate = useNavigate();
   // Using the imported auth instance directly
   const db = getFirestore(firebaseApp);
@@ -144,8 +145,27 @@ function SignUp() {
       setSuccess("Account created successfully! Please verify your email.");
       console.log("User registered:", user);
 
-      // Show success modal
-      toggleModal();
+      // Store the email for the verification modal
+      setRegisteredEmail(email);
+
+      // IMPORTANT: Sign out the user IMMEDIATELY after registration
+      // This prevents the auth state listener from detecting a logged-in user with unverified email
+      try {
+        // Use signOut from Firebase directly to ensure immediate effect
+        await signOut(auth);
+        console.log("User signed out immediately after registration");
+
+        // Clear any auth data from storage to prevent auto-login
+        const apiKey = "AIzaSyDo2u1X6qkJkfc9VLgrhZTx4Y-TjKiOSi0";
+        const storageKey = `firebase:authUser:${apiKey}:[DEFAULT]`;
+        localStorage.removeItem(storageKey);
+        sessionStorage.removeItem(storageKey);
+      } catch (error) {
+        console.error("Error signing out after registration:", error);
+      }
+
+      // Show verification modal
+      setShowVerificationModal(true);
 
       // Reset form
       setFirstName("");
@@ -154,8 +174,6 @@ function SignUp() {
       setDepartment("");
       setPassword("");
       setConfirmPassword("");
-
-      // We won't redirect automatically since they need to verify email first
     } catch (err) {
       console.error("Firebase error code:", err.code);
       console.error("Firebase error message:", err.message);
@@ -382,53 +400,12 @@ function SignUp() {
         </div>
       </form>
 
-      {/* Success Modal */}
-      {modal && (
-        <div className="fixed inset-0 flex justify-center items-center z-50 bg-black/30">
-          <div className="bg-white p-6 rounded-3xl shadow-lg w-96 animate-pop-up">
-            <div className="text-center">
-              <div className="bg-green-500 text-white rounded-full h-16 w-16 flex items-center justify-center mx-auto mb-4">
-                <BsCheckCircleFill className="h-8 w-8" />
-              </div>
-
-              <h4 className="font-bold text-xl mb-2">Account Created Successfully!</h4>
-              <p className="text-gray-600 mb-3">
-                We've sent a verification link to <span className="font-semibold">{email || 'your email'}</span>.
-              </p>
-              <p className="text-gray-600 mb-5">
-                Please check your inbox and verify your email before signing in.
-              </p>
-
-              <div className="bg-blue-50 p-3 rounded-lg mb-5 text-left">
-                <p className="text-sm text-blue-800 font-medium">Important:</p>
-                <ul className="text-sm text-blue-700 list-disc pl-5 mt-1">
-                  <li>Check your spam folder if you don't see the email</li>
-                  <li>The verification link expires in 24 hours</li>
-                  <li>You must verify your email before signing in</li>
-                  <li>If you don't receive the email, you can request another one on the Sign In page</li>
-                </ul>
-              </div>
-
-              <div className="flex flex-col space-y-3">
-                <button
-                  type="button"
-                  className="bg-green-500 text-white w-full py-3 rounded-full font-medium hover:bg-green-600 transition-colors"
-                  onClick={() => navigate('/signin')}
-                >
-                  Go to Sign In
-                </button>
-                <button
-                  type="button"
-                  className="bg-white border border-gray-300 text-gray-700 w-full py-3 rounded-full font-medium hover:bg-gray-50 transition-colors"
-                  onClick={() => toggleModal()}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Email Verification Modal */}
+      <PostSignupVerificationModal
+        isOpen={showVerificationModal}
+        onClose={() => setShowVerificationModal(false)}
+        email={registeredEmail}
+      />
     </div>
   );
 }
