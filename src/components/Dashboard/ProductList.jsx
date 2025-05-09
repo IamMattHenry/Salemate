@@ -304,6 +304,10 @@ const ProductList = ({ products, addToOrderList, updateProducts, loading = false
                   src={product.url}
                   alt={product.title}
                   className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => {
+                    // Fallback image if the product image fails to load
+                    e.target.src = "https://via.placeholder.com/300x150?text=Product+Image";
+                  }}
                 />
               </div>
 

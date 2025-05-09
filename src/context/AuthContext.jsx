@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef, useCallback } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
@@ -44,9 +44,9 @@ export const AuthProvider = ({ children }) => {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [hasPin, setHasPin] = useState(false);
-  // Initialize pinVerified from localStorage if available
+  // Initialize pinVerified from sessionStorage if available
   const [pinVerified, setPinVerified] = useState(() => {
-    const savedPinStatus = localStorage.getItem('pinVerified');
+    const savedPinStatus = sessionStorage.getItem('pinVerified');
     return savedPinStatus === 'true';
   });
   // Track PIN verification attempts and account lockout - initialize from localStorage if available
@@ -123,8 +123,8 @@ export const AuthProvider = ({ children }) => {
       console.log("PIN created successfully");
       setHasPin(true);
       setPinVerified(true);
-      // Save PIN verification status to localStorage
-      localStorage.setItem('pinVerified', 'true');
+      // Save PIN verification status to sessionStorage
+      sessionStorage.setItem('pinVerified', 'true');
 
       // Add a small delay to ensure state updates before returning
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -169,8 +169,8 @@ export const AuthProvider = ({ children }) => {
       if (userDoc.exists() && userDoc.data().pin === enteredPin) {
         console.log("PIN verified successfully");
         setPinVerified(true);
-        // Save PIN verification status to localStorage
-        localStorage.setItem('pinVerified', 'true');
+        // Save PIN verification status to sessionStorage
+        sessionStorage.setItem('pinVerified', 'true');
 
         // Reset PIN attempts on successful verification
         setPinAttempts(0);
@@ -232,8 +232,8 @@ export const AuthProvider = ({ children }) => {
   // Reset PIN verification status
   const resetPinVerification = () => {
     setPinVerified(false);
-    // Clear PIN verification status from localStorage
-    localStorage.removeItem('pinVerified');
+    // Clear PIN verification status from sessionStorage
+    sessionStorage.removeItem('pinVerified');
     // Also reset PIN attempts and lockout status
     setPinAttempts(0);
     setAccountLocked(false);
@@ -263,9 +263,15 @@ export const AuthProvider = ({ children }) => {
     return departmentAccess[department][module] === true;
   };
 
-  // Sign out function
-  const logout = async () => {
+  // Sign out function - use useCallback to prevent recreation on each render
+  const logout = useCallback(async () => {
     try {
+      // Get the API key from the firebaseConfig
+      const apiKey = "AIzaSyDo2u1X6qkJkfc9VLgrhZTx4Y-TjKiOSi0";
+
+      // Use the correct API key for the storage key
+      const storageKey = `firebase:authUser:${apiKey}:[DEFAULT]`;
+
       await signOut(auth);
       setCurrentUser(null);
       setUserProfile(null);
@@ -273,21 +279,28 @@ export const AuthProvider = ({ children }) => {
       setHasPin(false);
 
       // Clear all auth-related data from storage
-      localStorage.removeItem('pinVerified');
+      sessionStorage.removeItem('pinVerified');
       localStorage.removeItem('pinAttempts');
       localStorage.removeItem('accountLocked');
       localStorage.removeItem('lockoutEndTime');
       localStorage.removeItem('sessionActive');
       localStorage.removeItem('lastPing');
-      localStorage.removeItem('firebase:authUser:AIzaSyBWE_d3k6Zs9P1XQL-bI2Ywmrkx_DdYKQ8:[DEFAULT]');
-      sessionStorage.removeItem('firebase:authUser:AIzaSyBWE_d3k6Zs9P1XQL-bI2Ywmrkx_DdYKQ8:[DEFAULT]');
+      localStorage.removeItem('forceLogout');
+      localStorage.removeItem(storageKey);
+      sessionStorage.removeItem(storageKey);
 
-      console.log("User logged out and all auth data cleared");
+      // Only log in development environment
+      if (process.env.NODE_ENV === 'development') {
+        console.log("User logged out and all auth data cleared");
+      }
+
       navigate('/signin');
     } catch (error) {
       console.error("Error signing out:", error);
+      // Try to navigate anyway
+      navigate('/signin');
     }
-  };
+  }, [navigate]); // Only depends on navigate
 
   // Check if lockout period has expired on component mount
   useEffect(() => {
@@ -317,83 +330,216 @@ export const AuthProvider = ({ children }) => {
       // Set a flag indicating the user is logged in
       localStorage.setItem('sessionActive', 'true');
 
+      // Set initial ping time
+      localStorage.setItem('lastPing', new Date().toISOString());
+
       // Set up a ping mechanism to indicate the app is still running
+      // Use a more frequent interval for better detection of tab switching vs page closing
       const pingInterval = setInterval(() => {
         localStorage.setItem('lastPing', new Date().toISOString());
-      }, 5000); // Update every 5 seconds
+      }, 1000); // Update every 1 second for more accurate tracking
+
+      // We'll use a combination of events to detect actual page close vs tab switching
+      // This variable tracks if we're just switching tabs or actually closing the page
+      let isClosing = false;
+
+      // Add event listener for beforeunload to handle page close
+      const handleBeforeUnload = () => {
+        // When the page is closed, log the user out automatically
+        // This prevents security issues with users not properly logging out
+        isClosing = true;
+        localStorage.setItem('forceLogout', 'true');
+        localStorage.setItem('lastPing', new Date().toISOString());
+      };
+
+      // When visibility changes, check if it's a page close or just tab switching
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'hidden') {
+          // Start a timer - if the page becomes visible again before the timer completes,
+          // it was just a tab switch, not a page close
+          setTimeout(() => {
+            // Only log out if the page is still hidden after the timeout
+            // and we detected a beforeunload event (actual page close)
+            if (document.visibilityState === 'hidden' && isClosing) {
+              localStorage.setItem('forceLogout', 'true');
+            }
+          }, 500); // Short timeout to differentiate between tab switch and page close
+        } else if (document.visibilityState === 'visible') {
+          // User returned to the page, reset the closing flag
+          isClosing = false;
+        }
+      };
+
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      document.addEventListener('visibilitychange', handleVisibilityChange);
 
       return () => {
         clearInterval(pingInterval);
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        // Clear any potential logout flags when component unmounts normally
+        localStorage.removeItem('forceLogout');
       };
     }
   }, [currentUser]);
 
-  // Check if the previous session was terminated abnormally (page closed)
-  useEffect(() => {
-    const checkPreviousSession = () => {
-      const sessionActive = localStorage.getItem('sessionActive');
-      const lastPing = localStorage.getItem('lastPing');
+  // Function to check previous session using useCallback
+  const checkPreviousSession = useCallback(async () => {
+    const sessionActive = localStorage.getItem('sessionActive');
+    const lastPing = localStorage.getItem('lastPing');
+    const forceLogout = localStorage.getItem('forceLogout');
 
-      if (sessionActive === 'true' && lastPing) {
-        const lastPingTime = new Date(lastPing);
-        const now = new Date();
-        const timeDiff = now - lastPingTime;
+    // Check if the page was recently active (within last 3 seconds)
+    // This helps distinguish between tab switching and actual page closing
+    const now = new Date();
+    const lastPingTime = lastPing ? new Date(lastPing) : null;
+    const recentlyActive = lastPingTime && (now - lastPingTime < 3000); // 3 seconds
 
-        // If the last ping was more than 10 seconds ago, the page was likely closed
-        // without proper logout (browser/tab closed)
-        if (timeDiff > 10000) {
-          console.log("Detected abnormal session termination, clearing auth data");
-          // Clear auth data
-          localStorage.removeItem('pinVerified');
-          localStorage.removeItem('pinAttempts');
-          localStorage.removeItem('accountLocked');
-          localStorage.removeItem('lockoutEndTime');
-          localStorage.removeItem('firebase:authUser:AIzaSyBWE_d3k6Zs9P1XQL-bI2Ywmrkx_DdYKQ8:[DEFAULT]');
-          sessionStorage.removeItem('firebase:authUser:AIzaSyBWE_d3k6Zs9P1XQL-bI2Ywmrkx_DdYKQ8:[DEFAULT]');
-        }
+    // If force logout flag is set AND the page hasn't been active recently, handle it
+    if (forceLogout === 'true' && !recentlyActive) {
+      // Only log in development environment
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Force logout flag detected from previous session");
       }
+      localStorage.removeItem('forceLogout');
 
-      // Reset the session tracking
+      // Clear all auth-related data regardless of current user state
+      localStorage.removeItem('pinVerified');
+      localStorage.removeItem('pinAttempts');
+      localStorage.removeItem('accountLocked');
+      localStorage.removeItem('lockoutEndTime');
       localStorage.removeItem('sessionActive');
-    };
+      localStorage.removeItem('lastPing');
 
-    // Check for abnormal termination when the component mounts
-    checkPreviousSession();
-  }, []);
+      // If user is logged in, force logout
+      if (currentUser) {
+        await logout();
+      }
+      return;
+    } else if (forceLogout === 'true' && recentlyActive) {
+      // If the page was recently active, this was likely just a tab switch
+      // Clear the force logout flag but don't log out
+      localStorage.removeItem('forceLogout');
+    }
 
-  // Listen for auth state changes
-  useEffect(() => {
-    console.log("Setting up auth state listener");
+    if (sessionActive === 'true' && lastPing) {
+      // We already have lastPingTime from above
+      const timeDiff = now - lastPingTime;
 
-    // Check if we have a valid session
-    const checkSession = () => {
-      const authInLocalStorage = localStorage.getItem('firebase:authUser:AIzaSyBWE_d3k6Zs9P1XQL-bI2Ywmrkx_DdYKQ8:[DEFAULT]');
-      const authInSessionStorage = sessionStorage.getItem('firebase:authUser:AIzaSyBWE_d3k6Zs9P1XQL-bI2Ywmrkx_DdYKQ8:[DEFAULT]');
+      // If the last ping was more than 10 minutes ago, the session was likely inactive for a long time
+      if (timeDiff > 600000) { // 10 minutes in milliseconds
+        console.log("Detected long inactivity period, clearing session data");
 
-      if (!authInLocalStorage && !authInSessionStorage) {
-        console.log("No valid auth session found");
-        setCurrentUser(null);
-        setUserProfile(null);
-        setHasPin(false);
-        setPinVerified(false);
-        setPinAttempts(0);
-        setAccountLocked(false);
-        setLockoutEndTime(null);
-        // Clear all PIN-related localStorage items
-        localStorage.removeItem('pinVerified');
+        // Clear all auth-related data
+        sessionStorage.removeItem('pinVerified');
         localStorage.removeItem('pinAttempts');
         localStorage.removeItem('accountLocked');
         localStorage.removeItem('lockoutEndTime');
         localStorage.removeItem('sessionActive');
         localStorage.removeItem('lastPing');
-        setLoading(false);
-        return false;
-      }
-      return true;
-    };
 
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log("Auth state changed:", user ? "User logged in" : "No user");
+        // If user is logged in, force logout
+        if (currentUser) {
+          await logout();
+          return;
+        }
+      }
+    }
+
+    // Reset the session tracking for the new session
+    localStorage.setItem('sessionActive', 'true');
+    localStorage.setItem('lastPing', new Date().toISOString());
+  }, [currentUser, logout]);
+
+  // Check if the previous session was terminated abnormally (page closed)
+  useEffect(() => {
+    // Check for abnormal termination when the component mounts
+    checkPreviousSession();
+
+    // Include checkPreviousSession in the dependency array
+    // It won't cause re-runs because it's memoized with useCallback
+  }, [checkPreviousSession]);
+
+  // Session check function using useCallback to maintain reference
+  const checkSession = useCallback(async () => {
+    // Check if force logout flag is set (from page close or visibility change)
+    const forceLogout = localStorage.getItem('forceLogout') === 'true';
+
+    // Check if the page was recently active (within last 2 seconds)
+    // This helps distinguish between tab switching and actual page closing
+    const lastPing = localStorage.getItem('lastPing');
+    const now = new Date();
+    const lastPingTime = lastPing ? new Date(lastPing) : null;
+    const recentlyActive = lastPingTime && (now - lastPingTime < 2000); // 2 seconds
+
+    // Only log out if force logout flag is set AND the page hasn't been active recently
+    // This prevents logout during tab switching
+    if (forceLogout && currentUser && !recentlyActive) {
+      // Only log in development environment
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Force logout flag detected, logging out user");
+      }
+      // Clear the flag first to prevent infinite loops
+      localStorage.removeItem('forceLogout');
+      // Perform logout
+      await logout();
+      return false;
+    }
+
+    // Get the API key from the firebaseConfig
+    const apiKey = "AIzaSyDo2u1X6qkJkfc9VLgrhZTx4Y-TjKiOSi0";
+
+    // Use the correct API key for the storage key
+    const storageKey = `firebase:authUser:${apiKey}:[DEFAULT]`;
+
+    const authInLocalStorage = localStorage.getItem(storageKey);
+    const authInSessionStorage = sessionStorage.getItem(storageKey);
+
+    // Update the last ping time to indicate the session is active
+    if (authInLocalStorage || authInSessionStorage) {
+      localStorage.setItem('lastPing', new Date().toISOString());
+      return true;
+    }
+
+    // Only if there's no auth data in either storage, consider the session invalid
+    if (!authInLocalStorage && !authInSessionStorage) {
+      console.log("No valid auth session found");
+      setCurrentUser(null);
+      setUserProfile(null);
+      setHasPin(false);
+      setPinVerified(false);
+      setPinAttempts(0);
+      setAccountLocked(false);
+      setLockoutEndTime(null);
+      // Clear all PIN-related localStorage items
+      localStorage.removeItem('pinVerified');
+      localStorage.removeItem('pinAttempts');
+      localStorage.removeItem('accountLocked');
+      localStorage.removeItem('lockoutEndTime');
+      localStorage.removeItem('sessionActive');
+      localStorage.removeItem('lastPing');
+      localStorage.removeItem('forceLogout');
+      setLoading(false);
+      return false;
+    }
+    return true;
+  }, [currentUser, logout]);
+
+  // Reference to store the session check interval
+  const sessionCheckIntervalRef = useRef(null);
+
+  // Listen for auth state changes - only run once on mount
+  useEffect(() => {
+    // Only log this message in development to reduce console noise
+    if (process.env.NODE_ENV === 'development') {
+      console.log("Setting up auth state listener");
+    }
+
+    const handleAuthStateChange = async (user) => {
+      // Only log this message in development to reduce console noise
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Auth state changed:", user ? "User logged in" : "No user");
+      }
 
       if (user) {
         try {
@@ -410,15 +556,23 @@ export const AuthProvider = ({ children }) => {
             if (userData.pin) {
               setHasPin(true);
 
-              // Always require PIN verification on fresh login
-              // This ensures PIN verification shows on first login
-              setPinVerified(false);
-              localStorage.removeItem('pinVerified');
-
-              console.log("User has PIN, verification required");
+              // Check if PIN verification is already done in this session
+              const isPinVerified = sessionStorage.getItem('pinVerified') === 'true';
+              if (!isPinVerified) {
+                setPinVerified(false);
+                // Only log this message in development to reduce console noise
+                if (process.env.NODE_ENV === 'development') {
+                  console.log("User has PIN, verification required");
+                }
+              } else {
+                setPinVerified(true);
+              }
             } else {
               setHasPin(false);
-              console.log("User does not have PIN, creation required");
+              // Only log this message in development to reduce console noise
+              if (process.env.NODE_ENV === 'development') {
+                console.log("User does not have PIN, creation required");
+              }
             }
           } else {
             // User document doesn't exist in Firestore - this means the user was deleted from the admin panel
@@ -469,16 +623,25 @@ export const AuthProvider = ({ children }) => {
       }
 
       setLoading(false);
-    });
+    };
+
+    // Set up the auth state listener
+    const unsubscribe = onAuthStateChanged(auth, handleAuthStateChange);
+
+    // Initial session check
+    checkSession();
 
     // Set up session check interval
-    const sessionCheckInterval = setInterval(checkSession, 5000);
+    sessionCheckIntervalRef.current = setInterval(checkSession, 5000);
 
+    // Cleanup function
     return () => {
       unsubscribe();
-      clearInterval(sessionCheckInterval);
+      if (sessionCheckIntervalRef.current) {
+        clearInterval(sessionCheckIntervalRef.current);
+      }
     };
-  }, [auth, db]);
+  }, [auth, db, checkSession]); // Include checkSession in dependencies
 
   // Value to be provided to consumers
   const value = {

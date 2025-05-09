@@ -139,6 +139,7 @@ const OrdersTable = () => {
               : (data.no_order || 0), // Support both new and old formats
             timestamp: data.order_date.seconds,
             order_id_num: parseInt(data.order_id) || 0, // For sorting by order ID
+            is_student: data.is_student === true, // Ensure is_student is a boolean
           };
         })
         .filter(order => {
@@ -271,6 +272,22 @@ const OrdersTable = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Format student ID to include a hyphen (e.g., 23-2023)
+  const formatStudentId = (id) => {
+    if (!id) return 'N/A';
+
+    // If the ID already contains a hyphen, return it as is
+    if (id.includes('-')) return id;
+
+    // If the ID is 6 digits, format it as XX-XXXX
+    if (/^\d{6}$/.test(id)) {
+      return `${id.substring(0, 2)}-${id.substring(2)}`;
+    }
+
+    // Otherwise return the original ID
+    return id;
   };
 
   const handleRowClick = (order) => {
@@ -537,7 +554,7 @@ const OrdersTable = () => {
 
                   {/* Modern Customer Info Card */}
                   <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                    <h3 className="font-medium text-gray-900 mb-3 flex items-center">
+                    <h3 className="font-medium text-gray-900 mb-4 flex items-center">
                       <span className="bg-emerald-100 p-2 rounded-lg mr-3">
                         <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -545,7 +562,58 @@ const OrdersTable = () => {
                       </span>
                       Customer Information
                     </h3>
-                    <p className="text-gray-700 font-medium">{selectedOrder.recipient}</p>
+
+                    {/* Customer Name with Large Display */}
+                    <div className="mb-4">
+                      <h4 className="text-xl font-bold text-gray-800">{selectedOrder.recipient}</h4>
+                    </div>
+
+                    {/* Customer Type and ID in a Beautiful Card */}
+                    <div className={`
+                      rounded-xl p-4 border flex items-center gap-4
+                      ${selectedOrder.is_student === true
+                        ? 'bg-blue-50 border-blue-200'
+                        : 'bg-green-50 border-green-200'}
+                    `}>
+                      {/* Icon based on customer type */}
+                      <div className={`
+                        p-3 rounded-full
+                        ${selectedOrder.is_student === true
+                          ? 'bg-blue-100'
+                          : 'bg-green-100'}
+                      `}>
+                        {selectedOrder.is_student === true ? (
+                          <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+                          </svg>
+                        ) : (
+                          <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        )}
+                      </div>
+
+                      <div className="flex-1">
+                        {/* Customer Type */}
+                        <div className="font-medium mb-1 text-gray-700">
+                          {selectedOrder.is_student === true ? 'Student Customer' : 'Regular Customer'}
+                        </div>
+
+                        {/* Customer ID with Monospace Font for Better Readability */}
+                        <div className={`
+                          font-mono text-sm font-bold
+                          ${selectedOrder.is_student === true
+                            ? 'text-blue-700'
+                            : 'text-green-700'}
+                        `}>
+                          {selectedOrder.is_student === true
+                            ? `Student ID: ${formatStudentId(selectedOrder.customer_id) || 'N/A'}`
+                            : `Customer ID: ${selectedOrder.customer_id || 'N/A'}`}
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Modern Order Items Card */}

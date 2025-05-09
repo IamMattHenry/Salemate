@@ -19,6 +19,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaCheckCircle } from 'react-icons/fa';
 import { X, Edit2 } from 'lucide-react';
+import ClerkNameReminderModal from "../ClerkNameReminderModal";
 import { format } from 'date-fns';
 
 const InventoryDaily = () => {
@@ -27,6 +28,7 @@ const InventoryDaily = () => {
   const [clerkName, setClerkName] = useState('');
   const [editedItems, setEditedItems] = useState({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showClerkNameReminder, setShowClerkNameReminder] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const db = getFirestore(firebaseApp);
 
@@ -166,6 +168,9 @@ const InventoryDaily = () => {
           // Calculate the stock status based on the current ending inventory
           const currentStatus = getStockStatus(currentEndingInv, data);
 
+          // Ensure raw_mats is defined, use a default value if it's not
+          const rawMats = data.raw_mats || 'Unknown Material';
+
           const newData = {
             begin_inv: currentEndingInv, // Transfer ending inventory to beginning inventory
             ending_inv: currentEndingInv, // Keep the same value in ending inventory
@@ -174,7 +179,7 @@ const InventoryDaily = () => {
             waste: 0,
             last_updated: timestamp,
             stock_status: currentStatus, // Use the calculated status
-            raw_mats: data.raw_mats
+            raw_mats: rawMats // Use the validated raw_mats value
           };
 
           batch.update(docRef, newData);
@@ -283,7 +288,7 @@ const InventoryDaily = () => {
   const handleSubmit = useCallback(async () => {
     try {
       if (!clerkName.trim()) {
-        alert('Please enter clerk name for audit purposes');
+        setShowClerkNameReminder(true);
         return;
       }
 
@@ -401,6 +406,9 @@ const InventoryDaily = () => {
             Number(item.ending_inv || 0) :
             Number(item.begin_inv || 0);
 
+          // Ensure raw_mats is defined, use a default value if it's not
+          const rawMats = item.raw_mats || 'Unknown Material';
+
           // Create a copy of the current item with updated timestamp and clerk name
           const unchangedData = {
             begin_inv: Number(item.begin_inv || 0),
@@ -408,7 +416,7 @@ const InventoryDaily = () => {
             purchased: Number(item.purchased || 0),
             used: Number(item.used || 0),
             waste: Number(item.waste || 0),
-            raw_mats: item.raw_mats,
+            raw_mats: rawMats, // Use the validated raw_mats value
             last_updated: timestamp,
             clerk_name: clerkName,
             stock_status: item.stock_status || getStockStatus(currentEndingInv, item)
@@ -435,9 +443,12 @@ const InventoryDaily = () => {
           waste: item.waste || 0
         };
 
+        // Ensure raw_mats is defined, use a default value if it's not
+        const rawMats = item.raw_mats || 'Unknown Material';
+
         const updateData = {
           ...calculatedValues,
-          raw_mats: item.raw_mats, // Preserve the raw materials name
+          raw_mats: rawMats, // Use the validated raw_mats value
           last_updated: timestamp,
           clerk_name: clerkName,
           audit_trail: {
@@ -496,9 +507,15 @@ const InventoryDaily = () => {
 
   const handleRawMaterialUpdate = async (itemId, newName) => {
     try {
+      // Validate the new name - don't allow empty or undefined values
+      if (!newName || newName.trim() === '') {
+        console.warn('Attempted to update raw_mats with empty value, using default instead');
+        newName = 'Unknown Material';
+      }
+
       const itemRef = doc(db, 'inventory', itemId);
       await updateDoc(itemRef, {
-        raw_mats: newName
+        raw_mats: newName.trim() // Trim whitespace and ensure we have a value
       });
       setEditingId(null);
     } catch (error) {
@@ -621,6 +638,12 @@ const InventoryDaily = () => {
         )}
       </AnimatePresence>
 
+      {/* Clerk Name Reminder Modal */}
+      <ClerkNameReminderModal
+        isOpen={showClerkNameReminder}
+        onClose={() => setShowClerkNameReminder(false)}
+      />
+
       <section className="bg-white overflow-y-hidden rounded-2xl shadow-feat w-[1180px] h-auto mx-auto mt-4 py-2 px-4">
         <div className="w-full overflow-y-scroll overflow-x-hidden h-10/12">
           <div className="flex items-center text-[1.28rem] tracking-tight font-bold py-3 px-4 font-latrue border-b-[0.5px] min-w-max">
@@ -660,6 +683,11 @@ const InventoryDaily = () => {
                       onSubmit={(e) => {
                         e.preventDefault();
                         const newName = e.target.rawMaterial.value;
+                        // Validate the name before updating
+                        if (!newName || newName.trim() === '') {
+                          alert('Raw material name cannot be empty');
+                          return;
+                        }
                         handleRawMaterialUpdate(item.id, newName);
                       }}
                       className="flex w-full"
@@ -674,7 +702,14 @@ const InventoryDaily = () => {
                           transition-all duration-200"
                         autoFocus
                         onBlur={(e) => {
-                          handleRawMaterialUpdate(item.id, e.target.value);
+                          const newName = e.target.value;
+                          // Validate the name before updating
+                          if (!newName || newName.trim() === '') {
+                            alert('Raw material name cannot be empty');
+                            e.target.value = item.raw_mats || 'Unknown Material'; // Reset to original value
+                            return;
+                          }
+                          handleRawMaterialUpdate(item.id, newName);
                         }}
                       />
                     </form>
