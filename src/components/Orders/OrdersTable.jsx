@@ -140,6 +140,9 @@ const OrdersTable = () => {
             timestamp: data.order_date.seconds,
             order_id_num: parseInt(data.order_id) || 0, // For sorting by order ID
             is_student: data.is_student === true, // Ensure is_student is a boolean
+            college: data.college || null, // Include college information
+            program_code: data.program_code || null, // Include program code
+            program_full: data.program_full || null, // Include full program name
           };
         })
         .filter(order => {
@@ -612,6 +615,20 @@ const OrdersTable = () => {
                             ? `Student ID: ${formatStudentId(selectedOrder.customer_id) || 'N/A'}`
                             : `Customer ID: ${selectedOrder.customer_id || 'N/A'}`}
                         </div>
+
+                        {/* College and Program Information (for students) */}
+                        {selectedOrder.is_student === true && selectedOrder.college && (
+                          <div className="mt-2 pt-2 border-t border-blue-100">
+                            <div className="text-sm text-blue-700 font-medium">
+                              {selectedOrder.college}
+                            </div>
+                            {selectedOrder.program_full && (
+                              <div className="text-xs text-blue-600 mt-1">
+                                {selectedOrder.program_full}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -629,11 +646,23 @@ const OrdersTable = () => {
                     <div className="space-y-3">
                       {selectedOrder.items && selectedOrder.items.length > 0 ? (
                         selectedOrder.items.map((item, index) => (
-                          <div key={index} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0">
-                            <span className="text-gray-800 font-medium">
-                              {item.title === "Meal" ? "Katsu" : item.title}
-                            </span>
-                            <span className="bg-emerald-50 text-emerald-700 font-medium px-3 py-1 rounded-full">×{item.quantity}</span>
+                          <div key={index} className="flex flex-col py-3 border-b border-gray-100 last:border-0">
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-800 font-medium">
+                                {item.title === "Meal" ? "Katsu" : item.title}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-600 text-sm">₱{item.price}</span>
+                                <span className="bg-emerald-50 text-emerald-700 font-medium px-3 py-1 rounded-full">×{item.quantity}</span>
+                              </div>
+                            </div>
+                            {item.description && (
+                              <p className="text-xs text-gray-500 mt-1 line-clamp-2">{item.description}</p>
+                            )}
+                            <div className="flex justify-between items-center mt-2">
+                              <span className="text-xs text-gray-500 px-2 py-1 bg-gray-50 rounded-full">{item.category}</span>
+                              <span className="text-sm font-medium text-emerald-600">₱{(item.price * item.quantity).toFixed(2)}</span>
+                            </div>
                           </div>
                         ))
                       ) : (
@@ -664,8 +693,8 @@ const OrdersTable = () => {
                       {selectedOrder.mop === "Online" && (
                         <div className="flex justify-between items-center px-4 py-3 bg-blue-50 rounded-xl">
                           <span className="text-blue-600">Reference Number</span>
-                          <span className="font-medium text-blue-700">
-                            {selectedOrder.reference_number ?
+                          <span className="font-medium text-blue-700 font-mono">
+                            {selectedOrder.reference_number && selectedOrder.reference_number.length > 0 ?
                               selectedOrder.reference_number :
                               <span className="text-red-500 text-sm italic">Not provided</span>
                             }

@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
+import { getAuth, setPersistence, browserSessionPersistence } from "firebase/auth";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -24,12 +24,17 @@ const analytics = getAnalytics(app);
 // Get Auth instance
 const auth = getAuth(app);
 
-// Set local persistence (user will stay logged in even when browser is closed)
-// We're using an IIFE to ensure this runs immediately and doesn't block other code
+// Set session persistence (user will be logged out when browser is closed)
+// This helps prevent automatic login without proper verification
 (async () => {
   try {
-    await setPersistence(auth, browserLocalPersistence);
-    console.log("Firebase auth persistence set to local storage");
+    await setPersistence(auth, browserSessionPersistence);
+    console.log("Firebase auth persistence set to session storage");
+
+    // Clear any existing auth data from localStorage to prevent auto-login
+    const apiKey = firebaseConfig.apiKey;
+    const storageKey = `firebase:authUser:${apiKey}:[DEFAULT]`;
+    localStorage.removeItem(storageKey);
   } catch (error) {
     console.error("Error setting auth persistence:", error);
   }

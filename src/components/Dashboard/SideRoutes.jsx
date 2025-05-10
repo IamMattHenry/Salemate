@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import {
-  BsGraphUp,
-  BsFillBoxFill,
-} from "react-icons/bs";
-import { FaBasketShopping } from "react-icons/fa6";
-import { RiServiceFill } from "react-icons/ri";
-import { SiDashlane } from "react-icons/si";
-import { MdBlock } from "react-icons/md";
-import { FaUserShield } from "react-icons/fa";
+  MdDashboard,
+  MdInventory,
+  MdAnalytics,
+  MdShoppingCart,
+  MdPeople,
+  MdAdminPanelSettings,
+  MdBlock
+} from "react-icons/md";
 import { useAuth } from "../../context/AuthContext";
 import AccessDeniedModal from "../Auth/AccessDeniedModal";
 
@@ -22,35 +22,35 @@ const SideRoutes = ({ isMinimized }) => {
     {
       path: "/dashboard",
       label: "Dashboard",
-      icon: <SiDashlane />,
+      icon: <MdDashboard />,
       requiresPin: false,
       module: "dashboard"
     },
     {
       path: "/orders",
       label: "Orders",
-      icon: <FaBasketShopping />,
+      icon: <MdShoppingCart />,
       requiresPin: false,
       module: "orders"
     },
     {
       path: "/analytics",
       label: "Analytics",
-      icon: <BsGraphUp />,
+      icon: <MdAnalytics />,
       requiresPin: true,
       module: "analytics"
     },
     {
       path: "/inventory",
       label: "Inventory",
-      icon: <BsFillBoxFill />,
+      icon: <MdInventory />,
       requiresPin: true,
       module: "inventory"
     },
     {
       path: "/customer",
       label: "Customer",
-      icon: <RiServiceFill />,
+      icon: <MdPeople />,
       requiresPin: true,
       module: "customer"
     },
@@ -61,7 +61,7 @@ const SideRoutes = ({ isMinimized }) => {
     routes.push({
       path: "/admin",
       label: "User Accounts",
-      icon: <FaUserShield />,
+      icon: <MdAdminPanelSettings />,
       requiresPin: false,
       module: "admin"
     });

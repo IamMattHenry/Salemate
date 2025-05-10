@@ -9,9 +9,31 @@ import useSuccessModal from "../../hooks/Modal/SuccessModal";
 import useQRPaymentModal from "../../hooks/Modal/QRPaymentModal";
 import QRPaymentModal from "../Dashboard/QRPaymentModal";
 import { AnimatePresence, motion } from "framer-motion";
-import { collection, addDoc, serverTimestamp, getFirestore, query, where, getDocs, orderBy, updateDoc, doc, getDoc, setDoc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, getFirestore, query, where, getDocs, orderBy, updateDoc, doc, getDoc, setDoc, Timestamp } from "firebase/firestore";
 import firebaseApp from "../../firebaseConfig";
 import customerService from "../../services/customerService";
+import { useAuth } from "../../context/AuthContext";
+
+// College and program data structure with program codes
+const collegePrograms = {
+  "College of Business Administration and Accountancy": [
+    { code: "BSA", name: "Bachelor of Science in Accountancy (BSA)" },
+    { code: "BS Entrep", name: "Bachelor of Science in Entrepreneurship (BS Entrep)" }
+  ],
+  "College of Education": [
+    { code: "BECEd", name: "Bachelor of Early Childhood Education (BECEd)" }
+  ],
+  "College of Engineering": [
+    { code: "IE", name: "Bachelor of Science in Industrial Engineering (IE)" },
+    { code: "BSECE", name: "Bachelor of Science in Electronics Engineering (BSECE)" },
+    { code: "BSCpE", name: "Bachelor of Science in Computer Engineering (BSCpE)" }
+  ],
+  "College of Computer Studies": [
+    { code: "BSCS", name: "Bachelor of Science in Computer Science (BSCS)" },
+    { code: "BSIT", name: "Bachelor of Science in Information Technology (BSIT)" },
+    { code: "BSIS", name: "Bachelor of Science in Information System (BSIS)" }
+  ]
+};
 
 const DashboardOrder = ({ product, orderList, setOrderList }) => {
   const [orderNumber, setOrderNumber] = useState(1);
@@ -32,9 +54,17 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
   const [customerVariants, setCustomerVariants] = useState([]);
   const [selectedCustomerName, setSelectedCustomerName] = useState("");
   const [isStudentLocked, setIsStudentLocked] = useState(false);
+  const [selectedCollege, setSelectedCollege] = useState("");
+  const [selectedProgram, setSelectedProgram] = useState("");
+  const [programError, setProgramError] = useState("");
+  const [editingQuantityIndex, setEditingQuantityIndex] = useState(-1); // Track which quantity is being edited
+  const [showMaxOrderModal, setShowMaxOrderModal] = useState(false); // Modal for max order limit
 
   // Initialize Firestore
   const db = getFirestore(firebaseApp);
+
+  // Get current user
+  const { currentUser } = useAuth();
 
   // Import custom hooks
   const { inputNameModal, showNameModal, toggleModal } = useNameModal();
@@ -318,6 +348,12 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
   // Increase quantity
   const increaseQuantity = (index) => {
     if (orderList) {
+      // Show modal if already at max limit of 30
+      if (quantities[index] >= 30) {
+        setShowMaxOrderModal(true);
+        return;
+      }
+
       const updatedQuantities = [...quantities];
       updatedQuantities[index] = quantities[index] + 1;
       setQuantities(updatedQuantities);
@@ -332,8 +368,52 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
         setOrderList(updatedOrderList);
       }
     } else {
-      setQuantity(quantity + 1);
+      // For single product mode, also respect the max limit
+      if (quantity < 30) {
+        setQuantity(quantity + 1);
+      } else {
+        setShowMaxOrderModal(true);
+      }
     }
+  };
+
+  // Handle direct quantity input
+  const handleQuantityChange = (index, value) => {
+    // This function now only updates the value without exiting edit mode
+    // Convert to number and ensure it's at least 1
+    let newValue = parseInt(value);
+
+    // If the input is not a valid number, default to 1
+    if (isNaN(newValue) || newValue < 1) {
+      newValue = 1;
+    }
+
+    // Enforce maximum order limit of 30
+    if (newValue > 30) {
+      newValue = 30;
+      setShowMaxOrderModal(true);
+    }
+
+    if (orderList) {
+      const updatedQuantities = [...quantities];
+      updatedQuantities[index] = newValue;
+      setQuantities(updatedQuantities);
+
+      // Also update the orderList quantities to keep them in sync
+      if (setOrderList) {
+        const updatedOrderList = [...orderList];
+        updatedOrderList[index] = {
+          ...updatedOrderList[index],
+          quantity: newValue
+        };
+        setOrderList(updatedOrderList);
+      }
+    }
+  };
+
+  // Function to finalize quantity input and exit edit mode
+  const finalizeQuantityEdit = () => {
+    setEditingQuantityIndex(-1);
   };
 
   // Recalculate total quantity and subtotal dynamically
@@ -386,6 +466,42 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
     // UTF-16 characters can take up to 4 bytes each in the worst case
     // This is a conservative estimate
     return jsonString.length * 4;
+  };
+
+  // Create a single global notification
+  const createOrderNotification = async (orderIdString, customerName, orderTotal) => {
+    try {
+      console.log("Creating global notification for order");
+
+      if (!currentUser) {
+        console.error("Cannot create notification: No user is logged in");
+        return;
+      }
+
+      // Create a single global notification with a special global flag
+      const globalNotification = {
+        type: 'order',
+        message: `New order #${orderIdString} from ${customerName} (₱${orderTotal.toFixed(2)})`,
+        severity: 'normal',
+        route: '/orders/pending-transactions',
+        module: 'orders',
+        resolved: false, // Set to false so it appears as an unresolved notification
+        userId: 'global', // Special marker to indicate this is a global notification
+        createdBy: currentUser.uid, // Track who created it
+        createdByName: currentUser.email || 'Unknown user', // Include creator's name
+        read: false,
+        global: true, // Flag to indicate this is a global notification
+        createdAt: Timestamp.now(),
+        readBy: [] // Initialize empty array to track which users have read this notification
+      };
+
+      const notificationRef = await addDoc(collection(db, 'notifications'), globalNotification);
+      console.log(`Created global notification with ID: ${notificationRef.id}`);
+
+    } catch (error) {
+      console.error('Error creating global notification:', error);
+      // Continue with order process even if notification fails
+    }
   };
 
   // Save order to Firebase
@@ -536,7 +652,11 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
           name: customerName,
           customerId: finalCustomerId,
           isStudent: isStudent,
-          orderTotal: orderTotal
+          orderTotal: orderTotal,
+          college: isStudent ? selectedCollege : null,
+          program_code: isStudent ? selectedProgram : null,
+          program_full: isStudent && selectedCollege && selectedProgram ?
+            collegePrograms[selectedCollege].find(p => p.code === selectedProgram)?.name : null
         });
         console.log("Customer record created/updated successfully");
       } catch (error) {
@@ -561,7 +681,11 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
         status: true,
         updated_at: serverTimestamp(),
         order_id: orderIdString, // Add the incremental order_id
-        reference_number: paymentMode === "Online" ? "" : null // Initialize reference_number field for online payments
+        reference_number: paymentMode === "Online" ? "" : null, // Initialize reference_number field for online payments
+        college: isStudent ? selectedCollege : null, // Add college for students
+        program_code: isStudent ? selectedProgram : null, // Add program code for students
+        program_full: isStudent && selectedCollege && selectedProgram ?
+          collegePrograms[selectedCollege].find(p => p.code === selectedProgram)?.name : null // Add full program name
       });
 
       console.log("Order saved to order_transaction:", orderTransactionRef.id);
@@ -624,7 +748,11 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
         orderItems: customerHistoryDoc.orderItems, // Use potentially simplified items
         order_id: orderIdString, // Add the order_id to customer_history as well
         mop: paymentMode, // Include payment method
-        reference_number: paymentMode === "Online" ? "" : null // Include reference_number field
+        reference_number: paymentMode === "Online" ? "" : null, // Include reference_number field
+        college: isStudent ? selectedCollege : null, // Add college for students
+        program_code: isStudent ? selectedProgram : null, // Add program code for students
+        program_full: isStudent && selectedCollege && selectedProgram ?
+          collegePrograms[selectedCollege].find(p => p.code === selectedProgram)?.name : null // Add full program name
       });
 
       console.log("Order saved to customer_history:", customerHistorySnapshot.id);
@@ -641,6 +769,9 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
         ]);
         console.log(`Added new customer to existing customers list: ${customerName} (${finalCustomerId})`);
       }
+
+      // Create a notification for the new order
+      await createOrderNotification(orderIdString, customerName, orderTotal);
 
       return true;
     } catch (error) {
@@ -852,6 +983,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
     // Reset errors
     setNameError("");
     setIdError("");
+    setProgramError("");
 
     // Validate name (required)
     if (!customerName.trim()) {
@@ -862,7 +994,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
       isValid = false;
     }
 
-    // For students, validate student ID
+    // For students, validate student ID and program
     if (isStudent) {
       if (!studentId.trim()) {
         setIdError("Student ID is required");
@@ -880,6 +1012,15 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
           setIdError("This Student ID is already in use with a different name");
           isValid = false;
         }
+      }
+
+      // Validate college and program selection
+      if (!selectedCollege) {
+        setProgramError("Please select a college");
+        isValid = false;
+      } else if (!selectedProgram) {
+        setProgramError("Please select a program");
+        isValid = false;
       }
     } else {
       // For non-students, check if they already exist
@@ -959,11 +1100,14 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
     setStudentId("");
     setNameError("");
     setIdError("");
+    setProgramError("");
     setIsValidating(false);
     setIsStudent(true);
     setCustomerSuffix("");
     setShowDisambiguationModal(false);
     setIsStudentLocked(false); // Reset the student lock when closing the modal
+    setSelectedCollege("");
+    setSelectedProgram("");
 
     // Close the modal
     toggleModal();
@@ -1714,16 +1858,44 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                         </button>
                       </div>
                     )}
-                    <div className="flex items-center gap-3 bg-white rounded-lg border border-gray-200 p-1">
+                    <div className="flex items-center gap-2 bg-white rounded-lg border border-gray-200 p-1">
                       <button
                         onClick={() => decreaseQuantity(index)}
                         className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-100 rounded-lg"
                       >
                         -
                       </button>
-                      <span className="w-8 text-center font-medium">
-                        {quantities[index] || 1}
-                      </span>
+
+                      {editingQuantityIndex === index ? (
+                        <div className="relative flex-1 min-w-[60px]">
+                          <input
+                            type="number"
+                            min="1"
+                            max="30"
+                            value={quantities[index] || 1}
+                            onChange={(e) => handleQuantityChange(index, e.target.value)}
+                            onBlur={finalizeQuantityEdit}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                finalizeQuantityEdit();
+                              }
+                            }}
+                            className="w-full h-8 text-center font-medium border border-amber-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                            autoFocus
+                          />
+                          <div className="absolute right-2 top-[-18px] text-xs text-gray-500">
+                            Max: 30
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          className="flex-1 min-w-[60px] h-8 px-2 flex items-center justify-center text-gray-700 font-medium bg-amber-50 hover:bg-amber-100 rounded-md transition-colors"
+                          onClick={() => setEditingQuantityIndex(index)}
+                        >
+                          {quantities[index] || 1}
+                        </button>
+                      )}
+
                       <button
                         onClick={() => increaseQuantity(index)}
                         className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-100 rounded-lg"
@@ -1787,7 +1959,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
             onClick={handleModalClose}
           >
             <motion.div
-              className="bg-white w-[440px] rounded-2xl shadow-2xl"
+              className="bg-white w-full max-w-[480px] mx-4 rounded-2xl shadow-2xl"
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -1795,22 +1967,22 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="px-8 py-6">
-                <div className="flex items-center gap-5">
-                  <div className="p-3.5 bg-emerald-100 rounded-xl">
-                    <svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="px-5 sm:px-6 md:px-8 py-5">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-emerald-100 rounded-xl">
+                    <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">Complete Order</h3>
-                    <p className="text-sm text-gray-500 mt-0.5">Enter customer details to proceed</p>
+                    <h3 className="text-lg font-bold text-gray-900">Complete Order</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">Enter customer details to proceed</p>
                   </div>
                 </div>
               </div>
 
               {/* Form Fields */}
-              <div className="px-8 py-6 space-y-5">
+              <div className="px-5 sm:px-6 md:px-8 py-5 space-y-4">
                 {/* Customer Type Toggle */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
@@ -1826,11 +1998,11 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                       </div>
                     )}
                   </div>
-                  <div className="flex gap-3">
+                  <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={() => setIsStudent(true)}
-                      className={`flex-1 py-3 px-3 rounded-xl text-sm transition-all ${
+                      className={`flex-1 py-2.5 px-2 rounded-xl text-sm transition-all ${
                         isStudent
                           ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -1838,14 +2010,14 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                     >
                       <div className="flex flex-col items-center">
                         <span className="font-medium">Student</span>
-                        <span className="text-xs mt-1 opacity-80">6-digit ID required</span>
+                        <span className="text-xs mt-0.5 opacity-80">6-digit ID required</span>
                       </div>
                     </button>
                     <button
                       type="button"
                       onClick={() => !isStudentLocked && setIsStudent(false)}
                       disabled={isStudentLocked}
-                      className={`flex-1 py-3 px-3 rounded-xl text-sm transition-all ${
+                      className={`flex-1 py-2.5 px-2 rounded-xl text-sm transition-all ${
                         !isStudent
                           ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
                           : isStudentLocked
@@ -1855,11 +2027,11 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                     >
                       <div className="flex flex-col items-center">
                         <span className="font-medium">Non-Student</span>
-                        <span className="text-xs mt-1 opacity-80">Auto-generated ID</span>
+                        <span className="text-xs mt-0.5 opacity-80">Auto-generated ID</span>
                       </div>
                     </button>
                   </div>
-                  <p className="mt-2 text-xs text-gray-500">
+                  <p className="mt-1.5 text-xs text-gray-500">
                     {isStudent
                       ? "For students with a valid 6-digit student ID number."
                       : "For regular customers. A unique 6-digit ID starting from 500001 will be automatically assigned when the order is completed."}
@@ -1868,13 +2040,13 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
 
                 {/* Customer Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
                     Customer Name
                   </label>
                   <input
                     type="text"
                     placeholder="e.g. Juan Dela Cruz"
-                    className={`w-full px-4 py-2.5 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2
+                    className={`w-full px-3 py-2 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2
                     ${nameError ? 'focus:ring-red-500/20 bg-red-50' : 'focus:ring-emerald-500/20'}
                     transition-all text-sm`}
                     value={customerName}
@@ -1890,10 +2062,10 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
 
                 {/* Name Suffix */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
                     Suffix (Optional)
                   </label>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5">
                     {["Jr.", "Sr.", "I", "II", "III", "IV", "V"].map((suffix) => (
                       <button
                         key={suffix}
@@ -1924,7 +2096,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                             setCustomerName(baseName.trim() + " " + suffix);
                           }
                         }}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
                           customerSuffix === suffix
                             ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-transparent'
@@ -1938,7 +2110,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
 
                 {/* Customer ID - different based on customer type */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
                     {isStudent ? "Student ID" : "Customer ID"}
                   </label>
                   {isStudent ? (
@@ -1947,7 +2119,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                       type="text"
                       placeholder="Enter 6-digit Student ID"
                       maxLength={6}
-                      className={`w-full px-4 py-2.5 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2
+                      className={`w-full px-3 py-2 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2
                       ${idError ? 'focus:ring-red-500/20 bg-red-50' : 'focus:ring-emerald-500/20'}
                       transition-all text-sm`}
                       value={studentId}
@@ -1973,7 +2145,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                         <input
                           type="text"
                           placeholder="Will be generated when order is completed"
-                          className="w-full px-4 py-2.5 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2
+                          className="w-full px-3 py-2 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2
                           focus:ring-emerald-500/20 transition-all text-sm"
                           value={studentId}
                           readOnly
@@ -2015,14 +2187,75 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                     </p>
                   )}
                 </div>
+
+                {/* College and Program Selection - Only for students */}
+                {isStudent && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-1">
+                        College
+                      </label>
+                      <select
+                        className={`w-full px-3 py-2 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2
+                        ${programError ? 'focus:ring-red-500/20 bg-red-50' : 'focus:ring-emerald-500/20'}
+                        transition-all text-sm`}
+                        value={selectedCollege}
+                        onChange={(e) => {
+                          setSelectedCollege(e.target.value);
+                          setSelectedProgram(""); // Reset program when college changes
+                          if (programError) setProgramError("");
+                        }}
+                      >
+                        <option value="">Select College</option>
+                        {Object.keys(collegePrograms).map((college) => (
+                          <option key={college} value={college}>
+                            {college}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {selectedCollege && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-1">
+                          Program
+                        </label>
+                        <select
+                          className={`w-full px-3 py-2 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2
+                          ${programError ? 'focus:ring-red-500/20 bg-red-50' : 'focus:ring-emerald-500/20'}
+                          transition-all text-sm`}
+                          value={selectedProgram}
+                          onChange={(e) => {
+                            setSelectedProgram(e.target.value);
+                            if (programError) setProgramError("");
+                          }}
+                        >
+                          <option value="">Select Program</option>
+                          {collegePrograms[selectedCollege].map((program) => (
+                            <option key={program.code} value={program.code}>
+                              {program.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {programError && (
+                      <p className="mt-1 text-sm text-red-500 flex items-center gap-1.5">
+                        <FiAlertCircle size={14} />
+                        <span>{programError}</span>
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Actions */}
-              <div className="px-8 py-5 bg-gray-50 rounded-b-2xl border-t border-gray-100">
-                <div className="flex justify-end gap-3">
+              <div className="px-5 sm:px-6 md:px-8 py-4 bg-gray-50 rounded-b-2xl border-t border-gray-100">
+                <div className="flex justify-end gap-2">
                   <button
                     onClick={handleModalClose}
-                    className="px-4 py-2 text-gray-700 bg-white rounded-xl border border-gray-200
+                    className="px-3 py-2 text-gray-700 bg-white rounded-xl border border-gray-200
                              hover:bg-gray-50 transition-colors text-sm font-medium"
                   >
                     Cancel
@@ -2030,7 +2263,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                   <button
                     onClick={handleNameSubmit}
                     disabled={isValidating}
-                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2
+                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5
                       ${isValidating
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-500/30'
@@ -2072,51 +2305,84 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className="bg-white w-[400px] rounded-2xl shadow-2xl overflow-hidden"
+              className="bg-white w-full max-w-[420px] mx-4 rounded-2xl shadow-2xl overflow-hidden"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
             >
               {/* Header */}
-              <div className="px-6 py-5 bg-emerald-500 text-white">
+              <div className="px-5 py-4 bg-emerald-500 text-white">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-emerald-400/30 rounded-lg">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1.5 bg-emerald-400/30 rounded-lg">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                       </svg>
                     </div>
-                    <h3 className="font-semibold">Confirm Order</h3>
+                    <h3 className="font-semibold text-sm">Confirm Order</h3>
                   </div>
                   <button onClick={toggleConfirmOrderModal} className="p-1 hover:bg-emerald-400/30 rounded-lg transition-colors">
-                    <MdCancel size={20} />
+                    <MdCancel size={18} />
                   </button>
                 </div>
               </div>
 
               {/* Content */}
-              <div className="p-6 space-y-6">
+              <div className="p-5 space-y-4">
                 {/* Order Details */}
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center py-3 px-4 bg-emerald-50 rounded-xl">
+                <div className="space-y-3">
+                  {/* Order ID and Payment Method */}
+                  <div className="flex justify-between items-center py-2.5 px-3 bg-emerald-50 rounded-xl">
                     <span className="text-sm font-medium text-emerald-900">Order #{orderNumber}</span>
                     <span className="text-sm text-emerald-700">{paymentMode}</span>
                   </div>
 
+                  {/* Customer Information */}
+                  <div className="p-3 bg-blue-50 rounded-xl space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      <span className="text-sm font-medium text-blue-900">{customerName || "Guest"}</span>
+                    </div>
+
+                    {studentId && (
+                      <div className="flex items-center gap-2">
+                        <svg className="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                        </svg>
+                        <span className="text-xs text-blue-800">
+                          {isStudent ? `Student ID: ${studentId}` : `Customer ID: ${studentId}`}
+                        </span>
+                      </div>
+                    )}
+
+                    {isStudent && selectedCollege && selectedProgram && (
+                      <div className="flex items-center gap-2">
+                        <svg className="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                        <span className="text-xs text-blue-800">
+                          {selectedProgram} - {selectedCollege.split(" ").slice(0, 3).join(" ")}...
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Items List */}
-                  <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+                  <div className="space-y-2 max-h-40 overflow-y-auto pr-1.5">
                     {displayItems.map((item, index) => (
-                      <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                      <div key={index} className="flex items-center gap-2 p-2.5 bg-gray-50 rounded-xl">
                         {/* Display the image from the URL if available */}
                         <img
                           src={item.url}
                           alt={item.title}
-                          className="w-12 h-12 rounded-lg object-cover"
+                          className="w-10 h-10 rounded-lg object-cover"
                         />
                         <div className="flex-1">
                           <h4 className="text-sm font-medium text-gray-900">{item.title}</h4>
-                          <div className="flex items-center justify-between mt-1">
+                          <div className="flex items-center justify-between mt-0.5">
                             <span className="text-xs text-gray-500">
                               Qty: {quantities[index] || 1}
                             </span>
@@ -2130,19 +2396,19 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                   </div>
 
                   {/* Total */}
-                  <div className="flex justify-between items-center py-3 px-4 bg-emerald-50 rounded-xl">
+                  <div className="flex justify-between items-center py-2.5 px-3 bg-emerald-50 rounded-xl">
                     <span className="font-medium text-emerald-900">Total Amount</span>
                     <span className="text-lg font-bold text-emerald-700">₱{subtotal.toFixed(2)}</span>
                   </div>
 
                   {/* Date & Time */}
-                  <div className="flex gap-3 text-sm">
-                    <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg flex-1">
-                      <Calendar size={14} className="text-gray-400" />
+                  <div className="flex gap-2 text-xs">
+                    <div className="flex items-center gap-1.5 px-2.5 py-2 bg-gray-50 rounded-lg flex-1">
+                      <Calendar size={12} className="text-gray-400" />
                       <span className="text-gray-600">{formattedDate}</span>
                     </div>
-                    <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg flex-1">
-                      <Clock size={14} className="text-gray-400" />
+                    <div className="flex items-center gap-1.5 px-2.5 py-2 bg-gray-50 rounded-lg flex-1">
+                      <Clock size={12} className="text-gray-400" />
                       <span className="text-gray-600">{timeToday}</span>
                     </div>
                   </div>
@@ -2150,10 +2416,10 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
               </div>
 
               {/* Actions */}
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
+              <div className="px-5 py-3 bg-gray-50 border-t border-gray-100">
                 <button
                   onClick={handleConfirmOrder}
-                  className="w-full py-2.5 bg-emerald-500 text-white rounded-xl font-medium
+                  className="w-full py-2 bg-emerald-500 text-white rounded-xl font-medium
                            hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/30"
                 >
                   Confirm Order
@@ -2175,7 +2441,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className="bg-white w-[360px] rounded-2xl shadow-2xl overflow-hidden text-center p-6"
+              className="bg-white w-full max-w-[360px] mx-4 rounded-2xl shadow-2xl overflow-hidden text-center p-6"
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -2186,18 +2452,39 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                   <FaCheckCircle className="w-8 h-8 text-emerald-500" />
                 </div>
 
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                <h3 className="text-xl font-bold text-gray-900 mb-1">
                   Order Completed
                 </h3>
 
-                <p className="text-gray-500 mb-4">
-                  Your order has been successfully placed
-                </p>
+                <div className="text-sm text-gray-600 mb-2">
+                  Order #{orderNumber} has been successfully placed
+                </div>
+
+                <div className="text-center mb-4">
+                  <p className="text-gray-500">
+                    {customerName ? `Order for ${customerName}` : 'Your order'} has been successfully processed
+                  </p>
+                  {isStudent && studentId && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Student ID: {studentId}
+                    </p>
+                  )}
+                </div>
 
                 <div className="bg-emerald-50 px-4 py-2 rounded-lg mb-6">
-                  <span className="text-sm font-medium text-emerald-800">
-                    Order #{orderNumber - 1}
-                  </span>
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-sm font-medium text-emerald-800">
+                      Order #{orderNumber}
+                    </span>
+                    <span className="text-xs text-emerald-600">
+                      {formattedDate} • {paymentMode}
+                    </span>
+                  </div>
+                  {subtotal > 0 && totalQuantity > 0 ? (
+                    <div className="text-xs text-emerald-700 mt-1 text-center">
+                      Total: ₱{subtotal.toFixed(2)} • Items: {totalQuantity}
+                    </div>
+                  ) : null}
                 </div>
 
                 <button
@@ -2222,6 +2509,47 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
         totalAmount={subtotal}
         paymentMethod="Online"
       />
+
+      {/* Maximum Order Limit Modal */}
+      {showMaxOrderModal && (
+        <AnimatePresence>
+          <motion.div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setShowMaxOrderModal(false)}
+          >
+            <motion.div
+              className="bg-white w-full max-w-[360px] mx-4 rounded-2xl shadow-2xl overflow-hidden text-center p-6"
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.2 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-4">
+                  <svg className="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Maximum Order Limit</h3>
+                <p className="text-gray-600 text-center mb-6">
+                  We can only accommodate a maximum of 30 items per product in a single order.
+                </p>
+                <button
+                  onClick={() => setShowMaxOrderModal(false)}
+                  className="w-full py-2.5 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors shadow-lg shadow-amber-500/30"
+                >
+                  I Understand
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>
+      )}
     </>
   );
 };

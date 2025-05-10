@@ -13,7 +13,8 @@ import {
   query,
   where,
   getDocs,
-  limit
+  limit,
+  Timestamp
 } from "firebase/firestore";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
@@ -21,6 +22,7 @@ import { FaCheckCircle } from 'react-icons/fa';
 import { X, Edit2 } from 'lucide-react';
 import ClerkNameReminderModal from "../ClerkNameReminderModal";
 import { format } from 'date-fns';
+import { useAuth } from "../../../context/AuthContext";
 
 const InventoryDaily = () => {
   const [inventoryData, setInventoryData] = useState([]);
@@ -31,6 +33,44 @@ const InventoryDaily = () => {
   const [showClerkNameReminder, setShowClerkNameReminder] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const db = getFirestore(firebaseApp);
+  const { currentUser } = useAuth();
+
+  // Function to create inventory notifications for low or critical stock
+  const createInventoryNotification = async (itemName, stockLevel, endingInventory) => {
+    try {
+      if (!currentUser) {
+        console.error("Cannot create notification: No user is logged in");
+        return;
+      }
+
+      // Determine notification type based on stock level
+      const notificationType = stockLevel === 'Low' ? 'inventory_low' : 'inventory_critical';
+      const severity = stockLevel === 'Low' ? 'warning' : 'critical';
+
+      // Create a global notification
+      const globalNotification = {
+        type: 'inventory',
+        message: `${stockLevel} inventory alert: ${itemName} (${endingInventory}g remaining)`,
+        severity: severity,
+        route: '/inventory/daily-inventory',
+        module: 'inventory',
+        resolved: false, // Set to false so it appears as an unresolved notification
+        userId: 'global', // Special marker to indicate this is a global notification
+        createdBy: currentUser.uid, // Track who created it
+        createdByName: currentUser.email || 'Unknown user', // Include creator's name
+        read: false,
+        global: true, // Flag to indicate this is a global notification
+        createdAt: Timestamp.now(),
+        readBy: [] // Initialize empty array to track which users have read this notification
+      };
+
+      const notificationRef = await addDoc(collection(db, 'notifications'), globalNotification);
+      console.log(`Created inventory ${stockLevel} notification with ID: ${notificationRef.id} for ${itemName}`);
+
+    } catch (error) {
+      console.error('Error creating inventory notification:', error);
+    }
+  };
 
   // Add this validation function after your existing state declarations
   const validateInventoryChange = (item, newValues) => {
@@ -184,6 +224,12 @@ const InventoryDaily = () => {
 
           batch.update(docRef, newData);
           updates.push({ id: docSnapshot.id, ...newData });
+
+          // Check if stock is low or critical and create notification
+          if (currentStatus === 'Low' || (currentStatus === 'Moderate' && currentEndingInv < 3500)) {
+            // Create notification asynchronously (don't await)
+            createInventoryNotification(rawMats, currentStatus, currentEndingInv);
+          }
         }
 
         try {
@@ -212,7 +258,7 @@ const InventoryDaily = () => {
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [db, getStockStatus, saveInventoryToHistory]); // Include all dependencies
+  }, [db, getStockStatus, saveInventoryToHistory, createInventoryNotification]); // Include all dependencies
 
 
 
@@ -371,6 +417,18 @@ const InventoryDaily = () => {
           finalEndingInventory
         });
 
+        // Get the stock status
+        const stockStatus = getStockStatus(finalEndingInventory, item);
+
+        // Check if stock is low or critical and create notification
+        if (stockStatus === 'Low' || stockStatus === 'Moderate') {
+          // Only create notification if the stock level has changed or is critically low
+          if (stockStatus !== item.stock_status || finalEndingInventory < 1000) {
+            // Create notification asynchronously (don't await)
+            createInventoryNotification(item.raw_mats, stockStatus, finalEndingInventory);
+          }
+        }
+
         return {
           begin_inv: beginningInventory,
           ending_inv: finalEndingInventory, // Always set a value for ending inventory
@@ -378,7 +436,7 @@ const InventoryDaily = () => {
           used,
           waste,
           last_updated: timestamp,
-          stock_status: getStockStatus(finalEndingInventory, item)
+          stock_status: stockStatus
         };
       };
 
@@ -482,6 +540,32 @@ const InventoryDaily = () => {
       // Save inventory data to history collection
       await saveInventoryToHistory(updates);
 
+      // Create an inventory update notification
+      if (currentUser) {
+        const globalNotification = {
+          type: 'inventory',
+          message: `Inventory has been updated by ${clerkName}`,
+          severity: 'normal',
+          route: '/inventory/daily-inventory',
+          module: 'inventory',
+          resolved: false,
+          userId: 'global',
+          createdBy: currentUser.uid,
+          createdByName: currentUser.email || 'Unknown user',
+          read: false,
+          global: true,
+          createdAt: Timestamp.now(),
+          readBy: []
+        };
+
+        try {
+          const notificationRef = await addDoc(collection(db, 'notifications'), globalNotification);
+          console.log(`Created inventory update notification with ID: ${notificationRef.id}`);
+        } catch (error) {
+          console.error('Error creating inventory update notification:', error);
+        }
+      }
+
       // Show success modal
       setShowSuccessModal(true);
 
@@ -496,7 +580,7 @@ const InventoryDaily = () => {
     } finally {
       setLoading(false);
     }
-  }, [clerkName, editedItems, inventoryData, db, getStockStatus, saveInventoryToHistory]);
+  }, [clerkName, editedItems, inventoryData, db, getStockStatus, saveInventoryToHistory, createInventoryNotification]);
 
   // Add this helper function to check if an item has been edited
   const hasEdits = (itemId, editedItems) => {

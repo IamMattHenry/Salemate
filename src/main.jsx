@@ -10,6 +10,7 @@ import { SidebarProvider } from "./context/SidebarContext";
 import { AuthProvider } from "./context/AuthContext";
 import { LoadingProvider } from "./context/LoadingContext";
 import { AnalyticsProvider } from "./context/AnalyticsContext";
+import { NotificationProvider } from "./context/NotificationContext";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import InitialPinVerification from "./components/Auth/InitialPinVerification";
 import WelcomeBackModal from "./components/Auth/WelcomeBackModal";
@@ -48,11 +49,12 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <Router>
     <SidebarProvider>
       <AuthProvider>
-        <LoadingProvider>
-          <InitialPinVerification />
-          <WelcomeBackModal />
-          <EmailVerificationCheck />
-          <Routes>
+        <NotificationProvider>
+          <LoadingProvider>
+            <InitialPinVerification />
+            <WelcomeBackModal />
+            <EmailVerificationCheck />
+            <Routes>
           <Route path="/" element={<HomeLayout />}>
             <Route index element={<Home />} />
             <Route path="signin" element={<SignIn />} />
@@ -129,7 +131,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             </ProtectedRoute>
           } />
         </Routes>
-        </LoadingProvider>
+          </LoadingProvider>
+        </NotificationProvider>
       </AuthProvider>
     </SidebarProvider>
   </Router>
