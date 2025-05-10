@@ -1819,16 +1819,16 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
         <div className="p-6 border-b border-gray-100 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-amber-500 bg-clip-text text-transparent">
+              <span className="text-[1.45rem] font-semibold font-lato">
                 Order #{orderNumber}
               </span>
             </div>
             <div className="flex items-center gap-3 text-sm">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg">
+              <div className="flex items-center gap-2 px-3 py-1.5  rounded-lg">
                 <Clock size={14} />
                 <span>{timeToday}</span>
               </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg">
+              <div className="flex items-center gap-2 px-3 py-1.5  rounded-lg">
                 <Calendar size={14} />
                 <span>{formattedDate}</span>
               </div>
@@ -1837,7 +1837,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
 
           {/* Payment Mode Section */}
           <div className="mt-6">
-            <h4 className="text-sm font-medium text-gray-600 mb-3">Mode of Payment</h4>
+            <h4 className="text-base font-medium mb-3">Mode of Payment</h4>
             <div className="flex items-center justify-between">
               <div className="flex gap-3">
                 <button
@@ -1845,7 +1845,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                   className={`px-6 py-2 rounded-xl font-medium transition-all ${
                     paymentMode === "Cash"
                       ? "bg-amber-500 text-white shadow-md shadow-amber-500/30"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      : "bg-gray-100 hover:bg-gray-200"
                   }`}
                 >
                   Cash
@@ -1855,7 +1855,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                   className={`px-6 py-2 rounded-xl font-medium transition-all ${
                     paymentMode === "Online"
                       ? "bg-amber-500 text-white shadow-md shadow-amber-500/30"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      : "bg-gray-100 hover:bg-gray-200"
                   }`}
                 >
                   Online
@@ -1872,7 +1872,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
         </div>
 
         {/* Order Items Section - Scrollable with fixed height */}
-        <div className="flex-1 overflow-y-auto p-6 h-[calc(100vh-350px)]">
+        <div className="flex-1 overflow-y-auto p-6 h-[calc(100vh-350px)] font-latrue">
           {displayItems.length > 0 ? (
             <div className="space-y-4">
               {displayItems.map((item, index) => (
@@ -1967,7 +1967,7 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
         </div>
 
         {/* Footer Section - Fixed height */}
-        <div className="border-t border-gray-100 flex-shrink-0">
+        <div className="border-t border-gray-100 flex-shrink-0 font-latrue">
           <div className="p-6 bg-gray-50">
             <div className="flex justify-between items-center mb-3">
               <span className="text-gray-600">Number of Products</span>

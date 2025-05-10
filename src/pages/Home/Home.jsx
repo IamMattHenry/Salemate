@@ -18,9 +18,9 @@ function Home() {
 
   return (
     <>
-      <section className="w-full">
-        <div className="heading-quote min-w-auto md:w-full flex justify-center mx-auto flex-col text-center mt-8 space-y-4">
-          <div className="overflow-x-visible">
+      <section className="w-full overflow-hidden">
+        <div className="heading-quote min-w-auto md:w-full flex justify-center mx-auto flex-col text-center mt-8 space-y-4 overflow-hidden">
+          <div className="overflow-hidden">
             <motion.h1
               className="font-lato font-bold text-3xl md:text-[2.6rem] text-black"
               initial={{
@@ -98,7 +98,7 @@ function Home() {
             </button>
           </motion.div>
         </div>
-        <div className="flex flex-col md:flex-row justify-center gap-4 space-x-8 mt-10">
+        <div className="flex flex-col md:flex-row justify-center gap-4 space-x-8 mt-10 overflow-hidden">
           {/* First Image */}
           <motion.div
             className="flex flex-col items-center"
@@ -125,6 +125,7 @@ function Home() {
 
           {/* Second Image */}
           <motion.div
+            layout="position"
             className="flex flex-col items-center"
             initial="initial"
             animate="animate"
@@ -149,6 +150,7 @@ function Home() {
 
           {/* Third Image */}
           <motion.div
+            layout="position"
             className="flex flex-col items-center"
             initial="initial"
             animate="animate"
@@ -171,7 +173,7 @@ function Home() {
             </p>
           </motion.div>
         </div>
-        <div className="h-20 bg-yellowsm/15 shadow-lg flex items-center justify-center w-full mt-10">
+        <div className="h-20 bg-yellowsm/15 shadow-lg flex items-center justify-center w-full mt-10 overflow-hidden">
           <div className="flex space-x-1">
             <motion.h1
               className="font-lato text-4xl font-light"
@@ -256,10 +258,11 @@ function Home() {
           </div>
         </div>
       </section>
-      <div className="w-full px-4 md:px-10 xl:px-15">
+      <div className="w-full px-4 md:px-10 xl:px-15 overflow-hidden">
         <div className="space-y-20">
           {/* First Section */}
           <motion.div
+            layout="position"
             className="flex flex-col xl:flex-row items-center gap-10 pt-14"
             initial={{ translateX: -100, opacity: 0 }}
             whileInView={{ translateX: 0, opacity: 1 }}
@@ -292,6 +295,7 @@ function Home() {
 
           {/* Second Section */}
           <motion.div
+            layout="position"
             className="flex flex-col-reverse xl:flex-row items-center gap-10"
             initial={{ translateX: 100, opacity: 0 }}
             whileInView={{ translateX: 0, opacity: 1 }}
@@ -323,6 +327,7 @@ function Home() {
 
           {/* Third Section */}
           <motion.div
+            layout="position"
             className="flex flex-col xl:flex-row items-center gap-10"
             initial={{ translateX: -100, opacity: 0 }}
             whileInView={{ translateX: 0, opacity: 1 }}
@@ -354,6 +359,7 @@ function Home() {
 
           {/* Fourth Section */}
           <motion.div
+            layout="position"
             className="flex flex-col-reverse xl:flex-row items-center gap-10"
             initial={{ translateX: 100, opacity: 0 }}
             whileInView={{ translateX: 0, opacity: 1 }}
@@ -387,6 +393,7 @@ function Home() {
 
           {/* Fifth Section */}
           <motion.div
+            layout="position"
             className="flex flex-col xl:flex-row items-center gap-10"
             initial={{ translateX: -100, opacity: 0 }}
             whileInView={{ translateX: 0, opacity: 1 }}

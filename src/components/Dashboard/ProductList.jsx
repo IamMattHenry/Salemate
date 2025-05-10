@@ -249,13 +249,13 @@ const ProductList = ({ products, addToOrderList, updateProducts, loading = false
   }) : [];
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full font-latrue">
       {/* Header Section - Fixed height */}
-      <div className="flex justify-between items-center mb-6 flex-shrink-0">
-        <h2 className="text-2xl font-semibold bg-gradient-to-r from-amber-600 to-amber-500 bg-clip-text text-transparent">
+      <div className="flex justify-between items-center mb-4 flex-shrink-0">
+        <h2 className="text-[1.6rem] font-semibold font-lato uppercase">
           Menu Items
         </h2>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 font-latrue">
           {/* Search Bar */}
           <div className="relative">
             <input
@@ -276,7 +276,7 @@ const ProductList = ({ products, addToOrderList, updateProducts, loading = false
                      hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/30"
           >
             <IoIosAdd className="text-xl" />
-            <span>Add Item</span>
+            <span className="font-medium">Add Item</span>
           </button>
         </div>
       </div>
@@ -294,14 +294,13 @@ const ProductList = ({ products, addToOrderList, updateProducts, loading = false
             <p className="text-sm">Add a new product to get started</p>
           </div>
         ) : (
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeCategory}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[200px]"
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-48">
+            {filteredProducts.map((product) => (
+            <div
+              key={product.id}
+              onClick={() => handleAddToOrder(product)}
+              className="group bg-white rounded-2xl border border-gray-100 overflow-hidden
+                       hover:shadow-lg transition-all duration-300 relative h-[280px] flex flex-col"
             >
               {filteredProducts.map((product, index) => (
               <motion.div
@@ -323,7 +322,7 @@ const ProductList = ({ products, addToOrderList, updateProducts, loading = false
                          relative h-[280px] flex flex-col"
               >
               {/* Product Image - Fixed height */}
-              <div className="h-[140px] overflow-hidden flex-shrink-0">
+              <div className="h-[125px] overflow-hidden flex-shrink-0">
                 <img
                   src={product.url}
                   alt={product.title}
@@ -336,11 +335,11 @@ const ProductList = ({ products, addToOrderList, updateProducts, loading = false
               </div>
 
               {/* Product Info - Fixed height */}
-              <div className="p-6 flex-1 flex flex-col justify-between">
-                <div className="flex justify-between items-start mb-2">
-                  <div className="overflow-hidden">
+              <div className="p-4 flex-1 flex flex-col justify-between">
+                <div className="flex justify-between items-start">
+                  <div className="overflow-visible">
                     <h3 className="font-bold text-gray-900 text-lg mb-1 truncate">{product.title}</h3>
-                    <p className="text-gray-500 text-sm line-clamp-2">{product.description}</p>
+                    <p className="text-gray-500 text-sm text-nowrap">{product.description}</p>
                   </div>
                   <button
                     onClick={(e) => {
@@ -355,8 +354,8 @@ const ProductList = ({ products, addToOrderList, updateProducts, loading = false
                 </div>
 
                 <div className="flex items-center justify-between mt-auto">
-                  <span className="text-lg font-bold text-amber-600">₱{product.price}</span>
-                  <span className="px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-sm font-medium">
+                  <span className="text-lg font-bold">₱{product.price}</span>
+                  <span className="px-5 py-1 bg-amber-200 rounded-xl text-sm font-medium">
                     {product.category}
                   </span>
                 </div>
