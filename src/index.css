@@ -37,8 +37,8 @@
 
 .product-scroll::-webkit-scrollbar-thumb {
   background-color: #888;
-  border-radius: 10px;
-  border: 2px solid transparent;
+  border-radius: 25px;
+  border: 0.5px solid transparent;
   background-clip: content-box;
 }
 

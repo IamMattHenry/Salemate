@@ -66,18 +66,18 @@ const DashboardPanel = () => {
   };
 
   return (
-    <div className="grid grid-cols-[1.5fr_1fr] gap-6 p-6 h-[calc(100vh-80px)]">
+    <div className="grid grid-cols-[1.5fr_1fr] gap-6 p-6 h-[calc(100vh-65px)]">
       {/* Menu Panel */}
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col h-full">
         {/* Header */}
-        <div className="p-6 border-b border-gray-100 flex-shrink-0">
-          <h3 className="text-2xl font-semibold bg-gradient-to-r from-amber-600 to-amber-500 bg-clip-text text-transparent">
+        <div className="pt-6 pl-6 pb-2 flex-shrink-0">
+          <h3 className="text-[1.6rem] font-semibold font-lato uppercase">
             Menu Categories
           </h3>
         </div>
 
         {/* Categories Section */}
-        <div className="p-6 pt-4 border-b border-gray-100 bg-gradient-to-b from-amber-50/30 flex-shrink-0">
+        <div className="flex-shrink-0">
           <DashboardCategory setSelectedCategory={setSelectedCategory} />
         </div>
 
