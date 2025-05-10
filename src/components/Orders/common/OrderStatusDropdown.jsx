@@ -15,14 +15,11 @@ const OrderStatusDropdown = ({
   const containerRef = useRef(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [pendingStatus, setPendingStatus] = useState(null);
-  const { userProfile, isAdmin } = useAuth();
+  const { userProfile } = useAuth();
 
   // Check if user has permission to change order status
-  // Marketing department and Admin users can change order status
-  const canChangeOrderStatus =
-    (userProfile && userProfile.department === "Marketing") ||
-    (userProfile && userProfile.department === "Admin") ||
-    isAdmin();
+  // Only Marketing department can change order status
+  const canChangeOrderStatus = userProfile && userProfile.department === "Marketing";
 
   useEffect(() => {
     if (isOpen && dropdownRef.current && containerRef.current) {

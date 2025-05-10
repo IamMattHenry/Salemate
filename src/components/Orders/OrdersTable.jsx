@@ -13,7 +13,6 @@ import {
 import UseModal from "../../hooks/Modal/UseModal";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoMdInformationCircle } from "react-icons/io";
-import { FiAlertTriangle } from "react-icons/fi";
 
 const OrdersTable = () => {
   const { searchQuery } = useOutletContext();
@@ -119,17 +118,6 @@ const OrdersTable = () => {
             orderName = data.order_name === "Meal" ? "Katsu" : data.order_name;
           }
 
-          // Check if there are any old preparing orders
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          const orderDay = new Date(orderDate);
-          orderDay.setHours(0, 0, 0, 0);
-
-          // Calculate days difference
-          const diffTime = Math.abs(today - orderDay);
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          const isOldPreparingOrder = data.order_status === "Preparing" && diffDays > 0;
-
           return {
             id: doc.id,
             ...data,
@@ -158,16 +146,12 @@ const OrdersTable = () => {
             college: data.college || null, // Include college information
             program_code: data.program_code || null, // Include program code
             program_full: data.program_full || null, // Include full program name
-            daysOld: diffDays, // Add days since order was created
-            isOldPreparingOrder: isOldPreparingOrder // Flag if order is an old preparing order
           };
         })
         .filter((order) => {
           const orderDate = new Date(order.order_date.seconds * 1000);
           orderDate.setHours(0, 0, 0, 0);
-
-          // Include today's orders and any old "Preparing" orders
-          return orderDate.getTime() === today.getTime() || order.isOldPreparingOrder;
+          return orderDate.getTime() === today.getTime();
         });
 
       // Sort orders based on current sort preference
@@ -388,21 +372,6 @@ const OrdersTable = () => {
         </div>
       )}
 
-      {/* Notification for old preparing orders */}
-      {orders.some(order => order.isOldPreparingOrder) && (
-        <div className="p-4 mb-6 text-amber-700 bg-amber-50 rounded-xl border border-amber-200 flex items-center">
-          <FiAlertTriangle className="w-5 h-5 mr-2 text-amber-500" />
-          <div>
-            <p className="font-medium">Attention: You have preparing orders from previous days</p>
-            <p className="text-sm mt-1">These orders need to be updated to "Delivered" or "Cancelled" status.
-              <a href="/orders/all-preparing-transactions" className="ml-1 text-amber-600 hover:text-amber-800 underline font-medium">
-                View all preparing orders
-              </a>
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* Modern Header */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-[1.6rem] font-semibold font-lato uppercase">
@@ -471,9 +440,7 @@ const OrdersTable = () => {
                   <div
                     key={order.id}
                     onClick={() => handleRowClick(order)}
-                    className={`grid grid-cols-6 hover:bg-amber-50/50 transition-colors cursor-pointer group ${
-                      order.isOldPreparingOrder ? 'bg-red-50/30 border-l-4 border-amber-400' : ''
-                    }`}
+                    className="grid grid-cols-6 hover:bg-amber-50/50 transition-colors cursor-pointer group"
                   >
                     <div className="flex justify-center items-center py-4">
                       <div className="font-medium text-center text-base text-gray-900">
@@ -520,14 +487,7 @@ const OrdersTable = () => {
                         `}
                         >
                           <span className="h-2 w-2 rounded-full bg-current"></span>
-                          <div className="flex items-center">
-                            {order.order_status}
-                            {order.isOldPreparingOrder && (
-                              <span className="ml-1" title={`${order.daysOld} day(s) old`}>
-                                <FiAlertTriangle className="text-amber-600" />
-                              </span>
-                            )}
-                          </div>
+                          {order.order_status}
                           <OrderStatusDropdown
                             currentStatus={order.order_status}
                             onStatusChange={(newStatus) =>

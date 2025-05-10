@@ -9,14 +9,6 @@ const AuthContext = createContext();
 
 // Define department access permissions
 const departmentAccess = {
-  Admin: {
-    dashboard: true,
-    orders: true,
-    analytics: true,
-    inventory: true,
-    customer: true,
-    admin: true
-  },
   Production: {
     dashboard: true,
     orders: true,
@@ -265,9 +257,6 @@ export const AuthProvider = ({ children }) => {
 
     // For non-admin users, check department permissions
     if (!userProfile || !userProfile.department) return false;
-
-    // If the user's department is set to "Admin", they have full access
-    if (userProfile.department === "Admin") return true;
 
     const department = userProfile.department;
     if (!departmentAccess[department]) return false;

@@ -7,7 +7,6 @@ const OrdersNav = ({ onSearch }) => {
     { path: "/orders/all-transactions", label: "All Transactions" },
     { path: "/orders/completed-transactions", label: "Completed" },
     { path: "/orders/pending-transactions", label: "Pending" },
-    { path: "/orders/all-preparing-transactions", label: "All Preparing" },
     { path: "/orders/cancelled-transactions", label: "Cancelled" },
     { path: "/orders/saved-history", label: "Saved History" },
   ];

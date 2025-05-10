@@ -15,7 +15,7 @@ import { FaUserShield, FaEye, FaEyeSlash } from "react-icons/fa";
 import AdminNav from "../AdminNav";
 import firebaseApp from "../../../firebaseConfig";
 import { useAuth } from "../../../context/AuthContext";
-import { motion as m, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 
 const UserAccounts = () => {
@@ -301,7 +301,7 @@ const UserAccounts = () => {
     }
 
     // Check if department is one of the allowed values
-    const allowedDepartments = ["Admin", "Production", "Financial", "Marketing"];
+    const allowedDepartments = ["Production", "Financial", "Marketing"];
     if (!allowedDepartments.includes(newDepartment)) {
       setActionResult({
         success: false,
@@ -556,7 +556,7 @@ const UserAccounts = () => {
   };
 
   return (
-    <m.div
+    <motion.div
       className="w-full"
       initial="hidden"
       animate="visible"
@@ -564,49 +564,34 @@ const UserAccounts = () => {
     >
       <AdminNav onSearch={handleSearch} />
 
-
+      {/* Header - Table text removed */}
+      <motion.div
+        className="flex justify-between items-center mb-6"
+        variants={itemVariants}
+      >
+      </motion.div>
 
       {/* Users Section */}
-      <m.div
-        className="bg-gradient-to-b from-white to-amber-50/50 backdrop-blur-sm rounded-2xl shadow-lg p-5 md:p-6 border border-amber-100/30 mt-4"
+      <motion.div
+        className="bg-whitesm/90 backdrop-blur-sm rounded-xl shadow-md p-6 border border-yellowsm/10"
         style={{ overflow: 'hidden' }}
         variants={itemVariants}
       >
-        {/* Header with search and controls */}
-        <m.div
-          className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4"
+        <motion.div
+          className="flex justify-between items-center mb-6"
           variants={itemVariants}
         >
-          <div className="flex items-center">
-            <div className="bg-amber-100/50 p-2.5 rounded-xl mr-3">
-              <FaUserShield className="text-amber-500 text-xl" />
-            </div>
-            <h2 className="text-xl font-semibold font-league text-gray-800">Salemate</h2>
-          </div>
-
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-3 w-full md:w-auto">
-            {/* Search */}
-            <div className="relative group w-full md:w-auto">
-              <input
-                type="text"
-                placeholder="Search by email, ID, or department..."
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pl-10 pr-4 py-2.5 w-full md:w-64 bg-white border border-amber-200/50 rounded-xl shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-amber-300/50 transition-all duration-300 hover:shadow-md"
-              />
-              <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-400 group-hover:text-amber-500 transition-colors duration-300" />
-            </div>
-
-            {/* Auto-refresh toggle */}
-            <div className="flex items-center bg-white shadow-sm px-4 py-2 rounded-xl border border-amber-100/50 w-full md:w-auto">
-              <div className="text-sm text-gray-700 flex items-center mr-3">
-                <span className="mr-2 whitespace-nowrap">Auto-refresh</span>
+          <h2 className="text-xl font-semibold font-league text-gray-800">Salemate</h2>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center bg-white shadow-sm px-3 py-1.5 rounded-lg border border-gray-100">
+              <div className="text-sm text-gray-600 flex items-center mr-3">
+                <span className="mr-2">Auto-refresh</span>
                 <button
                   onClick={toggleAutoRefresh}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${autoRefresh ? 'bg-amber-500' : 'bg-gray-200'}`}
+                  className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${autoRefresh ? 'bg-yellow-500' : 'bg-gray-200'}`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${autoRefresh ? 'translate-x-5' : 'translate-x-1'}`}
+                    className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform ${autoRefresh ? 'translate-x-5' : 'translate-x-1'}`}
                   />
                 </button>
               </div>
@@ -615,7 +600,7 @@ const UserAccounts = () => {
                 <select
                   value={refreshInterval}
                   onChange={(e) => setRefreshInterval(Number(e.target.value))}
-                  className="text-xs bg-amber-50 border border-amber-100/50 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-300/50"
+                  className="text-xs bg-gray-50 border border-gray-100 rounded-md px-2 py-1 focus:outline-none"
                 >
                   <option value={10}>10s</option>
                   <option value={30}>30s</option>
@@ -625,65 +610,79 @@ const UserAccounts = () => {
               )}
             </div>
 
-            {/* Last updated indicator */}
-            <div className="text-xs text-gray-600 bg-white shadow-sm px-4 py-2.5 rounded-xl border border-amber-100/50 flex items-center w-full md:w-auto">
+            <div className="text-xs text-gray-500 bg-white shadow-sm px-3 py-1.5 rounded-lg border border-gray-100">
               {isRefreshing ? (
                 <span className="flex items-center">
-                  <FiRefreshCw className="animate-spin mr-2 text-amber-500" />
-                  <span>Refreshing...</span>
+                  <FiRefreshCw className="animate-spin mr-1 text-yellow-500" />
+                  Refreshing...
                 </span>
               ) : (
-                <span className="flex items-center">
-                  <span className="w-2 h-2 rounded-full bg-green-400 mr-2 animate-pulse"></span>
+                <span>
                   Last updated: {format(lastRefreshed, "h:mm:ss a")}
                 </span>
               )}
             </div>
           </div>
-        </m.div>
+        </motion.div>
 
-        {/* Users Table with responsive design */}
-        <m.div
-          className={`relative transition-all duration-300 rounded-xl border border-amber-200/30 bg-white shadow-md overflow-hidden ${showRefreshIndicator ? 'bg-amber-50/30' : ''}`}
-          style={{ minHeight: '400px' }}
+        {/* Search */}
+        <motion.div
+          className="flex flex-wrap gap-4 mb-6 items-center"
           variants={itemVariants}
         >
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gradient-to-r from-amber-50 to-amber-100/50">
-                  <th className="text-left py-4 px-4 text-amber-800 font-semibold text-sm border-b border-amber-100/50 whitespace-nowrap">User ID</th>
-                  <th className="text-left py-4 px-4 text-amber-800 font-semibold text-sm border-b border-amber-100/50 whitespace-nowrap">Email</th>
-                  <th className="text-left py-4 px-4 text-amber-800 font-semibold text-sm border-b border-amber-100/50 whitespace-nowrap">Department</th>
-                  <th className="text-left py-4 px-4 text-amber-800 font-semibold text-sm border-b border-amber-100/50 whitespace-nowrap hidden md:table-cell">Date Created</th>
-                  <th className="text-left py-4 px-4 text-amber-800 font-semibold text-sm border-b border-amber-100/50 whitespace-nowrap hidden md:table-cell">Signed In</th>
-                  <th className="text-left py-4 px-4 text-amber-800 font-semibold text-sm border-b border-amber-100/50 whitespace-nowrap">PIN</th>
-                  <th className="text-center py-4 px-4 text-amber-800 font-semibold text-sm border-b border-amber-100/50 whitespace-nowrap">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="min-h-[300px]">
+          <div className="relative ml-auto group">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-9 pr-4 py-2.5 w-64 bg-white/80 border border-yellowsm/20 rounded-lg shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-yellowsm/50 transition-all duration-300 hover:shadow-md hover:border-yellowsm/30"
+            />
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-hover:text-yellowsm transition-colors duration-300" />
+          </div>
+        </motion.div>
+
+        {/* Users Table */}
+        <motion.div
+          className={`relative transition-all duration-300 rounded-xl border border-yellowsm/20 bg-white/90 backdrop-blur-sm shadow-md ${showRefreshIndicator ? 'bg-yellowsm/5' : ''}`}
+          style={{ minHeight: '400px', overflowX: 'hidden' }}
+          variants={itemVariants}
+        >
+          <table className="w-full table-fixed">
+            <thead>
+              <tr className="bg-yellowsm/10">
+                <th className="text-left py-3.5 px-4 text-gray-700 font-semibold text-sm border-b border-yellowsm/20 w-[10%] font-league">User ID</th>
+                <th className="text-left py-3.5 px-4 text-gray-700 font-semibold text-sm border-b border-yellowsm/20 w-[18%] font-league">Email</th>
+                <th className="text-left py-3.5 px-4 text-gray-700 font-semibold text-sm border-b border-yellowsm/20 w-[12%] font-league">Department</th>
+                <th className="text-left py-3.5 px-4 text-gray-700 font-semibold text-sm border-b border-yellowsm/20 w-[12%] font-league">Date Created</th>
+                <th className="text-left py-3.5 px-4 text-gray-700 font-semibold text-sm border-b border-yellowsm/20 w-[12%] font-league">Signed In</th>
+                <th className="text-left py-3.5 px-4 text-gray-700 font-semibold text-sm border-b border-yellowsm/20 w-[12%] font-league">PIN</th>
+                <th className="text-center py-3.5 px-4 text-gray-700 font-semibold text-sm border-b border-yellowsm/20 w-[24%] font-league">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="min-h-[300px]">
               {loading ? (
                 <tr style={{ height: '300px' }}>
                   <td colSpan="7" className="text-center">
-                    <m.div
+                    <motion.div
                       className="flex flex-col items-center justify-center"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <m.div
+                      <motion.div
                         className="h-12 w-12 rounded-full border-3 border-yellowsm border-t-transparent"
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                       />
                       <p className="text-sm text-gray-600 font-medium mt-4 font-latrue">Loading users...</p>
-                    </m.div>
+                    </motion.div>
                   </td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr style={{ height: '300px' }}>
                   <td colSpan="7" className="text-center">
-                    <m.div
+                    <motion.div
                       className="bg-yellowsm/5 rounded-xl p-8 inline-block border border-yellowsm/20 shadow-sm"
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
@@ -693,7 +692,7 @@ const UserAccounts = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                       </svg>
                       <p className="text-gray-600 font-medium font-latrue">No users found</p>
-                    </m.div>
+                    </motion.div>
                   </td>
                 </tr>
               ) : (
@@ -701,9 +700,9 @@ const UserAccounts = () => {
                 filteredUsers
                   .slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)
                   .map((user, index) => (
-                  <m.tr
+                  <motion.tr
                     key={user.id}
-                    className={`group border-b border-amber-100/30 transition-all duration-300 ${user.disabled ? 'bg-red-50/40' : ''}`}
+                    className={`group border-b border-yellowsm/10 transition-all duration-300 ${user.disabled ? 'bg-red-50/30' : ''}`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{
@@ -714,10 +713,10 @@ const UserAccounts = () => {
                       damping: 15
                     }}
                     whileHover={{
-                      backgroundColor: user.disabled ? "rgba(254, 202, 202, 0.4)" : "rgba(251, 191, 36, 0.08)",
+                      backgroundColor: user.disabled ? "rgba(254, 202, 202, 0.4)" : "rgba(255, 207, 80, 0.15)",
                       boxShadow: user.disabled
                         ? "inset 0 0 15px rgba(248, 113, 113, 0.2)"
-                        : "inset 0 0 15px rgba(251, 191, 36, 0.15)",
+                        : "inset 0 0 15px rgba(255, 207, 80, 0.3)",
                       transition: {
                         duration: 0.2,
                         type: "spring",
@@ -725,41 +724,31 @@ const UserAccounts = () => {
                         damping: 20
                       }
                     }}
+                    variants={{
+                      hover: {
+                        filter: "brightness(1.05)",
+                      }
+                    }}
                   >
-                    {/* User ID */}
-                    <td className="py-4 px-4 transition-all duration-300 group-hover:text-gray-800">
-                      <span className={`text-xs font-medium rounded-lg px-3 py-1.5 shadow-sm inline-block transition-all duration-200 ${
+                    <td className="py-3 px-4 transition-all duration-300 group-hover:text-gray-800">
+                      <span className={`text-xs font-medium rounded-md px-2.5 py-1.5 shadow-sm inline-block transition-all duration-200 ${
                         user.disabled
                           ? 'text-gray-500 bg-gray-50 border border-gray-200'
-                          : 'text-amber-700 bg-amber-50 border border-amber-200/50 group-hover:bg-amber-100/70 group-hover:border-amber-300/50 group-hover:shadow-md'
+                          : 'text-gray-600 bg-yellowsm/10 border border-yellowsm/20 hover:bg-yellowsm/20 group-hover:bg-yellowsm/30 group-hover:border-yellowsm/40 group-hover:shadow-md'
                       }`}>
                         {user.formattedUserId}
                       </span>
                     </td>
-
-                    {/* Email */}
-                    <td className="py-4 px-4 transition-all duration-300 group-hover:text-gray-800">
+                    <td className="py-3 px-4 transition-all duration-300 group-hover:text-gray-800">
                       <div className="flex items-center">
-                        <a
-                          href={`mailto:${user.email}`}
-                          className={`text-blue-600 hover:text-amber-600 group-hover:text-amber-600 hover:underline transition-all duration-200 group-hover:font-medium ${user.disabled ? 'text-opacity-70' : ''}`}
-                        >
+                        <a href={`mailto:${user.email}`} className={`text-blue-600 hover:text-yellow-600 group-hover:text-yellowsm hover:underline transition-all duration-200 group-hover:font-medium ${user.disabled ? 'text-opacity-70' : ''}`}>
                           {user.email}
                         </a>
                       </div>
                     </td>
-
-                    {/* Department */}
-                    <td className="py-4 px-4 transition-all duration-300 group-hover:text-gray-800 group-hover:font-medium">
+                    <td className="py-3 px-4 transition-all duration-300 group-hover:text-gray-800 group-hover:font-medium">
                       <div className="flex items-center">
-                        <span className={`px-2.5 py-1 rounded-md text-xs font-medium ${
-                          user.disabled ? 'line-through text-gray-500 bg-gray-50' :
-                          user.department === 'Admin' ? 'text-purple-700 bg-purple-50 border border-purple-100' :
-                          user.department === 'Marketing' ? 'text-blue-700 bg-blue-50 border border-blue-100' :
-                          user.department === 'Financial' ? 'text-green-700 bg-green-50 border border-green-100' :
-                          user.department === 'Production' ? 'text-amber-700 bg-amber-50 border border-amber-100' :
-                          'text-gray-700 bg-gray-50 border border-gray-100'
-                        }`}>
+                        <span className={user.disabled ? 'line-through text-gray-500' : ''}>
                           {user.department || 'N/A'}
                         </span>
                         {user.disabled && (
@@ -769,25 +758,19 @@ const UserAccounts = () => {
                         )}
                       </div>
                     </td>
-
-                    {/* Date Created - Hidden on mobile */}
-                    <td className="py-4 px-4 transition-all duration-300 group-hover:text-gray-800 group-hover:font-medium hidden md:table-cell">
-                      <span className={`text-xs ${user.disabled ? 'text-gray-500' : 'text-gray-600'}`}>
+                    <td className="py-3 px-4 transition-all duration-300 group-hover:text-gray-800 group-hover:font-medium">
+                      <span className={user.disabled ? 'text-gray-500' : ''}>
                         {formatDate(user.createdAt)}
                       </span>
                     </td>
-
-                    {/* Signed In - Hidden on mobile */}
-                    <td className="py-4 px-4 transition-all duration-300 group-hover:text-gray-800 group-hover:font-medium hidden md:table-cell">
-                      <span className={`text-xs ${user.disabled ? 'text-gray-500' : 'text-gray-600'}`}>
+                    <td className="py-3 px-4 transition-all duration-300 group-hover:text-gray-800 group-hover:font-medium">
+                      <span className={user.disabled ? 'text-gray-500' : ''}>
                         {formatDate(user.lastSignIn)}
                       </span>
                     </td>
-
-                    {/* PIN */}
-                    <td className="py-4 px-4 transition-all duration-300 group-hover:text-gray-800">
+                    <td className="py-3 px-4 transition-all duration-300 group-hover:text-gray-800">
                       <div className="flex items-center">
-                        <span className={`text-sm font-medium mr-2 px-3 py-1.5 rounded-lg transition-all duration-200 ${
+                        <span className={`text-sm font-medium mr-2 px-2.5 py-1 rounded-md transition-all duration-200 ${
                           user.disabled
                             ? 'bg-gray-50 text-gray-400 border border-gray-200'
                             : user.pin
@@ -796,9 +779,9 @@ const UserAccounts = () => {
                         }`}>
                           {formatPin(user.pin, user.id)}
                         </span>
-                        <m.button
+                        <motion.button
                           onClick={() => togglePinVisibility(user.id)}
-                          className="text-gray-400 hover:text-amber-500 group-hover:text-amber-500 transition-all duration-200 p-1.5 rounded-full hover:bg-amber-50 group-hover:bg-amber-50 group-hover:shadow-sm"
+                          className="text-gray-400 hover:text-yellowsm group-hover:text-yellowsm/80 transition-all duration-200 p-1 rounded-full hover:bg-yellowsm/10 group-hover:bg-yellowsm/10 group-hover:shadow-sm"
                           title={showPins[user.id] ? "Hide PIN" : "Show PIN"}
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.95 }}
@@ -808,16 +791,14 @@ const UserAccounts = () => {
                           ) : (
                             <FaEye className="w-4 h-4" />
                           )}
-                        </m.button>
+                        </motion.button>
                       </div>
                     </td>
-
-                    {/* Actions */}
-                    <td className="py-4 px-4 transition-all duration-300">
+                    <td className="py-3 px-4 transition-all duration-300">
                       <div className="flex flex-wrap justify-center gap-3 transition-all duration-200">
                         {/* Privacy Settings Button */}
-                        <m.button
-                          className="action-button text-gray-500 hover:text-blue-500 bg-white hover:bg-blue-50 rounded-full p-2.5 shadow-sm transition-all duration-200 border border-gray-100 hover:border-blue-200"
+                        <motion.button
+                          className="action-button text-gray-500 hover:text-blue-500 bg-white hover:bg-blue-50 rounded-full p-2 shadow-sm transition-all duration-200 border border-gray-100 hover:border-blue-200"
                           onClick={() => handleUserAction(user, "privacySettings")}
                           whileHover={{ scale: 1.1, boxShadow: "0 4px 8px rgba(0,0,0,0.1)" }}
                           whileTap={{ scale: 0.9 }}
@@ -827,12 +808,12 @@ const UserAccounts = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           </svg>
-                        </m.button>
+                        </motion.button>
 
                         {/* Enable/Disable Button */}
                         {user.disabled ? (
-                          <m.button
-                            className="action-button text-gray-500 hover:text-green-500 bg-white hover:bg-green-50 rounded-full p-2.5 shadow-sm transition-all duration-200 border border-gray-100 hover:border-green-200"
+                          <motion.button
+                            className="action-button text-gray-500 hover:text-green-500 bg-white hover:bg-green-50 rounded-full p-2 shadow-sm transition-all duration-200 border border-gray-100 hover:border-green-200"
                             onClick={() => handleUserAction(user, "enable")}
                             whileHover={{ scale: 1.1, boxShadow: "0 4px 8px rgba(0,0,0,0.1)" }}
                             whileTap={{ scale: 0.9 }}
@@ -841,10 +822,10 @@ const UserAccounts = () => {
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                          </m.button>
+                          </motion.button>
                         ) : (
-                          <m.button
-                            className="action-button text-gray-500 hover:text-orange-500 bg-white hover:bg-orange-50 rounded-full p-2.5 shadow-sm transition-all duration-200 border border-gray-100 hover:border-orange-200"
+                          <motion.button
+                            className="action-button text-gray-500 hover:text-orange-500 bg-white hover:bg-orange-50 rounded-full p-2 shadow-sm transition-all duration-200 border border-gray-100 hover:border-orange-200"
                             onClick={() => handleUserAction(user, "disable")}
                             whileHover={{ scale: 1.1, boxShadow: "0 4px 8px rgba(0,0,0,0.1)" }}
                             whileTap={{ scale: 0.9 }}
@@ -853,159 +834,130 @@ const UserAccounts = () => {
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                          </m.button>
+                          </motion.button>
                         )}
+
+
                       </div>
                     </td>
-                  </m.tr>
+                  </motion.tr>
                 ))
               )}
             </tbody>
           </table>
-          </div>
 
           {/* Pagination Controls */}
-          <m.div
-            className="flex flex-col sm:flex-row items-center justify-between sm:justify-center px-4 py-5 bg-gradient-to-r from-white to-amber-50/30 border-t border-amber-100/30"
+          <motion.div
+            className="flex items-center justify-center px-4 py-4 bg-white/90 border-t border-yellowsm/20 h-16"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.4 }}
           >
-            {/* Page info - visible on mobile */}
-            <div className="text-sm text-gray-600 mb-3 sm:hidden">
-              Page {currentPage} of {Math.max(1, Math.ceil(filteredUsers.length / rowsPerPage))}
-            </div>
-
-            <div className="flex items-center gap-1 sm:gap-2">
+            <div className="flex items-center space-x-2">
               {/* First page button */}
-              <m.button
-                className={`p-2 rounded-lg ${currentPage === 1 ? 'bg-gray-50 text-gray-300 cursor-not-allowed' : 'bg-white text-amber-600 hover:bg-amber-50 border border-amber-100/50 hover:border-amber-200 shadow-sm hover:shadow'} transition-all duration-200`}
+              <motion.button
+                className={`p-1.5 rounded-md ${currentPage === 1 ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-white text-gray-500 hover:bg-yellowsm/10 hover:text-yellowsm border border-gray-100 hover:border-yellowsm/30'} transition-all duration-200`}
                 onClick={() => setCurrentPage(1)}
                 disabled={currentPage === 1}
-                whileHover={currentPage !== 1 ? { scale: 1.05 } : {}}
+                whileHover={currentPage !== 1 ? { scale: 1.1 } : {}}
                 whileTap={currentPage !== 1 ? { scale: 0.95 } : {}}
-                aria-label="First page"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
                 </svg>
-              </m.button>
+              </motion.button>
 
               {/* Previous page button */}
-              <m.button
-                className={`p-2 rounded-lg ${currentPage === 1 ? 'bg-gray-50 text-gray-300 cursor-not-allowed' : 'bg-white text-amber-600 hover:bg-amber-50 border border-amber-100/50 hover:border-amber-200 shadow-sm hover:shadow'} transition-all duration-200`}
+              <motion.button
+                className={`p-1.5 rounded-md ${currentPage === 1 ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-white text-gray-500 hover:bg-yellowsm/10 hover:text-yellowsm border border-gray-100 hover:border-yellowsm/30'} transition-all duration-200`}
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                whileHover={currentPage !== 1 ? { scale: 1.05 } : {}}
+                whileHover={currentPage !== 1 ? { scale: 1.1 } : {}}
                 whileTap={currentPage !== 1 ? { scale: 0.95 } : {}}
-                aria-label="Previous page"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
                 </svg>
-              </m.button>
+              </motion.button>
 
-              {/* Page numbers - hidden on small screens */}
-              <div className="hidden sm:flex items-center gap-1">
-                {Array.from({ length: Math.min(5, Math.ceil(filteredUsers.length / rowsPerPage)) }, (_, i) => {
-                  // Calculate which page numbers to show
-                  const totalPages = Math.ceil(filteredUsers.length / rowsPerPage);
-                  let pageNum;
+              {/* Page numbers */}
+              {Array.from({ length: Math.min(5, Math.ceil(filteredUsers.length / rowsPerPage)) }, (_, i) => {
+                // Calculate which page numbers to show
+                const totalPages = Math.ceil(filteredUsers.length / rowsPerPage);
+                let pageNum;
 
-                  if (totalPages <= 5) {
-                    // If 5 or fewer pages, show all pages
-                    pageNum = i + 1;
-                  } else if (currentPage <= 3) {
-                    // If on pages 1-3, show pages 1-5
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    // If on last 3 pages, show last 5 pages
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    // Otherwise show current page and 2 pages on each side
-                    pageNum = currentPage - 2 + i;
-                  }
+                if (totalPages <= 5) {
+                  // If 5 or fewer pages, show all pages
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  // If on pages 1-3, show pages 1-5
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  // If on last 3 pages, show last 5 pages
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  // Otherwise show current page and 2 pages on each side
+                  pageNum = currentPage - 2 + i;
+                }
 
-                  return (
-                    <m.button
-                      key={pageNum}
-                      className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium ${
-                        currentPage === pageNum
-                          ? 'bg-amber-500 text-white shadow-md'
-                          : 'bg-white text-gray-700 hover:bg-amber-50 hover:text-amber-600 border border-amber-100/50 hover:border-amber-200 shadow-sm hover:shadow'
-                      } transition-all duration-200`}
-                      onClick={() => setCurrentPage(pageNum)}
-                      whileHover={currentPage !== pageNum ? { scale: 1.05 } : {}}
-                      whileTap={{ scale: 0.95 }}
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05, duration: 0.2 }}
-                      aria-label={`Page ${pageNum}`}
-                      aria-current={currentPage === pageNum ? "page" : undefined}
-                    >
-                      {pageNum}
-                    </m.button>
-                  );
-                })}
-              </div>
+                return (
+                  <motion.button
+                    key={pageNum}
+                    className={`px-3 py-1.5 rounded-md ${currentPage === pageNum ? 'bg-yellowsm text-white font-medium shadow-md' : 'bg-white text-gray-600 hover:bg-yellowsm/10 hover:text-yellowsm border border-gray-100 hover:border-yellowsm/30'} transition-all duration-200`}
+                    onClick={() => setCurrentPage(pageNum)}
+                    whileHover={currentPage !== pageNum ? { scale: 1.1 } : {}}
+                    whileTap={{ scale: 0.95 }}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05, duration: 0.2 }}
+                  >
+                    {pageNum}
+                  </motion.button>
+                );
+              })}
 
               {/* Next page button */}
-              <m.button
-                className={`p-2 rounded-lg ${
-                  currentPage >= Math.ceil(filteredUsers.length / rowsPerPage)
-                    ? 'bg-gray-50 text-gray-300 cursor-not-allowed'
-                    : 'bg-white text-amber-600 hover:bg-amber-50 border border-amber-100/50 hover:border-amber-200 shadow-sm hover:shadow'
-                } transition-all duration-200`}
+              <motion.button
+                className={`p-1.5 rounded-md ${currentPage >= Math.ceil(filteredUsers.length / rowsPerPage) ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-white text-gray-500 hover:bg-yellowsm/10 hover:text-yellowsm border border-gray-100 hover:border-yellowsm/30'} transition-all duration-200`}
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredUsers.length / rowsPerPage)))}
                 disabled={currentPage >= Math.ceil(filteredUsers.length / rowsPerPage)}
-                whileHover={currentPage < Math.ceil(filteredUsers.length / rowsPerPage) ? { scale: 1.05 } : {}}
+                whileHover={currentPage < Math.ceil(filteredUsers.length / rowsPerPage) ? { scale: 1.1 } : {}}
                 whileTap={currentPage < Math.ceil(filteredUsers.length / rowsPerPage) ? { scale: 0.95 } : {}}
-                aria-label="Next page"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                 </svg>
-              </m.button>
+              </motion.button>
 
               {/* Last page button */}
-              <m.button
-                className={`p-2 rounded-lg ${
-                  currentPage >= Math.ceil(filteredUsers.length / rowsPerPage)
-                    ? 'bg-gray-50 text-gray-300 cursor-not-allowed'
-                    : 'bg-white text-amber-600 hover:bg-amber-50 border border-amber-100/50 hover:border-amber-200 shadow-sm hover:shadow'
-                } transition-all duration-200`}
+              <motion.button
+                className={`p-1.5 rounded-md ${currentPage >= Math.ceil(filteredUsers.length / rowsPerPage) ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-white text-gray-500 hover:bg-yellowsm/10 hover:text-yellowsm border border-gray-100 hover:border-yellowsm/30'} transition-all duration-200`}
                 onClick={() => setCurrentPage(Math.ceil(filteredUsers.length / rowsPerPage))}
                 disabled={currentPage >= Math.ceil(filteredUsers.length / rowsPerPage)}
-                whileHover={currentPage < Math.ceil(filteredUsers.length / rowsPerPage) ? { scale: 1.05 } : {}}
+                whileHover={currentPage < Math.ceil(filteredUsers.length / rowsPerPage) ? { scale: 1.1 } : {}}
                 whileTap={currentPage < Math.ceil(filteredUsers.length / rowsPerPage) ? { scale: 0.95 } : {}}
-                aria-label="Last page"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
                 </svg>
-              </m.button>
+              </motion.button>
             </div>
-
-            {/* Page info - hidden on mobile */}
-            <div className="hidden sm:block text-sm text-gray-600 ml-4">
-              Page {currentPage} of {Math.max(1, Math.ceil(filteredUsers.length / rowsPerPage))}
-            </div>
-          </m.div>
-        </m.div>
-      </m.div>
+          </motion.div>
+        </motion.div>
+      </motion.div>
 
       {/* Action Confirmation Modal */}
       <AnimatePresence>
         {showActionModal && (
-          <m.div
+          <motion.div
             className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeModal}
           >
-            <m.div
-              className="bg-gradient-to-b from-white to-amber-50/50 rounded-xl shadow-xl max-w-md w-full mx-4 p-6 border border-amber-100/30"
+            <motion.div
+              className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6 border border-yellowsm/20"
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -1013,25 +965,17 @@ const UserAccounts = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-xl font-bold mb-4 text-gray-800">
-                {actionType === "privacySettings"
-                  ? "Privacy Settings"
-                  : actionType === "disable"
-                    ? "Disable Account"
-                    : "Enable Account"
-                }
+                {actionType === "privacySettings" ? "Privacy Settings" :
+                 actionType === "disable" ? "Disable Account" :
+                 "Enable Account"}
               </h3>
 
               {selectedUser && (
-                <div className="mb-4 flex items-center bg-amber-50/50 p-4 rounded-xl border border-amber-100/30">
-                  <div className="bg-amber-100/50 p-2 rounded-lg mr-3">
-                    <FaUserShield className="text-amber-500 text-lg" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs font-medium text-amber-700 bg-white rounded-lg px-2.5 py-1 mb-1 shadow-sm inline-block border border-amber-100/50">
-                      {selectedUser.formattedUserId}
-                    </span>
-                    <span className="text-sm text-gray-700 font-medium">{selectedUser.email}</span>
-                  </div>
+                <div className="mb-4 flex items-center bg-gray-50 p-3 rounded-lg">
+                  <span className="text-xs font-medium text-gray-500 bg-white rounded-md px-2 py-1 mr-2 shadow-sm">
+                    {selectedUser.formattedUserId}
+                  </span>
+                  <span className="text-sm text-gray-700">{selectedUser.email}</span>
                 </div>
               )}
 
@@ -1096,7 +1040,7 @@ const UserAccounts = () => {
                   <AnimatePresence mode="wait">
                     {/* Password Reset Tab */}
                     {privacySettingsTab === "password" && (
-                      <m.div
+                      <motion.div
                         key="password-tab"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -1107,12 +1051,12 @@ const UserAccounts = () => {
                         <p className="text-blue-700">
                           Send a password reset email to this user. They will receive an email with instructions to reset their password.
                         </p>
-                      </m.div>
+                      </motion.div>
                     )}
 
                     {/* PIN Change Tab */}
                     {privacySettingsTab === "pin" && (
-                      <m.div
+                      <motion.div
                         key="pin-tab"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -1178,12 +1122,12 @@ const UserAccounts = () => {
                             />
                           </div>
                         </div>
-                      </m.div>
+                      </motion.div>
                     )}
 
                     {/* Department Change Tab */}
                     {privacySettingsTab === "department" && (
-                      <m.div
+                      <motion.div
                         key="department-tab"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -1200,7 +1144,7 @@ const UserAccounts = () => {
                           <label htmlFor="newDepartment" className="block text-sm font-medium text-gray-700 mb-1">
                             Department
                           </label>
-                          <m.div
+                          <motion.div
                             initial={{ opacity: 0.8, y: -5 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3, ease: "easeOut" }}
@@ -1223,14 +1167,13 @@ const UserAccounts = () => {
                               className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white transition-all duration-300 ease-in-out"
                             >
                               <option value="" disabled>Select department</option>
-                              <option value="Admin">Admin</option>
                               <option value="Production">Production</option>
                               <option value="Financial">Financial</option>
                               <option value="Marketing">Marketing</option>
                             </select>
-                          </m.div>
+                          </motion.div>
                         </div>
-                      </m.div>
+                      </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
@@ -1251,20 +1194,20 @@ const UserAccounts = () => {
               )}
 
               <div className="flex justify-end space-x-3 mt-6">
-                <m.button
+                <motion.button
                   onClick={closeModal}
-                  className="px-5 py-2.5 border border-amber-100/50 rounded-xl text-gray-600 hover:bg-amber-50 transition-all duration-200 shadow-sm font-medium"
+                  className="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-all duration-200 shadow-sm font-medium"
                   whileHover={{ scale: 1.03, boxShadow: "0 4px 8px rgba(0,0,0,0.05)" }}
                   whileTap={{ scale: 0.97 }}
                 >
                   {actionResult.message ? 'Close' : 'Cancel'}
-                </m.button>
+                </motion.button>
 
                 {!actionResult.message && (
-                  <m.button
+                  <motion.button
                     onClick={executeAction}
                     disabled={isActionLoading}
-                    className={`px-5 py-2.5 text-white rounded-xl shadow-md transition-all duration-200 font-medium relative ${
+                    className={`px-5 py-2 text-white rounded-lg shadow-md transition-all duration-200 font-medium relative ${
                       actionType === "disable"
                         ? 'bg-orange-500 hover:bg-orange-600'
                         : actionType === "enable"
@@ -1275,7 +1218,7 @@ const UserAccounts = () => {
                         ? 'bg-purple-500 hover:bg-purple-600'
                         : actionType === "privacySettings" && privacySettingsTab === "department"
                         ? 'bg-green-500 hover:bg-green-600'
-                        : 'bg-amber-500 hover:bg-amber-600'
+                        : 'bg-yellowsm hover:bg-yellow-600'
                     } ${isActionLoading ? 'opacity-80 cursor-not-allowed' : ''}`}
                     whileHover={isActionLoading ? {} : { scale: 1.05, boxShadow: "0 6px 12px rgba(0,0,0,0.1)" }}
                     whileTap={isActionLoading ? {} : { scale: 0.95 }}
@@ -1297,14 +1240,14 @@ const UserAccounts = () => {
                         ? "Update Department"
                         : "Confirm"
                     )}
-                  </m.button>
+                  </motion.button>
                 )}
               </div>
-            </m.div>
-          </m.div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
-    </m.div>
+    </motion.div>
   );
 };
 
