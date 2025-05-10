@@ -2,7 +2,6 @@ import React from "react";
 import DashboardBrand from "./DashboardBrand";
 import SideRoutes from "./SideRoutes";
 import DashboardSideToggle from "./DashboardSideToggle";
-import DashboardLogout from "./DashboardLogout";
 import { BsXCircleFill, BsKeyboard } from "react-icons/bs";
 
 const DashboardSideNav = ({ toggleSideNav, isMinimized }) => {
@@ -36,7 +35,6 @@ const DashboardSideNav = ({ toggleSideNav, isMinimized }) => {
         <DashboardBrand isMinimized={isMinimized} />
       </div>
       <SideRoutes isMinimized={isMinimized} />
-      <DashboardLogout isMinimized={isMinimized}/>
 
       {/* Overlay to close sidebar when clicking outside on mobile */}
       {!isMinimized && (

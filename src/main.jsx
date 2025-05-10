@@ -26,6 +26,7 @@ import "./index.css";
 import TermsAndCond from "./pages/Home/TermsAndCond";
 import Features from "./pages/Home/Features";
 import DashboardLayout from "./layouts/DashboardLayout";
+import ProfileLayout from "./layouts/ProfileLayout";
 import OrderLayout from "./layouts/OrderLayout";
 import AllTransact from "./components/Orders/OrdersHistory/AllTransact.jsx";
 import CancelledTransact from "./components/Orders/OrdersHistory/CancelledTransact.jsx";
@@ -46,6 +47,7 @@ import InventoryDaily from "./components/Inventory/inventory-data/InventoryDaily
 import InventorySavedHistory from "./components/Inventory/inventory-data/InventorySavedHistory.jsx";
 import AdminLayout from "./layouts/AdminLayout.jsx";
 import UserAccounts from "./components/Admin/admin-data/UserAccounts.jsx";
+import ProfileSettings from "./components/Profile/ProfileSettings.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <Router>
@@ -135,6 +137,15 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           }>
             <Route index element={<Navigate to="user-accounts" replace />} />
             <Route path="user-accounts" element={<UserAccounts />} />
+          </Route>
+
+          {/* Profile settings route */}
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <ProfileLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<ProfileSettings />} />
           </Route>
         </Routes>
           </LoadingProvider>
