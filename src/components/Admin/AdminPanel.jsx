@@ -1,12 +1,12 @@
 import React from 'react';
 import { Outlet } from "react-router-dom";
 import AdminNav from './AdminNav';
+import UserAccounts from './admin-data/UserAccounts';
 
-const AdminPanel = ({ children }) => {
+const AdminPanel = () => {
   return (
     <div className="w-full px-7 py-3">
-      <AdminNav />
-      {children}
+      <UserAccounts />
     </div>
   );
 };

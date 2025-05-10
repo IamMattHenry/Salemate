@@ -75,7 +75,6 @@ const DashboardHeader = () => {
     if (path.includes("orders")) return "Order History";
     if (path.includes("analytics")) return "Analytic Report";
     if (path.includes("customer")) return "Customer";
-    if (path.includes("admin")) return "User Accounts";
     return "Welcome";
   };
 

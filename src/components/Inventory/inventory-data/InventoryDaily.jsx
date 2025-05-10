@@ -36,7 +36,7 @@ const InventoryDaily = () => {
   const { currentUser } = useAuth();
 
   // Function to create inventory notifications for low or critical stock
-  const createInventoryNotification = useCallback(async (itemName, stockLevel, endingInventory) => {
+  const createInventoryNotification = async (itemName, stockLevel, endingInventory) => {
     try {
       if (!currentUser) {
         console.error("Cannot create notification: No user is logged in");
@@ -70,7 +70,7 @@ const InventoryDaily = () => {
     } catch (error) {
       console.error('Error creating inventory notification:', error);
     }
-  }, [currentUser, db]);
+  };
 
   // Add this validation function after your existing state declarations
   const validateInventoryChange = (item, newValues) => {
