@@ -8,10 +8,14 @@ import { AnimatePresence, motion } from "motion/react";
 import successModal from "../../hooks/Modal/SuccessModal";
 import DashboardCategory from "./DashboardCategory";
 import { addProduct, updateProduct, deleteProduct } from "../../services/productService";
+import { useRef } from "react";
 
 const ProductList = ({ products, addToOrderList, updateProducts, loading = false }) => {
   const { modal, toggleModal: originalToggleModal } = useModal();
   const { okayModal, showSuccessModal } = successModal();
+
+  // Extract the active category from the first product (if available)
+  const activeCategory = products && products.length > 0 ? products[0].category : "All";
 
   // Custom toggle modal function that also resets form fields
   const toggleModal = () => {
@@ -298,6 +302,25 @@ const ProductList = ({ products, addToOrderList, updateProducts, loading = false
               className="group bg-white rounded-2xl border border-gray-100 overflow-hidden
                        hover:shadow-lg transition-all duration-300 relative h-[280px] flex flex-col"
             >
+              {filteredProducts.map((product, index) => (
+              <motion.div
+                key={product.id}
+                onClick={() => handleAddToOrder(product)}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.3,
+                  delay: index * 0.05,
+                  ease: "easeOut"
+                }}
+                whileHover={{
+                  y: -3,
+                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                  transition: { duration: 0.2 }
+                }}
+                className="group bg-white rounded-2xl border border-gray-100 overflow-hidden
+                         relative h-[280px] flex flex-col"
+              >
               {/* Product Image - Fixed height */}
               <div className="h-[125px] overflow-hidden flex-shrink-0">
                 <img
@@ -324,7 +347,7 @@ const ProductList = ({ products, addToOrderList, updateProducts, loading = false
                       handleEditProduct(product);
                     }}
                     className="p-2 text-gray-400 hover:text-amber-500 rounded-lg
-                             opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                             opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0"
                   >
                     <FaEdit className="text-lg" />
                   </button>
@@ -337,9 +360,10 @@ const ProductList = ({ products, addToOrderList, updateProducts, loading = false
                   </span>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
-          </div>
+          </motion.div>
+          </AnimatePresence>
         )}
       </div>
 

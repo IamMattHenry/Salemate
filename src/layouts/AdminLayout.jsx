@@ -5,7 +5,7 @@ import Admin from '../pages/Main/Admin';
 import { useSidebar } from "../context/SidebarContext";
 import { useLoading } from "../context/LoadingContext";
 import { useAuth } from "../context/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 
 const AdminLayout = () => {
   // Use the shared sidebar context instead of local state
@@ -41,7 +41,9 @@ const AdminLayout = () => {
     >
       <DashboardSideNav toggleSideNav={toggleSideNav} isMinimized={isMinimized} />
       <div className="pb-5">
-        <Admin />
+        <Admin>
+          <Outlet />
+        </Admin>
       </div>
     </motion.main>
   );

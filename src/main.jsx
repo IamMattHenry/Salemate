@@ -10,6 +10,7 @@ import { SidebarProvider } from "./context/SidebarContext";
 import { AuthProvider } from "./context/AuthContext";
 import { LoadingProvider } from "./context/LoadingContext";
 import { AnalyticsProvider } from "./context/AnalyticsContext";
+import { NotificationProvider } from "./context/NotificationContext";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import InitialPinVerification from "./components/Auth/InitialPinVerification";
 import WelcomeBackModal from "./components/Auth/WelcomeBackModal";
@@ -30,6 +31,7 @@ import AllTransact from "./components/Orders/OrdersHistory/AllTransact.jsx";
 import CancelledTransact from "./components/Orders/OrdersHistory/CancelledTransact.jsx";
 import CompletedTransact from "./components/Orders/OrdersHistory/CompletedTransact.jsx";
 import PendingTransact from "./components/Orders/OrdersHistory/PendingTransact.jsx";
+import AllPreparingTransact from "./components/Orders/OrdersHistory/AllPreparingTransact.jsx";
 import SavedHistory from "./components/Orders/OrdersHistory/SavedHistory.jsx";
 import AnalyticsLayout from "./layouts/AnalyticsLayout.jsx";
 import DailySales from "./components/Analytics/analytics-data/DailySales.jsx";
@@ -43,16 +45,18 @@ import InventoryLayout from "./layouts/InventoryLayout.jsx";
 import InventoryDaily from "./components/Inventory/inventory-data/InventoryDaily.jsx";
 import InventorySavedHistory from "./components/Inventory/inventory-data/InventorySavedHistory.jsx";
 import AdminLayout from "./layouts/AdminLayout.jsx";
+import UserAccounts from "./components/Admin/admin-data/UserAccounts.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <Router>
     <SidebarProvider>
       <AuthProvider>
-        <LoadingProvider>
-          <InitialPinVerification />
-          <WelcomeBackModal />
-          <EmailVerificationCheck />
-          <Routes>
+        <NotificationProvider>
+          <LoadingProvider>
+            <InitialPinVerification />
+            <WelcomeBackModal />
+            <EmailVerificationCheck />
+            <Routes>
           <Route path="/" element={<HomeLayout />}>
             <Route index element={<Home />} />
             <Route path="signin" element={<SignIn />} />
@@ -82,6 +86,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="cancelled-transactions" element={<CancelledTransact />} />
             <Route path="completed-transactions" element={<CompletedTransact />} />
             <Route path="pending-transactions" element={<PendingTransact />} />
+            <Route path="all-preparing-transactions" element={<AllPreparingTransact />} />
             <Route path="saved-history" element={<SavedHistory />} />
           </Route>
 
@@ -127,9 +132,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <ProtectedRoute>
               <AdminLayout />
             </ProtectedRoute>
-          } />
+          }>
+            <Route index element={<Navigate to="user-accounts" replace />} />
+            <Route path="user-accounts" element={<UserAccounts />} />
+          </Route>
         </Routes>
-        </LoadingProvider>
+          </LoadingProvider>
+        </NotificationProvider>
       </AuthProvider>
     </SidebarProvider>
   </Router>

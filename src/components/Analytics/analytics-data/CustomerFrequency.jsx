@@ -67,8 +67,10 @@ const CustomerFrequency = () => {
         snapshot.forEach((doc) => {
           const data = doc.data();
           const recipient = data.recipient || '';
+          const orderStatus = data.order_status || '';
 
-          if (recipient) {
+          // Skip cancelled orders
+          if (recipient && orderStatus !== 'Cancelled') {
             const orderDate = data.order_date?.seconds ?
               new Date(data.order_date.seconds * 1000) :
               new Date();
@@ -140,10 +142,12 @@ const CustomerFrequency = () => {
         snapshot.forEach((doc) => {
           const data = doc.data();
           const orderDate = new Date(data.order_date.seconds * 1000);
+          const orderStatus = data.order_status || '';
 
-          // Only count orders from current month
+          // Only count orders from current month and exclude cancelled orders
           if (orderDate.getMonth() === currentMonth &&
-              orderDate.getFullYear() === currentYear) {
+              orderDate.getFullYear() === currentYear &&
+              orderStatus !== 'Cancelled') {
             const recipient = data.recipient || '';
             if (recipient) {
               const currentCount = monthlyCustomerOrders.get(recipient) || 0;
@@ -349,9 +353,12 @@ const Card = ({ children, className = "" }) => (
 // Update the CustomerLoyaltyMetrics component
 const CustomerLoyaltyMetrics = ({ metrics }) => (
   <Card className="bg-gradient-to-br from-yellowsm/10 to-yellowsm/20 shadow-lg hover:shadow-xl transition-all duration-300">
-    <div className="text-lg md:text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+    <div className="text-lg md:text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
       <span className="bg-yellowsm/20 p-2 rounded-lg">📊</span>
       CUSTOMER LOYALTY METRICS
+    </div>
+    <div className="text-xs text-gray-500 mb-4 italic">
+      * Cancelled orders are excluded from all metrics
     </div>
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between w-full items-start sm:items-center gap-3">
@@ -424,6 +431,7 @@ const LoyalCustomers = ({ customers }) => (
         {customers.length} customers
       </div>
     </div>
+
     <div className="overflow-auto max-h-[250px] scrollbar-thin scrollbar-thumb-amber-200 scrollbar-track-transparent pr-2">
       {customers.length > 0 ? (
         <div className="space-y-3">

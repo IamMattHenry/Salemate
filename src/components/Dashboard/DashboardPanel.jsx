@@ -66,12 +66,16 @@ const DashboardPanel = () => {
   };
 
   return (
+
     <div className="grid grid-cols-[1.5fr_1fr] gap-6 p-6 h-[calc(100vh-65px)]">
+
       {/* Menu Panel */}
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col h-full">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden flex flex-col h-full">
         {/* Header */}
+
         <div className="pt-6 pl-6 pb-2 flex-shrink-0">
           <h3 className="text-[1.6rem] font-semibold font-lato uppercase">
+
             Menu Categories
           </h3>
         </div>
@@ -93,7 +97,7 @@ const DashboardPanel = () => {
       </div>
 
       {/* Order Panel */}
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden h-full">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden h-full mt-4 lg:mt-0">
         <DashboardOrder orderList={orderList} setOrderList={setOrderList} />
       </div>
     </div>

@@ -9,7 +9,6 @@ import {
   where,
   orderBy,
   serverTimestamp,
-  Timestamp,
   limit,
   getFirestore,
   setDoc
@@ -249,7 +248,7 @@ export const getNextCustomerId = async () => {
  */
 export const createOrUpdateCustomer = async (customerData) => {
   try {
-    const { name, customerId, isStudent } = customerData;
+    const { name, customerId, isStudent, college, program_code, program_full } = customerData;
 
     // Check if customer already exists by ID
     if (customerId) {
@@ -264,7 +263,11 @@ export const createOrUpdateCustomer = async (customerData) => {
             is_student: existingCustomer.is_student === true, // Ensure this is a boolean true/false
             last_order_date: serverTimestamp(),
             total_orders: (existingCustomer.total_orders || 0) + 1,
-            total_spent: (existingCustomer.total_spent || 0) + (customerData.orderTotal || 0)
+            total_spent: (existingCustomer.total_spent || 0) + (customerData.orderTotal || 0),
+            // Update college and program if student and values are provided
+            ...(isStudent && college ? { college } : {}),
+            ...(isStudent && program_code ? { program_code } : {}),
+            ...(isStudent && program_full ? { program_full } : {})
           });
           console.log(`Updated existing customer: ${name} (${customerId}), isStudent: ${existingCustomer.is_student === true}`);
           return customerId;
@@ -286,10 +289,15 @@ export const createOrUpdateCustomer = async (customerData) => {
         customer_id: customerId,
         last_order_date: serverTimestamp(),
         total_orders: 1,
-        total_spent: customerData.orderTotal || 0
+        total_spent: customerData.orderTotal || 0,
+        // Add college and program if student and values are provided
+        ...(isStudent && college ? { college } : {}),
+        ...(isStudent && program_code ? { program_code } : {}),
+        ...(isStudent && program_full ? { program_full } : {})
       };
 
       console.log(`Creating new customer with name: ${name}, isStudent: ${isStudent === true}, ID: ${customerId}`);
+      if (isStudent && college) console.log(`College: ${college}, Program: ${program_code} (${program_full})`);
 
       const result = await addCustomer(newCustomer);
       console.log(`Created new customer: ${name} (${result.id})`);

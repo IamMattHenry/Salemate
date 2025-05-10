@@ -3,6 +3,7 @@ import { IoIosArrowDown } from "react-icons/io";
 import { TbCancel } from "react-icons/tb";
 import { IoMdWarning } from "react-icons/io";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "../../../context/AuthContext";
 
 const OrderStatusDropdown = ({
   currentStatus,
@@ -14,6 +15,14 @@ const OrderStatusDropdown = ({
   const containerRef = useRef(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [pendingStatus, setPendingStatus] = useState(null);
+  const { userProfile, isAdmin } = useAuth();
+
+  // Check if user has permission to change order status
+  // Marketing department and Admin users can change order status
+  const canChangeOrderStatus =
+    (userProfile && userProfile.department === "Marketing") ||
+    (userProfile && userProfile.department === "Admin") ||
+    isAdmin();
 
   useEffect(() => {
     if (isOpen && dropdownRef.current && containerRef.current) {
@@ -138,27 +147,32 @@ const OrderStatusDropdown = ({
         )}
       </AnimatePresence>
 
-      {/* Dropdown Trigger */}
-      <button
-        type="button"
-        onClick={() => {
-          if (currentStatus !== "Cancelled") {
-            onToggle(!isOpen);
-          }
-        }}
-        className={`ml-3 mt-0.5 ${
-          currentStatus === "Cancelled" ? "cursor-not-allowed" : "cursor-pointer"
-        }`}
-      >
-        {currentStatus !== "Cancelled" ? (
-          <IoIosArrowDown />
-        ) : (
-          <TbCancel />
-        )}
-      </button>
+      {/* Dropdown Trigger - Only show for users who can change order status */}
+      {canChangeOrderStatus && (
+        <button
+          type="button"
+          onClick={() => {
+            // Only allow changing non-cancelled orders
+            if (currentStatus !== "Cancelled") {
+              onToggle(!isOpen);
+            }
+          }}
+          className={`ml-3 mt-0.5 ${
+            currentStatus === "Cancelled"
+              ? "cursor-not-allowed opacity-50"
+              : "cursor-pointer"
+          }`}
+        >
+          {currentStatus !== "Cancelled" ? (
+            <IoIosArrowDown />
+          ) : (
+            <TbCancel />
+          )}
+        </button>
+      )}
 
-      {/* Dropdown Menu */}
-      {isOpen && availableOptions.length > 0 && (
+      {/* Dropdown Menu - Only show for users who can change order status */}
+      {isOpen && availableOptions.length > 0 && canChangeOrderStatus && (
         <div
           ref={dropdownRef}
           className="absolute block right-0 py-2 w-32 bg-white rounded-xl shadow-lg border border-gray-100 z-[999]"
