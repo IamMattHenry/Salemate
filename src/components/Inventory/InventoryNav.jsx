@@ -6,15 +6,50 @@ import { X } from "lucide-react";
 import NavTabs from "../common/NavTabs";
 import useModal from "../../hooks/Modal/UseModal";
 import { AnimatePresence, motion } from "framer-motion";
-import { addDoc, collection, getFirestore } from 'firebase/firestore';
+import { addDoc, collection, getFirestore, Timestamp } from 'firebase/firestore';
 import firebaseApp from "../../firebaseConfig";
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from "../../context/AuthContext";
 
 const InventoryNav = () => {
   const db = getFirestore(firebaseApp);
   const { modal: saveModal, toggleModal: toggleSaveModal } = useModal(); // add item modal
   const { modal: ItemAddedModal, toggleModal: toggleConfirmationModal } = useModal(); // item added modal
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+
+  // Function to create inventory notification when a new item is added
+  const createInventoryAddedNotification = async (itemName, beginningInventory) => {
+    try {
+      if (!currentUser) {
+        console.error("Cannot create notification: No user is logged in");
+        return;
+      }
+
+      // Create a global notification
+      const globalNotification = {
+        type: 'inventory',
+        message: `New inventory item added: ${itemName} (${beginningInventory}g)`,
+        severity: 'normal',
+        route: '/inventory/daily-inventory',
+        module: 'inventory',
+        resolved: false, // Set to false so it appears as an unresolved notification
+        userId: 'global', // Special marker to indicate this is a global notification
+        createdBy: currentUser.uid, // Track who created it
+        createdByName: currentUser.email || 'Unknown user', // Include creator's name
+        read: false,
+        global: true, // Flag to indicate this is a global notification
+        createdAt: Timestamp.now(),
+        readBy: [] // Initialize empty array to track which users have read this notification
+      };
+
+      const notificationRef = await addDoc(collection(db, 'notifications'), globalNotification);
+      console.log(`Created inventory item added notification with ID: ${notificationRef.id} for ${itemName}`);
+
+    } catch (error) {
+      console.error('Error creating inventory notification:', error);
+    }
+  };
 
   // Add state for form inputs
   const [formInputs, setFormInputs] = useState({
@@ -67,6 +102,9 @@ const InventoryNav = () => {
       };
 
       const docRef = await addDoc(collection(db, "inventory"), newItem);
+
+      // Create a notification for the new inventory item
+      await createInventoryAddedNotification(formInputs.rawMaterial, beginningInventory);
 
       // Reset form states
       setFormInputs({

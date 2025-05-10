@@ -396,6 +396,40 @@ export const AuthProvider = ({ children }) => {
     const lastPingTime = lastPing ? new Date(lastPing) : null;
     const recentlyActive = lastPingTime && (now - lastPingTime < 3000); // 3 seconds
 
+    // Check if we have a current user from Firebase Auth
+    const currentAuthUser = auth.currentUser;
+
+    // If we have a user but email is not verified, force logout
+    if (currentAuthUser && !currentAuthUser.emailVerified) {
+      console.log("Found user with unverified email on session check, forcing logout");
+
+      // Clear all auth-related data
+      const apiKey = "AIzaSyDo2u1X6qkJkfc9VLgrhZTx4Y-TjKiOSi0";
+      const storageKey = `firebase:authUser:${apiKey}:[DEFAULT]`;
+      localStorage.removeItem(storageKey);
+      sessionStorage.removeItem(storageKey);
+      localStorage.removeItem('pinVerified');
+      localStorage.removeItem('pinAttempts');
+      localStorage.removeItem('accountLocked');
+      localStorage.removeItem('lockoutEndTime');
+      localStorage.removeItem('sessionActive');
+      localStorage.removeItem('lastPing');
+      localStorage.removeItem('forceLogout');
+
+      // Force logout
+      await signOut(auth);
+      setCurrentUser(null);
+      setUserProfile(null);
+      setHasPin(false);
+      setPinVerified(false);
+      setPinAttempts(0);
+      setAccountLocked(false);
+      setLockoutEndTime(null);
+      setEmailVerified(false);
+      setLoading(false);
+      return;
+    }
+
     // If force logout flag is set AND the page hasn't been active recently, handle it
     if (forceLogout === 'true' && !recentlyActive) {
       // Only log in development environment
@@ -405,6 +439,10 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('forceLogout');
 
       // Clear all auth-related data regardless of current user state
+      const apiKey = "AIzaSyDo2u1X6qkJkfc9VLgrhZTx4Y-TjKiOSi0";
+      const storageKey = `firebase:authUser:${apiKey}:[DEFAULT]`;
+      localStorage.removeItem(storageKey);
+      sessionStorage.removeItem(storageKey);
       localStorage.removeItem('pinVerified');
       localStorage.removeItem('pinAttempts');
       localStorage.removeItem('accountLocked');
@@ -472,6 +510,40 @@ export const AuthProvider = ({ children }) => {
     const now = new Date();
     const lastPingTime = lastPing ? new Date(lastPing) : null;
     const recentlyActive = lastPingTime && (now - lastPingTime < 2000); // 2 seconds
+
+    // Check if we have a current user from Firebase Auth
+    const currentAuthUser = auth.currentUser;
+
+    // If we have a user but email is not verified, force logout
+    if (currentAuthUser && !currentAuthUser.emailVerified) {
+      console.log("Found user with unverified email during session check, forcing logout");
+
+      // Clear all auth-related data
+      const apiKey = "AIzaSyDo2u1X6qkJkfc9VLgrhZTx4Y-TjKiOSi0";
+      const storageKey = `firebase:authUser:${apiKey}:[DEFAULT]`;
+      localStorage.removeItem(storageKey);
+      sessionStorage.removeItem(storageKey);
+      localStorage.removeItem('pinVerified');
+      localStorage.removeItem('pinAttempts');
+      localStorage.removeItem('accountLocked');
+      localStorage.removeItem('lockoutEndTime');
+      localStorage.removeItem('sessionActive');
+      localStorage.removeItem('lastPing');
+      localStorage.removeItem('forceLogout');
+
+      // Force logout
+      await signOut(auth);
+      setCurrentUser(null);
+      setUserProfile(null);
+      setHasPin(false);
+      setPinVerified(false);
+      setPinAttempts(0);
+      setAccountLocked(false);
+      setLockoutEndTime(null);
+      setEmailVerified(false);
+      setLoading(false);
+      return false;
+    }
 
     // Only log out if force logout flag is set AND the page hasn't been active recently
     // This prevents logout during tab switching
@@ -544,6 +616,40 @@ export const AuthProvider = ({ children }) => {
 
       if (user) {
         try {
+          // First check if email is verified - this is critical for security
+          if (!user.emailVerified) {
+            console.log("User logged in but email not verified, signing out");
+
+            // Sign out the user immediately
+            await signOut(auth);
+
+            // Reset all auth states
+            setCurrentUser(null);
+            setUserProfile(null);
+            setHasPin(false);
+            setPinVerified(false);
+            setPinAttempts(0);
+            setAccountLocked(false);
+            setLockoutEndTime(null);
+            setEmailVerified(false);
+
+            // Clear all auth-related localStorage items
+            const apiKey = "AIzaSyDo2u1X6qkJkfc9VLgrhZTx4Y-TjKiOSi0";
+            const storageKey = `firebase:authUser:${apiKey}:[DEFAULT]`;
+            localStorage.removeItem(storageKey);
+            sessionStorage.removeItem(storageKey);
+            localStorage.removeItem('pinVerified');
+            localStorage.removeItem('pinAttempts');
+            localStorage.removeItem('accountLocked');
+            localStorage.removeItem('lockoutEndTime');
+            localStorage.removeItem('sessionActive');
+            localStorage.removeItem('lastPing');
+
+            setLoading(false);
+            return;
+          }
+
+          // If email is verified, proceed with normal authentication
           const userDocRef = doc(db, "users", user.uid);
           const userDoc = await getDoc(userDocRef);
 
@@ -553,7 +659,7 @@ export const AuthProvider = ({ children }) => {
             setUserProfile(userData);
             setCurrentUser(user);
 
-            // Check if email is verified
+            // Set email verified state
             setEmailVerified(user.emailVerified);
 
             // Update Firestore with the latest email verification status from Firebase Auth

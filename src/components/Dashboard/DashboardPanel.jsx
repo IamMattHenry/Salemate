@@ -66,19 +66,19 @@ const DashboardPanel = () => {
   };
 
   return (
-    <div className="grid grid-cols-[1.5fr_1fr] gap-6 p-6 h-[calc(100vh-80px)]">
+    <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4 sm:gap-5 md:gap-6 p-3 sm:p-4 md:p-6 h-[calc(100vh-80px)]">
       {/* Menu Panel */}
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col h-full">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden flex flex-col h-full">
         {/* Header */}
-        <div className="p-6 border-b border-gray-100 flex-shrink-0">
-          <h3 className="text-2xl font-semibold bg-gradient-to-r from-amber-600 to-amber-500 bg-clip-text text-transparent">
+        <div className="px-4 sm:px-5 md:px-5 py-3 border-b border-gray-100 flex-shrink-0">
+          <h3 className="text-xl sm:text-2xl font-semibold bg-gradient-to-r from-amber-600 to-amber-500 bg-clip-text text-transparent">
             Menu Categories
           </h3>
         </div>
 
         {/* Categories Section */}
-        <div className="p-6 pt-4 border-b border-gray-100 bg-gradient-to-b from-amber-50/30 flex-shrink-0">
-          <DashboardCategory setSelectedCategory={setSelectedCategory} />
+        <div className="px-3 sm:px-4 md:px-5 py-3 border-b border-gray-100 bg-gradient-to-b from-amber-50/30 flex-shrink-0">
+          <DashboardCategory setSelectedCategory={setSelectedCategory} activeCategory={selectedCategory} />
         </div>
 
         {/* Products Grid */}
@@ -93,7 +93,7 @@ const DashboardPanel = () => {
       </div>
 
       {/* Order Panel */}
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden h-full">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden h-full mt-4 lg:mt-0">
         <DashboardOrder orderList={orderList} setOrderList={setOrderList} />
       </div>
     </div>

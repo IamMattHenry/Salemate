@@ -42,56 +42,106 @@ const SavedHistory = () => {
     try {
       const pdfDoc = new jsPDF();
 
+      // Enterprise Name
+      pdfDoc.setFont("helvetica", "bold");
+      pdfDoc.setFontSize(22);
+      pdfDoc.setTextColor(0, 0, 0);
+      pdfDoc.text('INKAYO CORPORATION', 105, 20, { align: 'center' });
+
       // Title
       pdfDoc.setFont("helvetica", "bold");
-      pdfDoc.setFontSize(20);
-      pdfDoc.text('Monthly Orders Summary', 20, 30);
+      pdfDoc.setFontSize(18);
+      pdfDoc.text('Monthly Orders Summary', 105, 30, { align: 'center' });
 
-      // Get the current week
+      // Month and Year
+      pdfDoc.setFont("helvetica", "normal");
+      pdfDoc.setFontSize(14);
+      pdfDoc.text(monthYear, 105, 38, { align: 'center' });
+
+      // Get the current week and date
       const today = new Date();
       const weekNumber = Math.ceil(today.getDate() / 7);
-      pdfDoc.setFontSize(12);
+      pdfDoc.setFontSize(10);
       pdfDoc.setTextColor(107, 114, 128);
-      pdfDoc.text(`Week ${weekNumber} | ${today.toLocaleDateString('en-US', {
+      pdfDoc.text(`Generated on: ${today.toLocaleDateString('en-US', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
         day: 'numeric'
-      })}`, 20, 40);
+      })}`, 105, 45, { align: 'center' });
+
+      // Filter out "Preparing" orders
+      const filteredTransactions = transactions.filter(t => t.order_status !== "Preparing");
+
+      // Count different order statuses
+      const deliveredOrders = filteredTransactions.filter(t => t.order_status === "Delivered");
+      const cancelledOrders = filteredTransactions.filter(t => t.order_status === "Cancelled");
+
+      // Calculate total sales (only from delivered orders)
+      const totalSales = deliveredOrders
+        .reduce((sum, t) => sum + (parseFloat(t.order_total) || 0), 0);
+
+      // Calculate potential lost sales from cancelled orders
+      const lostSales = cancelledOrders
+        .reduce((sum, t) => sum + (parseFloat(t.order_total) || 0), 0);
 
       // Summary Box
       pdfDoc.setDrawColor(255, 191, 0);
       pdfDoc.setFillColor(255, 251, 235);
-      pdfDoc.roundedRect(15, 50, 180, 60, 3, 3, 'FD');
+      pdfDoc.roundedRect(15, 50, 180, 70, 3, 3, 'FD');
 
       // Summary Content
       pdfDoc.setFontSize(12);
       pdfDoc.setTextColor(0, 0, 0);
+      pdfDoc.setFont("helvetica", "bold");
+      pdfDoc.text("SUMMARY", 105, 60, { align: 'center' });
+
+      pdfDoc.setFont("helvetica", "normal");
       const summaryStats = [
-        `Total Orders: ${transactions.length}`,
-        `Completed Orders: ${transactions.filter(t => t.order_status === "Delivered").length}`,
-        `Total Sales: PHP ${transactions
-          .filter(t => t.order_status === "Delivered")
-          .reduce((sum, t) => sum + (parseFloat(t.order_total) || 0), 0)
-          .toLocaleString()}`
+        `Total Orders: ${filteredTransactions.length}`,
+        `Completed Orders: ${deliveredOrders.length}`,
+        `Cancelled Orders: ${cancelledOrders.length}`,
+        `Total Sales: PHP ${totalSales.toLocaleString()}`,
+        `Lost Sales (Cancelled): PHP ${lostSales.toLocaleString()}`
       ];
 
       summaryStats.forEach((stat, index) => {
-        pdfDoc.text(stat, 20, 70 + (index * 15));
+        pdfDoc.text(stat, 20, 70 + (index * 12));
       });
 
       // Orders Table
       autoTable(pdfDoc, {
-        startY: 125,
-        head: [['#', 'Order ID', 'Customer', 'Items', 'Total', 'Status']],
-        body: transactions.map((order, index) => [
-          (index + 1).toString(),
-          order.order_id,
-          order.recipient,
-          order.order_name,
-          `PHP ${parseFloat(order.order_total).toLocaleString()}`,
-          order.order_status
-        ]),
+        startY: 130,
+        head: [['#', 'Customer Info', 'Customer', 'Items', 'Total', 'Status']],
+        body: filteredTransactions.map((order, index) => {
+          // Format student information
+          let customerInfo = '';
+          if (order.is_student === true) {
+            // Format student ID with hyphen if needed
+            let studentId = order.customer_id || '';
+            if (studentId && studentId.length === 6 && !studentId.includes('-')) {
+              studentId = `${studentId.substring(0, 2)}-${studentId.substring(2)}`;
+            }
+
+            // Add program code if available
+            if (order.program_code) {
+              customerInfo = `${studentId}\n${order.program_code}`;
+            } else {
+              customerInfo = studentId;
+            }
+          } else {
+            customerInfo = 'Non-Student';
+          }
+
+          return [
+            (index + 1).toString(),
+            customerInfo,
+            order.recipient,
+            order.order_name,
+            `PHP ${parseFloat(order.order_total).toLocaleString()}`,
+            order.order_status
+          ];
+        }),
         styles: {
           fontSize: 10,
           cellPadding: 6,
@@ -122,6 +172,15 @@ const SavedHistory = () => {
         tableWidth: 'auto'
       });
 
+      // Add footer
+      const pageCount = pdfDoc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        pdfDoc.setPage(i);
+        pdfDoc.setFontSize(10);
+        pdfDoc.setTextColor(150, 150, 150);
+        pdfDoc.text(`Page ${i} of ${pageCount} - INKAYO CORPORATION`, 105, pdfDoc.internal.pageSize.height - 10, { align: 'center' });
+      }
+
       pdfDoc.save(`${monthYear.replace(' ', '')}_Orders.pdf`);
     } catch (error) {
       console.error("Error generating PDF:", error);
@@ -140,10 +199,19 @@ const SavedHistory = () => {
       );
 
       const transactionSnapshot = await getDocs(transactionQuery);
-      const allTransactions = transactionSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      const allTransactions = transactionSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          // Ensure these fields are properly included
+          is_student: data.is_student === true,
+          customer_id: data.customer_id || '',
+          program_code: data.program_code || '',
+          program_full: data.program_full || '',
+          college: data.college || ''
+        };
+      });
 
       // Filter for the specific month/year
       const [month, year] = monthYear.split(" ");
@@ -151,6 +219,13 @@ const SavedHistory = () => {
         const orderDate = new Date(t.order_date.seconds * 1000);
         return orderDate.toLocaleString('en-US', { month: 'long' }) === month &&
                orderDate.getFullYear().toString() === year;
+      });
+
+      // Make sure all orders have a status
+      filteredTransactions.forEach(order => {
+        if (!order.order_status) {
+          order.order_status = "Preparing"; // Default status if missing
+        }
       });
 
       // Sort by order_id in ascending order (lowest to highest)
@@ -356,6 +431,14 @@ const SavedHistory = () => {
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Order History</h1>
           <p className="text-gray-500 mt-1">View and download monthly order reports</p>
+          <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-700">
+            <p className="flex items-center">
+              <svg className="w-5 h-5 mr-2 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Reports include all completed and cancelled orders with student information (ID and program). Orders with "Preparing" status are excluded.
+            </p>
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
