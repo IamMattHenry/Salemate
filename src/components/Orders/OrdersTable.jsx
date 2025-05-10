@@ -25,7 +25,7 @@ const OrdersTable = () => {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [sortConfig, setSortConfig] = useState({
     type: "timestamp",
-    direction: "desc"
+    direction: "desc",
   }); // Update the sort state to handle multiple sort options
 
   const db = getFirestore(firebaseApp);
@@ -102,17 +102,17 @@ const OrdersTable = () => {
           const orderDate = new Date(data.order_date.seconds * 1000);
 
           // Handle order name formatting based on whether we have items array or just order_name
-          let orderName = '';
+          let orderName = "";
           if (data.items && data.items.length > 0) {
             // For orders with items array (new format)
             orderName = data.items
-              .map(item => {
+              .map((item) => {
                 // Make sure to display "Classic" correctly
                 if (item.title === "Meal") return "Katsu";
                 return item.title; // Return the original title for all other items
               })
               .filter((value, index, self) => self.indexOf(value) === index) // Remove duplicates
-              .join(' / ');
+              .join(" / ");
           } else {
             // For legacy data with just order_name
             orderName = data.order_name === "Meal" ? "Katsu" : data.order_name;
@@ -122,27 +122,30 @@ const OrdersTable = () => {
             id: doc.id,
             ...data,
             order_name: orderName,
-            time: orderDate.toLocaleTimeString('en-US', {
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: true
+            time: orderDate.toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
             }),
             date: orderDate.toLocaleDateString("en-US", {
               month: "long",
               day: "numeric",
               year: "numeric",
             }),
-            mop: data.mop || 'Cash',
-            reference_number: data.reference_number || '', // Include reference number for online payments
+            mop: data.mop || "Cash",
+            reference_number: data.reference_number || "", // Include reference number for online payments
             quantity: data.items
-              ? data.items.reduce((total, item) => total + (item.quantity || 0), 0)
-              : (data.no_order || 0), // Support both new and old formats
+              ? data.items.reduce(
+                  (total, item) => total + (item.quantity || 0),
+                  0
+                )
+              : data.no_order || 0, // Support both new and old formats
             timestamp: data.order_date.seconds,
             order_id_num: parseInt(data.order_id) || 0, // For sorting by order ID
             is_student: data.is_student === true, // Ensure is_student is a boolean
           };
         })
-        .filter(order => {
+        .filter((order) => {
           const orderDate = new Date(order.order_date.seconds * 1000);
           orderDate.setHours(0, 0, 0, 0);
           return orderDate.getTime() === today.getTime();
@@ -164,7 +167,9 @@ const OrdersTable = () => {
         sortedOrders = ordersList.sort((a, b) => a.order_total - b.order_total);
       } else {
         // Sort by order_id (lowest to highest)
-        sortedOrders = ordersList.sort((a, b) => a.order_id_num - b.order_id_num);
+        sortedOrders = ordersList.sort(
+          (a, b) => a.order_id_num - b.order_id_num
+        );
       }
 
       setOrders(sortedOrders);
@@ -253,8 +258,10 @@ const OrdersTable = () => {
       // Check if all items in the order are ready before marking as Delivered
       if (newStatus === "Delivered" && currentOrder.items) {
         // If any items are still preparing, prevent status change
-        if (currentOrder.items.some(item => item.status === "Preparing")) {
-          setError("Cannot mark as delivered - some items are still being prepared");
+        if (currentOrder.items.some((item) => item.status === "Preparing")) {
+          setError(
+            "Cannot mark as delivered - some items are still being prepared"
+          );
           return;
         }
       }
@@ -276,10 +283,10 @@ const OrdersTable = () => {
 
   // Format student ID to include a hyphen (e.g., 23-2023)
   const formatStudentId = (id) => {
-    if (!id) return 'N/A';
+    if (!id) return "N/A";
 
     // If the ID already contains a hyphen, return it as is
-    if (id.includes('-')) return id;
+    if (id.includes("-")) return id;
 
     // If the ID is 6 digits, format it as XX-XXXX
     if (/^\d{6}$/.test(id)) {
@@ -300,7 +307,7 @@ const OrdersTable = () => {
       {filterOrdersBySearch(filterOrders(orders)).map((order) => (
         <tr
           key={order.id}
-          className="hover:bg-[#ffcf50]/20 hover:shadow-lg transition-colors border-b-[0.5px] border-yellowsm/20 font-medium font-latrue"
+          className="hover:bg-[#ffcf50]/20 hover:shadow-lg transition-colors border-b-[0.5px] border-yellowsm/20 font-medium font-lato"
           onClick={() => handleRowClick(order)}
         >
           <td className="px-4 py-4 text-center cursor-pointer">
@@ -315,13 +322,9 @@ const OrdersTable = () => {
             ₱ {order.order_total}
           </td>
 
-          <td className="px-4 py-4 text-center cursor-pointer">
-            {order.time}
-          </td>
+          <td className="px-4 py-4 text-center cursor-pointer">{order.time}</td>
 
-          <td className="px-4 py-4 text-center cursor-pointer">
-            {order.mop}
-          </td>
+          <td className="px-4 py-4 text-center cursor-pointer">{order.mop}</td>
 
           <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-center">
@@ -357,7 +360,10 @@ const OrdersTable = () => {
       {error && (
         <div className="p-4 mb-6 text-red-500 bg-red-50 rounded-xl border border-red-100 flex items-center">
           <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" />
+            <path
+              fillRule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+            />
           </svg>
           {error}
         </div>
@@ -365,7 +371,7 @@ const OrdersTable = () => {
 
       {/* Modern Header */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold bg-gradient-to-r from-amber-600 to-amber-500 bg-clip-text text-transparent">
+        <h2 className="text-[1.6rem] font-semibold font-lato uppercase">
           Today's Orders
         </h2>
         {/* Modern Sort Dropdown */}
@@ -410,62 +416,84 @@ const OrdersTable = () => {
           <p className="mt-4 text-amber-600 font-medium">Loading orders...</p>
         </div>
       ) : (
-        <div className="overflow-auto h-9/12 rounded-xl border border-amber-100">
+        <div className="overflow-auto h-9/12 rounded-xl border border-amber-100/50">
           {/* Fixed header */}
-          <div className="bg-gradient-to-r from-amber-50 to-amber-100/50 sticky top-0 z-10">
-            <div className="grid grid-cols-6 text-amber-800">
-              <div className="px-6 py-4 font-semibold text-left">Order</div>
-              <div className="px-6 py-4 font-semibold text-left">Recipient</div>
-              <div className="px-6 py-4 font-semibold text-center">Amount</div>
-              <div className="px-6 py-4 font-semibold text-center">Time</div>
-              <div className="px-6 py-4 font-semibold text-center">MOP</div>
-              <div className="px-6 py-4 font-semibold text-center">Status</div>
+          <div className="bg-gradient-to-r from-amber-50 to-amber-100 sticky top-0 z-10 font-lato">
+            <div className="grid grid-cols-6 ">
+              <div className="px-6 py-4 font-semibold text-center text-xl">Order</div>
+              <div className="px-6 py-4 font-semibold text-center text-xl">
+                Recipient
+              </div>
+              <div className="px-6 py-4 font-semibold text-center text-xl">Amount</div>
+              <div className="px-6 py-4 font-semibold text-center text-xl">Time</div>
+              <div className="px-6 py-4 font-semibold text-center text-xl">MOP</div>
+              <div className="px-6 py-4 font-semibold text-center text-xl">Status</div>
             </div>
           </div>
-          {/* Scrollable content */}
-          <div className="overflow-y-scroll">
+          <div className="font-latrue">
             {filterOrdersBySearch(filterOrders(orders)).length > 0 ? (
-              <div className="divide-y divide-amber-100">
+              <div className="divide-y divide-amber-100/50">
                 {filterOrdersBySearch(filterOrders(orders)).map((order) => (
                   <div
                     key={order.id}
                     onClick={() => handleRowClick(order)}
                     className="grid grid-cols-6 hover:bg-amber-50/50 transition-colors cursor-pointer group"
                   >
-                    <div className="px-6 py-4">
-                      <div className="font-medium text-gray-900">{order.order_name}</div>
+                    <div className="flex justify-center items-center py-4">
+                      <div className="font-medium text-center text-base text-gray-900">
+                        {order.order_name}
+                      </div>
                     </div>
-                    <div className="px-6 py-4">
-                      <div className="font-medium text-gray-900">{order.recipient}</div>
+                    <div className="flex justify-center items-center py-4">
+                      <div className="font-medium text-center text-base text-gray-900">
+                        {order.recipient}
+                      </div>
                     </div>
-                    <div className="px-6 py-4 text-center">
-                      <div className="font-semibold text-amber-700">₱{order.order_total}</div>
+                    <div className="flex justify-center items-center py-4 text-center">
+                      <div className="font-semibold text-center text-base text-amber-700">
+                        ₱{order.order_total}
+                      </div>
                     </div>
-                    <div className="px-6 py-4 text-center text-gray-600">{order.time}</div>
-                    <div className="px-6 py-4">
+                    <div className="flex justify-center items-center py-4 text-center">
+                      <div className="font-medium text-center text-base text-gray-600">
+                        {order.time}
+                      </div>
+                    </div>
+                    <div className="flex justify-center items-center py-4">
                       <div className="flex justify-center">
-                        <span className="px-3 py-1 rounded-full text-sm font-medium bg-amber-50 text-amber-700">
+                        <span className="rounded-full text-sm font-medium bg-amber-50 text-amber-700 text-center">
                           {order.mop}
                         </span>
                       </div>
                     </div>
-                    <div className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                    <div
+                      className="flex justify-center items-center py-4"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <div className="flex justify-center">
-                        <div className={`
+                        <div
+                          className={`
                           flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium
-                          ${order.order_status === 'Delivered'
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : order.order_status === 'Preparing'
-                            ? 'bg-amber-100 text-amber-700'
-                            : 'bg-red-100 text-red-700'}
-                        `}>
+                          ${
+                            order.order_status === "Delivered"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : order.order_status === "Preparing"
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-red-100 text-red-700"
+                          }
+                        `}
+                        >
                           <span className="h-2 w-2 rounded-full bg-current"></span>
                           {order.order_status}
                           <OrderStatusDropdown
                             currentStatus={order.order_status}
-                            onStatusChange={(newStatus) => handleStatusChange(order.id, newStatus)}
+                            onStatusChange={(newStatus) =>
+                              handleStatusChange(order.id, newStatus)
+                            }
                             isOpen={activeDropdown === order.id}
-                            onToggle={(isOpen) => setActiveDropdown(isOpen ? order.id : null)}
+                            onToggle={(isOpen) =>
+                              setActiveDropdown(isOpen ? order.id : null)
+                            }
                           />
                         </div>
                       </div>
@@ -476,15 +504,33 @@ const OrdersTable = () => {
             ) : (
               <div className="text-center py-12">
                 <div className="text-gray-500 flex flex-col items-center">
-                  <svg className="w-12 h-12 mb-4 text-amber-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  <svg
+                    className="w-12 h-12 mb-4 text-amber-200"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
                   </svg>
                   {searchQuery ? (
                     <p>No results found for "{searchQuery}"</p>
                   ) : (
-                    <p>No {location.pathname.includes("completed") ? "completed" :
-                        location.pathname.includes("pending") ? "pending" :
-                        location.pathname.includes("cancelled") ? "cancelled" : ""} orders found</p>
+                    <p>
+                      No{" "}
+                      {location.pathname.includes("completed")
+                        ? "completed"
+                        : location.pathname.includes("pending")
+                        ? "pending"
+                        : location.pathname.includes("cancelled")
+                        ? "cancelled"
+                        : ""}{" "}
+                      orders found
+                    </p>
                   )}
                 </div>
               </div>
@@ -517,7 +563,9 @@ const OrdersTable = () => {
                   <IoMdInformationCircle className="text-3xl" />
                   <div className="flex flex-col">
                     <span className="font-semibold text-xl">Order Details</span>
-                    <span className="text-sm text-emerald-50">#{selectedOrder.order_id}</span>
+                    <span className="text-sm text-emerald-50">
+                      #{selectedOrder.order_id}
+                    </span>
                   </div>
                 </div>
                 <button
@@ -534,21 +582,29 @@ const OrdersTable = () => {
                   {/* Order Status & Time */}
                   <div className="flex justify-between items-start">
                     <div className="space-y-2">
-                      <span className={`
+                      <span
+                        className={`
                         inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium
-                        ${selectedOrder.order_status === 'Delivered'
-                          ? 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-700/20'
-                          : selectedOrder.order_status === 'Preparing'
-                          ? 'bg-amber-100 text-amber-700 ring-1 ring-amber-700/20'
-                          : 'bg-red-100 text-red-700 ring-1 ring-red-700/20'}
-                      `}>
+                        ${
+                          selectedOrder.order_status === "Delivered"
+                            ? "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-700/20"
+                            : selectedOrder.order_status === "Preparing"
+                            ? "bg-amber-100 text-amber-700 ring-1 ring-amber-700/20"
+                            : "bg-red-100 text-red-700 ring-1 ring-red-700/20"
+                        }
+                      `}
+                      >
                         <span className="mr-1.5 h-2 w-2 rounded-full bg-current"></span>
                         {selectedOrder.order_status}
                       </span>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900">{selectedOrder.date}</p>
-                      <p className="text-sm text-gray-500">{selectedOrder.time}</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {selectedOrder.date}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {selectedOrder.time}
+                      </p>
                     </div>
                   </div>
 
@@ -556,8 +612,18 @@ const OrdersTable = () => {
                   <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                     <h3 className="font-medium text-gray-900 mb-4 flex items-center">
                       <span className="bg-emerald-100 p-2 rounded-lg mr-3">
-                        <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        <svg
+                          className="w-5 h-5 text-emerald-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
                         </svg>
                       </span>
                       Customer Information
@@ -565,32 +631,72 @@ const OrdersTable = () => {
 
                     {/* Customer Name with Large Display */}
                     <div className="mb-4">
-                      <h4 className="text-xl font-bold text-gray-800">{selectedOrder.recipient}</h4>
+                      <h4 className="text-xl font-bold text-gray-800">
+                        {selectedOrder.recipient}
+                      </h4>
                     </div>
 
                     {/* Customer Type and ID in a Beautiful Card */}
-                    <div className={`
+                    <div
+                      className={`
                       rounded-xl p-4 border flex items-center gap-4
-                      ${selectedOrder.is_student === true
-                        ? 'bg-blue-50 border-blue-200'
-                        : 'bg-green-50 border-green-200'}
-                    `}>
+                      ${
+                        selectedOrder.is_student === true
+                          ? "bg-blue-50 border-blue-200"
+                          : "bg-green-50 border-green-200"
+                      }
+                    `}
+                    >
                       {/* Icon based on customer type */}
-                      <div className={`
+                      <div
+                        className={`
                         p-3 rounded-full
-                        ${selectedOrder.is_student === true
-                          ? 'bg-blue-100'
-                          : 'bg-green-100'}
-                      `}>
+                        ${
+                          selectedOrder.is_student === true
+                            ? "bg-blue-100"
+                            : "bg-green-100"
+                        }
+                      `}
+                      >
                         {selectedOrder.is_student === true ? (
-                          <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+                          <svg
+                            className="w-6 h-6 text-blue-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 14l9-5-9-5-9 5 9 5z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"
+                            />
                           </svg>
                         ) : (
-                          <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          <svg
+                            className="w-6 h-6 text-green-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            />
                           </svg>
                         )}
                       </div>
@@ -598,19 +704,30 @@ const OrdersTable = () => {
                       <div className="flex-1">
                         {/* Customer Type */}
                         <div className="font-medium mb-1 text-gray-700">
-                          {selectedOrder.is_student === true ? 'Student Customer' : 'Regular Customer'}
+                          {selectedOrder.is_student === true
+                            ? "Student Customer"
+                            : "Regular Customer"}
                         </div>
 
                         {/* Customer ID with Monospace Font for Better Readability */}
-                        <div className={`
+                        <div
+                          className={`
                           font-mono text-sm font-bold
-                          ${selectedOrder.is_student === true
-                            ? 'text-blue-700'
-                            : 'text-green-700'}
-                        `}>
+                          ${
+                            selectedOrder.is_student === true
+                              ? "text-blue-700"
+                              : "text-green-700"
+                          }
+                        `}
+                        >
                           {selectedOrder.is_student === true
-                            ? `Student ID: ${formatStudentId(selectedOrder.customer_id) || 'N/A'}`
-                            : `Customer ID: ${selectedOrder.customer_id || 'N/A'}`}
+                            ? `Student ID: ${
+                                formatStudentId(selectedOrder.customer_id) ||
+                                "N/A"
+                              }`
+                            : `Customer ID: ${
+                                selectedOrder.customer_id || "N/A"
+                              }`}
                         </div>
                       </div>
                     </div>
@@ -620,8 +737,18 @@ const OrdersTable = () => {
                   <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                     <h3 className="font-medium text-gray-900 mb-4 flex items-center">
                       <span className="bg-emerald-100 p-2 rounded-lg mr-3">
-                        <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        <svg
+                          className="w-5 h-5 text-emerald-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                          />
                         </svg>
                       </span>
                       Order Items
@@ -629,17 +756,26 @@ const OrdersTable = () => {
                     <div className="space-y-3">
                       {selectedOrder.items && selectedOrder.items.length > 0 ? (
                         selectedOrder.items.map((item, index) => (
-                          <div key={index} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0">
+                          <div
+                            key={index}
+                            className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0"
+                          >
                             <span className="text-gray-800 font-medium">
                               {item.title === "Meal" ? "Katsu" : item.title}
                             </span>
-                            <span className="bg-emerald-50 text-emerald-700 font-medium px-3 py-1 rounded-full">×{item.quantity}</span>
+                            <span className="bg-emerald-50 text-emerald-700 font-medium px-3 py-1 rounded-full">
+                              ×{item.quantity}
+                            </span>
                           </div>
                         ))
                       ) : (
                         <div className="flex justify-between items-center py-3">
-                          <span className="text-gray-800 font-medium">{selectedOrder.order_name}</span>
-                          <span className="bg-emerald-50 text-emerald-700 font-medium px-3 py-1 rounded-full">×{selectedOrder.no_order || 1}</span>
+                          <span className="text-gray-800 font-medium">
+                            {selectedOrder.order_name}
+                          </span>
+                          <span className="bg-emerald-50 text-emerald-700 font-medium px-3 py-1 rounded-full">
+                            ×{selectedOrder.no_order || 1}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -649,8 +785,18 @@ const OrdersTable = () => {
                   <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                     <h3 className="font-medium text-gray-900 mb-4 flex items-center">
                       <span className="bg-emerald-100 p-2 rounded-lg mr-3">
-                        <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2" />
+                        <svg
+                          className="w-5 h-5 text-emerald-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2"
+                          />
                         </svg>
                       </span>
                       Payment Details
@@ -658,23 +804,34 @@ const OrdersTable = () => {
                     <div className="space-y-4">
                       <div className="flex justify-between items-center px-4 py-3 bg-gray-50 rounded-xl">
                         <span className="text-gray-600">Payment Method</span>
-                        <span className="font-medium text-gray-900">{selectedOrder.mop}</span>
+                        <span className="font-medium text-gray-900">
+                          {selectedOrder.mop}
+                        </span>
                       </div>
 
                       {selectedOrder.mop === "Online" && (
                         <div className="flex justify-between items-center px-4 py-3 bg-blue-50 rounded-xl">
-                          <span className="text-blue-600">Reference Number</span>
+                          <span className="text-blue-600">
+                            Reference Number
+                          </span>
                           <span className="font-medium text-blue-700">
-                            {selectedOrder.reference_number ?
-                              selectedOrder.reference_number :
-                              <span className="text-red-500 text-sm italic">Not provided</span>
-                            }
+                            {selectedOrder.reference_number ? (
+                              selectedOrder.reference_number
+                            ) : (
+                              <span className="text-red-500 text-sm italic">
+                                Not provided
+                              </span>
+                            )}
                           </span>
                         </div>
                       )}
                       <div className="flex justify-between items-center px-4 py-3 bg-emerald-50 rounded-xl">
-                        <span className="font-medium text-emerald-800">Total Amount</span>
-                        <span className="font-bold text-emerald-700 text-lg">₱{selectedOrder.order_total}</span>
+                        <span className="font-medium text-emerald-800">
+                          Total Amount
+                        </span>
+                        <span className="font-bold text-emerald-700 text-lg">
+                          ₱{selectedOrder.order_total}
+                        </span>
                       </div>
                     </div>
                   </div>

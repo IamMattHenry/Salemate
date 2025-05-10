@@ -161,7 +161,7 @@ const OrderStatusDropdown = ({
       {isOpen && availableOptions.length > 0 && (
         <div
           ref={dropdownRef}
-          className="absolute right-0 py-2 w-32 bg-white rounded-xl shadow-lg border border-gray-100 z-[999]"
+          className="absolute block right-0 py-2 w-32 bg-white rounded-xl shadow-lg border border-gray-100 z-[999]"
         >
           {availableOptions.map((option) => (
             <button
