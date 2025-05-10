@@ -295,14 +295,7 @@ const ProductList = ({ products, addToOrderList, updateProducts, loading = false
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-48">
-            {filteredProducts.map((product) => (
-            <div
-              key={product.id}
-              onClick={() => handleAddToOrder(product)}
-              className="group bg-white rounded-2xl border border-gray-100 overflow-hidden
-                       hover:shadow-lg transition-all duration-300 relative h-[280px] flex flex-col"
-            >
-              {filteredProducts.map((product, index) => (
+            {filteredProducts.map((product, index) => (
               <motion.div
                 key={product.id}
                 onClick={() => handleAddToOrder(product)}
@@ -321,49 +314,48 @@ const ProductList = ({ products, addToOrderList, updateProducts, loading = false
                 className="group bg-white rounded-2xl border border-gray-100 overflow-hidden
                          relative h-[280px] flex flex-col"
               >
-              {/* Product Image - Fixed height */}
-              <div className="h-[125px] overflow-hidden flex-shrink-0">
-                <img
-                  src={product.url}
-                  alt={product.title}
-                  className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
-                  onError={(e) => {
-                    // Fallback image if the product image fails to load
-                    e.target.src = "https://via.placeholder.com/300x150?text=Product+Image";
-                  }}
-                />
-              </div>
-
-              {/* Product Info - Fixed height */}
-              <div className="p-4 flex-1 flex flex-col justify-between">
-                <div className="flex justify-between items-start">
-                  <div className="overflow-visible">
-                    <h3 className="font-bold text-gray-900 text-lg mb-1 truncate">{product.title}</h3>
-                    <p className="text-gray-500 text-sm text-nowrap">{product.description}</p>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditProduct(product);
+                {/* Product Image - Fixed height */}
+                <div className="h-[125px] overflow-hidden flex-shrink-0">
+                  <img
+                    src={product.url}
+                    alt={product.title}
+                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      // Fallback image if the product image fails to load
+                      e.target.src = "https://via.placeholder.com/300x150?text=Product+Image";
                     }}
-                    className="p-2 text-gray-400 hover:text-amber-500 rounded-lg
-                             opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0"
-                  >
-                    <FaEdit className="text-lg" />
-                  </button>
+                  />
                 </div>
 
-                <div className="flex items-center justify-between mt-auto">
-                  <span className="text-lg font-bold">₱{product.price}</span>
-                  <span className="px-5 py-1 bg-amber-200 rounded-xl text-sm font-medium">
-                    {product.category}
-                  </span>
+                {/* Product Info - Fixed height */}
+                <div className="p-4 flex-1 flex flex-col justify-between">
+                  <div className="flex justify-between items-start">
+                    <div className="overflow-visible">
+                      <h3 className="font-bold text-gray-900 text-lg mb-1 truncate">{product.title}</h3>
+                      <p className="text-gray-500 text-sm text-nowrap">{product.description}</p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditProduct(product);
+                      }}
+                      className="p-2 text-gray-400 hover:text-amber-500 rounded-lg
+                               opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0"
+                    >
+                      <FaEdit className="text-lg" />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-auto">
+                    <span className="text-lg font-bold">₱{product.price}</span>
+                    <span className="px-5 py-1 bg-amber-200 rounded-xl text-sm font-medium">
+                      {product.category}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
-          </motion.div>
-          </AnimatePresence>
+              </motion.div>
+            ))}
+          </div>
         )}
       </div>
 

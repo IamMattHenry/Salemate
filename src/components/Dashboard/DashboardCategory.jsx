@@ -53,29 +53,49 @@ const DashboardCategory = ({ setSelectedCategory, activeCategory = "All" }) => {
   }, [activeCategory]);
 
   return (
-    <div className="flex flex-nowrap justify-around px-4 font-latrue">
-      {categories.map(({ id, name, icon: Icon }) => (
-        <button
-          ref={snacksRef}
-          onClick={() => setSelectedCategory("Snacks")}
-          className={`
-
-        flex items-center gap-3 px-4 py-2 shrink rounded-lg font-medium transition-all text-sm sm:text-lg
-        ${
-          activeCategory === name
-            ? "bg-amber-500 text-white shadow-md shadow-amber-500/30"
-            : "bg-white text-gray-700 hover:bg-amber-50 hover:text-amber-600 border border-gray-100"
+    <div className="flex flex-nowrap justify-around px-4 font-latrue relative">
+      {/* Animated slider background */}
+      <div 
+        ref={sliderRef}
+        className="absolute bg-amber-500 rounded-lg transition-all duration-300 shadow-md shadow-amber-500/30"
+      />
+      
+      {/* Category buttons */}
+      {categories.map(({ id, name, icon: Icon }) => {
+        // Determine which ref to use based on category name
+        let buttonRef;
+        switch(name) {
+          case "All": buttonRef = allRef; break;
+          case "Drinks": buttonRef = drinksRef; break;
+          case "Dessert": buttonRef = dessertRef; break;
+          case "Meal": buttonRef = mealRef; break;
+          case "Snacks": buttonRef = snacksRef; break;
+          default: buttonRef = null;
         }
-      `}
-        >
-          <Icon
-            className={`text-base sm:text-2xl ${
-              activeCategory === name ? "text-white" : "text-black"
-            }`}
-          />
-          <span className="whitespace-nowrap">{name}</span>
-        </button>
-      </div>
+        
+        return (
+          <button
+            key={id}
+            ref={buttonRef}
+            onClick={() => setSelectedCategory(name)}
+            className={`
+              flex items-center gap-3 px-4 py-2 shrink rounded-lg font-medium transition-all text-sm sm:text-lg
+              ${
+                activeCategory === name
+                  ? "text-white z-10"
+                  : "bg-white text-gray-700 hover:bg-amber-50 hover:text-amber-600 border border-gray-100"
+              }
+            `}
+          >
+            <Icon
+              className={`text-base sm:text-2xl ${
+                activeCategory === name ? "text-white" : "text-black"
+              }`}
+            />
+            <span className="whitespace-nowrap">{name}</span>
+          </button>
+        );
+      })}
     </div>
   );
 };
