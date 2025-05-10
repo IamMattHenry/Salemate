@@ -209,6 +209,11 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
           }
           const orderDate = data.created_at ? new Date(data.created_at.seconds * 1000) : new Date();
 
+          // Extract college and program information if available
+          const college = data.college || null;
+          const program_code = data.program_code || null;
+          const program_full = data.program_full || null;
+
           // If we haven't seen this customer before, add them
           if (!customerMap.has(customerName)) {
             customerMap.set(customerName, {
@@ -216,10 +221,16 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
               id: customerIdStr,
               isStudent: isStudentCustomer,
               lastOrder: orderDate,
+              college: college,
+              program_code: program_code,
+              program_full: program_full,
               variants: [{
                 id: customerIdStr,
                 isStudent: isStudentCustomer,
-                lastOrder: orderDate
+                lastOrder: orderDate,
+                college: college,
+                program_code: program_code,
+                program_full: program_full
               }]
             });
           } else {
@@ -232,7 +243,10 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
               existingCustomer.variants.push({
                 id: customerIdStr,
                 isStudent: isStudentCustomer,
-                lastOrder: orderDate
+                lastOrder: orderDate,
+                college: college,
+                program_code: program_code,
+                program_full: program_full
               });
 
               // Update the "main" record if this order is more recent
@@ -240,16 +254,27 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                 existingCustomer.id = customerIdStr;
                 existingCustomer.isStudent = isStudentCustomer;
                 existingCustomer.lastOrder = orderDate;
+                existingCustomer.college = college;
+                existingCustomer.program_code = program_code;
+                existingCustomer.program_full = program_full;
               }
             } else if (orderDate > existingVariant.lastOrder) {
               // Update the last order date for this variant
               existingVariant.lastOrder = orderDate;
+
+              // Update college and program information if available
+              if (college) existingVariant.college = college;
+              if (program_code) existingVariant.program_code = program_code;
+              if (program_full) existingVariant.program_full = program_full;
 
               // Update the "main" record if this order is more recent
               if (orderDate > existingCustomer.lastOrder) {
                 existingCustomer.id = customerIdStr;
                 existingCustomer.isStudent = isStudentCustomer;
                 existingCustomer.lastOrder = orderDate;
+                existingCustomer.college = college;
+                existingCustomer.program_code = program_code;
+                existingCustomer.program_full = program_full;
               }
             }
           }
@@ -820,39 +845,25 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
             setCustomerVariants(matchingCustomer.variants);
             setShowDisambiguationModal(true);
           } else {
-            // Only one variant, use it directly
-            setStudentId(matchingCustomer.id.toString());
+            // For non-students, we can automatically assign the ID
+            if (matchingCustomer.isStudent === false ||
+                (matchingCustomer.isStudent === undefined &&
+                 (matchingCustomer.id.toString().startsWith('C') || parseInt(matchingCustomer.id) >= 500000))) {
 
-            // Properly set the customer type based on the isStudent property
-            // This fixes the bug where non-students were being treated as students
-            if (matchingCustomer.isStudent !== undefined) {
-              // If we have explicit isStudent property, use it
-              setIsStudent(matchingCustomer.isStudent);
-
-              // If this is a student, lock the customer type to prevent switching to non-student
-              if (matchingCustomer.isStudent === true) {
-                setIsStudentLocked(true);
-                console.log(`Locking customer type to Student for ${matchingCustomer.name}`);
-              } else {
-                setIsStudentLocked(false);
-              }
-
-              console.log(`Setting customer type based on isStudent property: ${matchingCustomer.isStudent}`);
+              // Only one variant and it's a non-student, use it directly
+              setStudentId(matchingCustomer.id.toString());
+              setIsStudent(false);
+              setIsStudentLocked(false);
+              console.log(`Setting non-student ID automatically: ${matchingCustomer.id}`);
             } else {
-              // Fallback to ID-based detection if isStudent property is not available
-              const isStudentBasedOnId = !matchingCustomer.id.toString().startsWith('C') &&
-                                        !(parseInt(matchingCustomer.id) >= 500000);
-              setIsStudent(isStudentBasedOnId);
+              // For students, don't automatically assign the ID
+              // Just set the customer type to student but require manual ID entry
+              setIsStudent(true);
+              setIsStudentLocked(true);
+              console.log(`Found student customer, but not automatically assigning ID. Manual verification required.`);
 
-              // If this is determined to be a student, lock the customer type
-              if (isStudentBasedOnId) {
-                setIsStudentLocked(true);
-                console.log(`Locking customer type to Student for ${matchingCustomer.name} based on ID`);
-              } else {
-                setIsStudentLocked(false);
-              }
-
-              console.log(`Setting customer type based on ID: ${isStudentBasedOnId}`);
+              // Clear the student ID field to force manual entry
+              setStudentId('');
             }
           }
         } else {
@@ -877,8 +888,8 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
   // See the onClick handler in the suffix buttons section
 
   // Function to check if student ID already exists in the database
-  // Returns true if ID exists but with a different name (is a duplicate)
-  // Returns false if ID doesn't exist or if ID exists with the same name (allowed)
+  // Returns true if ID exists but with a different name or different course (is a duplicate)
+  // Returns false if ID doesn't exist or if ID exists with the same name and course (allowed)
   const checkDuplicateId = async (id, name) => {
     try {
       const q = query(
@@ -892,12 +903,29 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
         return false;
       }
 
-      // Check if any document has the same name
+      // Check if any document has the same name and course
       for (const doc of querySnapshot.docs) {
         const data = doc.data();
-        // If we find a match with the same name, it's not considered a duplicate
+
+        // If we find a match with the same name
         if (data.recipient && data.recipient.trim().toLowerCase() === name.trim().toLowerCase()) {
-          return false; // Not a duplicate if same name and ID
+          // For students, also check if the college and program match
+          if (isStudent && data.is_student === true) {
+            // If college is selected, check if it matches
+            if (selectedCollege && data.college && selectedCollege !== data.college) {
+              console.log(`Student ID ${id} exists with same name but different college: ${data.college} vs ${selectedCollege}`);
+              return true; // Consider it a duplicate if college doesn't match
+            }
+
+            // If program is selected, check if it matches
+            if (selectedProgram && data.program_code && selectedProgram !== data.program_code) {
+              console.log(`Student ID ${id} exists with same name but different program: ${data.program_code} vs ${selectedProgram}`);
+              return true; // Consider it a duplicate if program doesn't match
+            }
+          }
+
+          // If we get here, either it's not a student or the college/program matches
+          return false; // Not a duplicate if same name and matching details
         }
       }
 
@@ -1006,10 +1034,10 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
         setIdError("Student ID must contain only numbers");
         isValid = false;
       } else {
-        // Check for duplicate ID with different name
+        // Check for duplicate ID with different name or course
         const isDuplicate = await checkDuplicateId(studentId, customerName);
         if (isDuplicate) {
-          setIdError("This Student ID is already in use with a different name");
+          setIdError("This Student ID is already in use with a different name or belongs to a student from a different course");
           isValid = false;
         }
       }
@@ -1042,39 +1070,48 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
 
   // Handle selection of a customer variant from the disambiguation modal
   const handleSelectCustomerVariant = (variant) => {
-    setStudentId(variant.id.toString());
+    // For non-students, we can automatically assign the ID
+    if (variant.isStudent === false ||
+        (variant.isStudent === undefined &&
+         (variant.id.toString().startsWith('C') || parseInt(variant.id) >= 500000))) {
 
-    // Explicitly set the customer type based on the variant's isStudent property
-    if (variant.isStudent !== undefined) {
-      setIsStudent(variant.isStudent);
+      // Set the ID and customer type for non-students
+      setStudentId(variant.id.toString());
+      setIsStudent(false);
+      setIsStudentLocked(false);
+      console.log(`Selected non-student variant with ID ${variant.id}`);
 
-      // If this is a student, lock the customer type to prevent switching to non-student
-      if (variant.isStudent === true) {
-        setIsStudentLocked(true);
-        console.log(`Locking customer type to Student for variant with ID ${variant.id}`);
-      } else {
-        setIsStudentLocked(false);
-      }
-
-      console.log(`Selected variant with ID ${variant.id}, setting isStudent to ${variant.isStudent}`);
+      // Close the modal
+      setShowDisambiguationModal(false);
     } else {
-      // Fallback to ID-based detection if isStudent property is not available
-      const isStudentBasedOnId = !variant.id.toString().startsWith('C') &&
-                                !(parseInt(variant.id) >= 500000);
-      setIsStudent(isStudentBasedOnId);
+      // For students, we need to verify the ID
+      // Set the customer type to student
+      setIsStudent(true);
+      setIsStudentLocked(true);
 
-      // If this is determined to be a student, lock the customer type
-      if (isStudentBasedOnId) {
-        setIsStudentLocked(true);
-        console.log(`Locking customer type to Student for variant with ID ${variant.id} based on ID`);
-      } else {
-        setIsStudentLocked(false);
+      // If the variant has college/program info, pre-select it
+      if (variant.college) {
+        setSelectedCollege(variant.college);
+
+        // If the program code exists and belongs to this college, select it
+        if (variant.program_code && collegePrograms[variant.college]) {
+          const programExists = collegePrograms[variant.college].some(p => p.code === variant.program_code);
+          if (programExists) {
+            setSelectedProgram(variant.program_code);
+          }
+        }
       }
 
-      console.log(`Selected variant with ID ${variant.id}, determined isStudent as ${isStudentBasedOnId} based on ID`);
-    }
+      // Don't automatically set the student ID - require manual verification
+      // Just close the disambiguation modal and let the user verify/enter the ID
+      console.log(`Selected student variant with ID ${variant.id}, requiring manual verification`);
 
-    setShowDisambiguationModal(false);
+      // Close the modal
+      setShowDisambiguationModal(false);
+
+      // Show a verification message
+      alert(`Please verify and enter the student ID for ${selectedCustomerName}. Students from different courses may have the same name.`);
+    }
   };
 
   // Close the disambiguation modal without selecting a customer
@@ -1729,9 +1766,21 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                         <span className="font-medium">{selectedCustomerName}</span>
                         <div className="text-sm text-gray-500 mt-1">
                           {variant.isStudent ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                              Student ID: {variant.id}
-                            </span>
+                            <div>
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                Student ID: {variant.id}
+                              </span>
+                              {variant.college && (
+                                <div className="mt-1 text-xs text-gray-600">
+                                  <span className="font-medium">College:</span> {variant.college}
+                                </div>
+                              )}
+                              {variant.program_code && (
+                                <div className="text-xs text-gray-600">
+                                  <span className="font-medium">Program:</span> {variant.program_code}
+                                </div>
+                              )}
+                            </div>
                           ) : (
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
                               Customer ID: {variant.id.startsWith('C') ? variant.id : variant.id}
@@ -2114,30 +2163,35 @@ const DashboardOrder = ({ product, orderList, setOrderList }) => {
                     {isStudent ? "Student ID" : "Customer ID"}
                   </label>
                   {isStudent ? (
-                    // Student ID input
-                    <input
-                      type="text"
-                      placeholder="Enter 6-digit Student ID"
-                      maxLength={6}
-                      className={`w-full px-3 py-2 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2
-                      ${idError ? 'focus:ring-red-500/20 bg-red-50' : 'focus:ring-emerald-500/20'}
-                      transition-all text-sm`}
-                      value={studentId}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, '');
-                        if (value.length <= 6) {
-                          setStudentId(value);
-                          if (idError) setIdError("");
-                        }
-                      }}
-                      onKeyDown={(e) => {
-                        // Allow only numbers, backspace, delete, tab, arrows
-                        const allowedKeys = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
-                        if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
-                          e.preventDefault();
-                        }
-                      }}
-                    />
+                    // Student ID input with verification note
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Enter 6-digit Student ID"
+                        maxLength={6}
+                        className={`w-full px-3 py-2 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2
+                        ${idError ? 'focus:ring-red-500/20 bg-red-50' : 'focus:ring-emerald-500/20'}
+                        transition-all text-sm`}
+                        value={studentId}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '');
+                          if (value.length <= 6) {
+                            setStudentId(value);
+                            if (idError) setIdError("");
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          // Allow only numbers, backspace, delete, tab, arrows
+                          const allowedKeys = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+                          if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
+                      />
+                      <p className="mt-1.5 text-xs text-amber-600">
+                        <span className="font-medium">Important:</span> Please verify this is the correct student ID. Students with the same name may be from different courses.
+                      </p>
+                    </div>
                   ) : (
                     // Non-student ID display with enhanced information
                     <div className="flex flex-col">

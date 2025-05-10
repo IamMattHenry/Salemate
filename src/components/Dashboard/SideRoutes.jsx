@@ -59,7 +59,7 @@ const SideRoutes = ({ isMinimized }) => {
   // Add User Accounts route for admin users only
   if (isAdmin()) {
     routes.push({
-      path: "/admin",
+      path: "/admin/user-accounts",
       label: "User Accounts",
       icon: <MdAdminPanelSettings />,
       requiresPin: false,
