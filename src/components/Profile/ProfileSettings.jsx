@@ -235,7 +235,7 @@ const ProfileSettings = () => {
     try {
       const userDocRef = doc(db, 'users', currentUser.uid);
 
-      // Prepare update data
+      // Prepare update data - include first name and last name
       const updateData = {
         firstName: userData.firstName,
         lastName: userData.lastName,
