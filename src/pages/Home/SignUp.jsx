@@ -133,20 +133,34 @@ function SignUp() {
       });
 
       // Save additional user data to Firestore
-      await setDoc(doc(db, "users", user.uid), {
-        firstName,
-        lastName,
-        email,
-        department,
-        emailVerified: false, // Track email verification status
-        createdAt: new Date().toISOString(),
-      });
-
-      setSuccess("Account created successfully! Please verify your email.");
-      console.log("User registered:", user);
+      try {
+        await setDoc(doc(db, "users", user.uid), {
+          firstName,
+          lastName,
+          email,
+          department,
+          emailVerified: false, // Track email verification status
+          createdAt: new Date().toISOString(),
+          lastSignIn: new Date().toISOString(), // Add last sign-in date
+        });
+        console.log("User data saved to Firestore successfully");
+        setSuccess("Account created successfully! Please verify your email.");
+        console.log("User registered:", user);
+      } catch (firestoreError) {
+        console.error("Error saving user data to Firestore:", firestoreError);
+        // Still continue with the registration process even if Firestore save fails
+        // This way the user is at least created in Firebase Auth
+        setSuccess("Account created but profile data couldn't be saved. Please contact support.");
+      }
 
       // Store the email for the verification modal
       setRegisteredEmail(email);
+
+      // Store user information in localStorage for later use during sign-in
+      localStorage.setItem('registeredDepartment', department);
+      localStorage.setItem('registeredFirstName', firstName);
+      localStorage.setItem('registeredLastName', lastName);
+      console.log("Saved user information to localStorage:", { department, firstName, lastName });
 
       // IMPORTANT: Sign out the user IMMEDIATELY after registration
       // This prevents the auth state listener from detecting a logged-in user with unverified email
@@ -195,6 +209,9 @@ function SignUp() {
       } else if (err.code === "auth/too-many-requests") {
         setError("Too many attempts. Please try again later.");
         console.error("Error during registration: Too many requests");
+      } else if (err.code === "auth/permission-denied" || err.message.includes("permission") || err.message.includes("insufficient")) {
+        setError("Registration failed: Missing or insufficient permissions. Please contact the administrator.");
+        console.error("Error during registration: Permission denied", err);
       } else {
         setError(`Registration failed: ${err.message}`);
         console.error("Error during registration:", err);

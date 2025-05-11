@@ -8,8 +8,9 @@ import { useAuth } from "../../context/AuthContext";
 import firebaseApp, { auth } from "../../firebaseConfig"; // Import both app and auth
 import useModal from "../../hooks/Modal/UseModal"; // Import your custom hook
 import DisabledAccountModal from "../../components/Auth/DisabledAccountModal"; // Import the disabled account modal
-import DeletedAccountModal from "../../components/Auth/DeletedAccountModal"; // Import the deleted account modal
 import SignInVerificationReminder from "../../components/Auth/SignInVerificationReminder"; // Import the verification reminder modal
+import ValidationErrorModal from "../../components/Auth/ValidationErrorModal"; // Import the validation error modal
+import ForgotPasswordValidationModal from "../../components/Auth/ForgotPasswordValidationModal"; // Import the forgot password validation modal
 
 function SignIn() {
   const [email, setEmail] = useState("");
@@ -19,9 +20,10 @@ function SignIn() {
   const [isLoading, setIsLoading] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
   const [showDisabledModal, setShowDisabledModal] = useState(false);
-  const [showDeletedModal, setShowDeletedModal] = useState(false);
   const [showVerificationReminder, setShowVerificationReminder] = useState(false);
   const [redirectToDashboard, setRedirectToDashboard] = useState(false);
+  const [showValidationErrorModal, setShowValidationErrorModal] = useState(false);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const { modal, toggleModal } = useModal(); // Use the custom modal hook
   const navigate = useNavigate();
   const location = useLocation();
@@ -46,10 +48,94 @@ function SignIn() {
   useEffect(() => {
     const checkUserStatus = async () => {
       if (currentUser) {
-        // Only redirect to dashboard if email is verified
+        // Only redirect if email is verified
         if (currentUser.emailVerified) {
-          console.log("User already logged in with verified email, redirecting to dashboard");
-          setRedirectToDashboard(true);
+          console.log("User already logged in with verified email, checking access...");
+
+          try {
+            // Get user data to check department
+            const db = getFirestore(firebaseApp);
+            const userDocRef = doc(db, "users", currentUser.uid);
+            const userDoc = await getDoc(userDocRef);
+
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              const department = userData.department;
+
+              // Admin users always go to dashboard
+              if (department === 'Admin' || ['admin@gmail.com', 'adminadmin@gmail.com', 'salemate186@gmail.com'].includes(currentUser.email)) {
+                console.log("Admin user, redirecting to dashboard");
+                setRedirectToDashboard(true);
+                return;
+              }
+
+              // Define department access permissions
+              const departmentAccess = {
+                Admin: {
+                  dashboard: true,
+                  orders: true,
+                  analytics: true,
+                  inventory: true,
+                  customer: true,
+                  admin: true
+                },
+                Production: {
+                  dashboard: true,
+                  orders: true,
+                  analytics: false,
+                  inventory: true,
+                  customer: false,
+                  admin: false
+                },
+                Marketing: {
+                  dashboard: true,
+                  orders: true,
+                  analytics: false,
+                  inventory: false,
+                  customer: true,
+                  admin: false
+                },
+                Financial: {
+                  dashboard: true,
+                  orders: true,
+                  analytics: true,
+                  inventory: false,
+                  customer: true,
+                  admin: false
+                }
+              };
+
+              // Check if department exists and has dashboard access
+              if (department && departmentAccess[department] && departmentAccess[department].dashboard) {
+                console.log("User has dashboard access, redirecting to dashboard");
+                setRedirectToDashboard(true);
+              } else if (department && departmentAccess[department]) {
+                // Find first module they have access to
+                const modulesToCheck = ['orders', 'inventory', 'customer', 'analytics'];
+                for (const module of modulesToCheck) {
+                  if (departmentAccess[department][module]) {
+                    console.log(`User doesn't have dashboard access, redirecting to ${module}`);
+                    navigate(`/${module}`);
+                    return;
+                  }
+                }
+                // Default to orders if no specific access
+                navigate('/orders');
+              } else {
+                // Default to orders for unknown departments
+                console.log("Unknown department, redirecting to orders");
+                navigate('/orders');
+              }
+            } else {
+              // No user document, default to orders
+              console.log("No user document found, redirecting to orders");
+              navigate('/orders');
+            }
+          } catch (err) {
+            console.error("Error checking user access:", err);
+            // Default to dashboard on error
+            setRedirectToDashboard(true);
+          }
         } else {
           console.log("User logged in but email not verified, signing out");
           // Sign out the user to prevent the redirect loop
@@ -69,7 +155,7 @@ function SignIn() {
     };
 
     checkUserStatus();
-  }, [currentUser, showVerificationReminder]);
+  }, [currentUser, showVerificationReminder, navigate]);
 
   const db = getFirestore(firebaseApp);
 
@@ -113,13 +199,18 @@ function SignIn() {
       setVerificationSent(true);
       toggleModal();
     } catch (err) {
+      let errorMessage = "Failed to send verification email. Please try again.";
+
       if (err.code === "auth/user-not-found") {
-        setError("No account found with this email.");
+        errorMessage = "No account found with this email.";
       } else if (err.code === "auth/wrong-password") {
-        setError("Incorrect password. Please try again.");
-      } else {
-        setError("Failed to send verification email. Please try again.");
+        errorMessage = "Incorrect password. Please try again.";
+      } else if (err.code === "auth/too-many-requests") {
+        errorMessage = "Too many failed attempts. Please try again later.";
       }
+
+      setError(errorMessage);
+      setShowValidationErrorModal(true);
       console.error("Error sending verification email:", err.message);
     } finally {
       setIsLoading(false);
@@ -203,31 +294,135 @@ function SignIn() {
         resetPinVerification();
         console.log("PIN verification reset for new login session");
 
-        // Set redirect state to trigger navigation
-        console.log("Setting up redirect to dashboard...");
+        // Check if user has access to dashboard, if not redirect to a page they can access
+        const department = userData.department;
+        const redirectToAppropriateModule = () => {
+          // Define the order of modules to check for access
+          const modulesToCheck = ['dashboard', 'orders', 'inventory', 'customer', 'analytics'];
+
+          // Check if department exists in departmentAccess
+          const departmentExists = department &&
+            ['Admin', 'Production', 'Marketing', 'Financial'].includes(department);
+
+          if (!departmentExists) {
+            // If department doesn't exist in our access control, default to dashboard
+            console.log("Department not found in access control, defaulting to dashboard");
+            setRedirectToDashboard(true);
+            return;
+          }
+
+          // Admin users and users with Admin department always have access to dashboard
+          if (department === 'Admin' || ['admin@gmail.com', 'adminadmin@gmail.com', 'salemate186@gmail.com'].includes(user.email)) {
+            console.log("Admin user, redirecting to dashboard");
+            setRedirectToDashboard(true);
+            return;
+          }
+
+          // Define department access permissions
+          const departmentAccess = {
+            Admin: {
+              dashboard: true,
+              orders: true,
+              analytics: true,
+              inventory: true,
+              customer: true,
+              admin: true
+            },
+            Production: {
+              dashboard: true,
+              orders: true,
+              analytics: false,
+              inventory: true,
+              customer: false,
+              admin: false
+            },
+            Marketing: {
+              dashboard: true,
+              orders: true,
+              analytics: false,
+              inventory: false,
+              customer: true,
+              admin: false
+            },
+            Financial: {
+              dashboard: true,
+              orders: true,
+              analytics: true,
+              inventory: false,
+              customer: true,
+              admin: false
+            }
+          };
+
+          // Check if user has access to dashboard
+          if (departmentAccess[department].dashboard) {
+            console.log("User has access to dashboard, redirecting there");
+            setRedirectToDashboard(true);
+            return;
+          }
+
+          // If not, find the first module they have access to
+          for (const module of modulesToCheck) {
+            if (departmentAccess[department][module]) {
+              console.log(`User doesn't have dashboard access, redirecting to ${module}`);
+              // Set the appropriate redirect path
+              navigate(`/${module}`);
+              return;
+            }
+          }
+
+          // If no access to any module, default to orders (most basic access)
+          console.log("User has no specific access, defaulting to orders");
+          navigate('/orders');
+        };
+
+        // Set redirect after a short delay
+        console.log("Setting up redirect to appropriate module...");
         setTimeout(() => {
-          console.log("Now redirecting to dashboard...");
-          setRedirectToDashboard(true);
+          redirectToAppropriateModule();
         }, 1000);
       } else {
-        // User document doesn't exist in Firestore - this means the user was deleted from the admin panel
-        console.log("User document not found in Firestore. User was likely deleted from admin panel:", user.email);
+        // User document doesn't exist in Firestore, create a basic one
+        console.log("User document not found in Firestore. Creating a basic user document.");
 
-        // Sign out the user immediately
-        await auth.signOut();
-        // Show the deleted account modal instead of just an error message
-        setShowDeletedModal(true);
-        setIsLoading(false);
-        return;
+        // Create a basic user document with information from localStorage
+        const savedDepartment = localStorage.getItem('registeredDepartment') || "Financial";
+        const savedFirstName = localStorage.getItem('registeredFirstName') || "";
+        const savedLastName = localStorage.getItem('registeredLastName') || "";
+
+        await setDoc(userDocRef, {
+          firstName: savedFirstName,
+          lastName: savedLastName,
+          email: user.email,
+          emailVerified: user.emailVerified,
+          createdAt: new Date().toISOString(),
+          lastSignIn: new Date().toISOString(),
+          department: savedDepartment // Use saved department or default to Financial
+        });
+
+        console.log("Basic user document created for:", user.email);
+
+        // For new users with Marketing department, redirect to dashboard
+        console.log("New user with Marketing department, redirecting to dashboard");
+        setTimeout(() => {
+          setRedirectToDashboard(true);
+        }, 1000);
       }
     } catch (err) {
+      let errorMessage = "Failed to sign in. Please try again.";
+
       if (err.code === "auth/user-not-found") {
-        setError("No account found with this email.");
+        errorMessage = "No account found with this email.";
       } else if (err.code === "auth/wrong-password") {
-        setError("Incorrect password. Please try again.");
-      } else {
-        setError("Failed to sign in. Please try again.");
+        errorMessage = "Incorrect password. Please try again.";
+      } else if (err.code === "auth/too-many-requests") {
+        errorMessage = "Too many failed login attempts. Please try again later or reset your password.";
+      } else if (err.code === "auth/network-request-failed") {
+        errorMessage = "Network error. Please check your internet connection and try again.";
       }
+
+      setError(errorMessage);
+      setShowValidationErrorModal(true);
       console.error("Error during sign-in:", err.message);
     } finally {
       setIsLoading(false);
@@ -238,7 +433,7 @@ function SignIn() {
     setError("");
 
     if (!email) {
-      setError("Please enter your email address before resetting your password.");
+      setShowForgotPasswordModal(true);
       return;
     }
 
@@ -246,11 +441,18 @@ function SignIn() {
       await sendPasswordResetEmail(auth, email);
       toggleModal(); // Open the modal
     } catch (err) {
+      let errorMessage = "Failed to send password reset email. Please try again.";
+
       if (err.code === "auth/user-not-found") {
-        setError("No account found with this email.");
-      } else {
-        setError("Failed to send password reset email. Please try again.");
+        errorMessage = "No account found with this email.";
+      } else if (err.code === "auth/invalid-email") {
+        errorMessage = "Please enter a valid email address.";
+      } else if (err.code === "auth/too-many-requests") {
+        errorMessage = "Too many requests. Please try again later.";
       }
+
+      setError(errorMessage);
+      setShowValidationErrorModal(true);
       console.error("Error during password reset:", err.message);
     }
   };
@@ -307,34 +509,7 @@ function SignIn() {
                   {passwordVisible ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
                 </div>
               </div>
-              {error && (
-                <div className={`text-[0.9rem] p-3 rounded-lg ${error.includes("verify your email") ? "bg-yellow-50 text-yellow-700 border border-yellow-200" : "bg-red-50 text-red-500"}`}>
-                  <p>{error}</p>
-                  {error.includes("verify your email") && (
-                    <div className="mt-2">
-                      <p className="text-gray-600 text-sm mb-2">
-                        If you can't find the verification email, check your spam folder or request a new one.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={resendVerificationEmail}
-                        className="bg-blue-500 text-white py-1 px-3 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <span className="flex items-center">
-                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Sending...
-                          </span>
-                        ) : "Resend verification email"}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
+              {/* Error messages are now shown in the ValidationErrorModal */}
               <div className="w-full text-right">
                 <button
                   type="button"
@@ -446,17 +621,23 @@ function SignIn() {
         email={email}
       />
 
-      {/* Deleted Account Modal */}
-      <DeletedAccountModal
-        isOpen={showDeletedModal}
-        onClose={() => setShowDeletedModal(false)}
-        email={email}
-      />
-
       {/* Verification Reminder Modal */}
       <SignInVerificationReminder
         isOpen={showVerificationReminder}
         onClose={() => setShowVerificationReminder(false)}
+      />
+
+      {/* Validation Error Modal */}
+      <ValidationErrorModal
+        isOpen={showValidationErrorModal}
+        onClose={() => setShowValidationErrorModal(false)}
+        errorMessage={error}
+      />
+
+      {/* Forgot Password Validation Modal */}
+      <ForgotPasswordValidationModal
+        isOpen={showForgotPasswordModal}
+        onClose={() => setShowForgotPasswordModal(false)}
       />
    </div>
   );

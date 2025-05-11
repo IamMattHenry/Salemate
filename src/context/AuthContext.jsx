@@ -269,6 +269,13 @@ export const AuthProvider = ({ children }) => {
     // If the user's department is set to "Admin", they have full access
     if (userProfile.department === "Admin") return true;
 
+    // For new users who haven't completed additional info, grant access to all modules
+    // This ensures they can access the page where AdditionalInfoModal will be shown
+    if (userProfile.additionalInfoCompleted === undefined || userProfile.additionalInfoCompleted === false) {
+      console.log("New user without completed profile, granting temporary access to:", module);
+      return true;
+    }
+
     const department = userProfile.department;
     if (!departmentAccess[department]) return false;
 
@@ -704,29 +711,39 @@ export const AuthProvider = ({ children }) => {
               }
             }
           } else {
-            // User document doesn't exist in Firestore - this means the user was deleted from the admin panel
-            console.log("User document not found in Firestore. User was likely deleted from admin panel:", user.email);
+            // User document doesn't exist in Firestore, create a basic one
+            console.log("User document not found in Firestore. Creating a basic user document.");
 
-            // Sign out the user immediately
-            await signOut(auth);
-            setCurrentUser(null);
-            setUserProfile(null);
+            // Create a basic user document with information from localStorage
+            const savedDepartment = localStorage.getItem('registeredDepartment') || "Financial";
+            const savedFirstName = localStorage.getItem('registeredFirstName') || "";
+            const savedLastName = localStorage.getItem('registeredLastName') || "";
+
+            await setDoc(userDocRef, {
+              firstName: savedFirstName,
+              lastName: savedLastName,
+              email: user.email,
+              emailVerified: user.emailVerified,
+              createdAt: new Date().toISOString(),
+              lastSignIn: new Date().toISOString(),
+              department: savedDepartment // Use saved department or default to Financial
+            });
+
+            console.log("Basic user document created for:", user.email);
+
+            // Set up the user profile with basic info including first name, last name and department
+            setUserProfile({
+              firstName: savedFirstName,
+              lastName: savedLastName,
+              email: user.email,
+              emailVerified: user.emailVerified,
+              createdAt: new Date().toISOString(),
+              lastSignIn: new Date().toISOString(),
+              department: savedDepartment // Use the same department as in the document
+            });
+            setCurrentUser(user);
+            setEmailVerified(user.emailVerified);
             setHasPin(false);
-            setPinVerified(false);
-            setPinAttempts(0);
-            setAccountLocked(false);
-            setLockoutEndTime(null);
-            // Clear all PIN-related localStorage items
-            localStorage.removeItem('pinVerified');
-            localStorage.removeItem('pinAttempts');
-            localStorage.removeItem('accountLocked');
-            localStorage.removeItem('lockoutEndTime');
-            localStorage.removeItem('sessionActive');
-            localStorage.removeItem('lastPing');
-            console.log("User signed out due to missing Firestore document");
-
-            // Don't set currentUser since we're signing them out
-            return;
           }
         } catch (error) {
           console.error("Error fetching user profile:", error);

@@ -13,7 +13,12 @@ service cloud.firestore {
     match /users/{userId} {
       // Allow users to read and write their own data
       // Allow admins to read and write all user data
+      // Ensure the userId matches the authenticated user's ID
       allow read, write: if request.auth != null && (request.auth.uid == userId || isAdmin());
+
+      // Allow creation of user documents during registration
+      // This is critical for new user registration to work
+      allow create: if request.auth != null && request.auth.uid == userId;
     }
 
     // Your existing rules for other collections
