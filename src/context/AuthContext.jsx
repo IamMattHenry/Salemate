@@ -726,7 +726,8 @@ export const AuthProvider = ({ children }) => {
               emailVerified: user.emailVerified,
               createdAt: new Date().toISOString(),
               lastSignIn: new Date().toISOString(),
-              department: savedDepartment // Use saved department or default to Financial
+              department: savedDepartment, // Use saved department or default to Financial
+              additionalInfoCompleted: true // Mark as completed to skip the additional info modal
             });
 
             console.log("Basic user document created for:", user.email);
@@ -739,7 +740,8 @@ export const AuthProvider = ({ children }) => {
               emailVerified: user.emailVerified,
               createdAt: new Date().toISOString(),
               lastSignIn: new Date().toISOString(),
-              department: savedDepartment // Use the same department as in the document
+              department: savedDepartment, // Use the same department as in the document
+              additionalInfoCompleted: true // Mark as completed to skip the additional info modal
             });
             setCurrentUser(user);
             setEmailVerified(user.emailVerified);
