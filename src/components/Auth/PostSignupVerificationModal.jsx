@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaEnvelope, FaCheckCircle } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
@@ -11,6 +11,33 @@ import { auth } from '../../firebaseConfig';
  */
 const PostSignupVerificationModal = ({ isOpen, onClose, email }) => {
   const navigate = useNavigate();
+  const [countdown, setCountdown] = useState(2);
+
+  // Automatically redirect to sign in page after a short delay
+  useEffect(() => {
+    if (isOpen) {
+      // Start countdown
+      const countdownInterval = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(countdownInterval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      // Redirect after countdown reaches 0
+      const redirectTimer = setTimeout(() => {
+        goToSignIn();
+      }, 2000); // 2 seconds delay before auto-redirect
+
+      return () => {
+        clearTimeout(redirectTimer);
+        clearInterval(countdownInterval);
+      };
+    }
+  }, [isOpen]);
 
   // Handle navigation to sign in page
   const goToSignIn = async () => {
@@ -112,31 +139,14 @@ const PostSignupVerificationModal = ({ isOpen, onClose, email }) => {
                     onClick={goToSignIn}
                     className="w-full py-3 rounded-xl font-medium transition-all bg-amber-500 text-white hover:bg-amber-600"
                   >
-                    Go to Sign In
+                    Redirecting to Sign In ({countdown}s)
                   </button>
 
                   <button
-                    onClick={async () => {
-                      try {
-                        // Sign out the user first using Firebase's signOut function
-                        await signOut(auth);
-                        console.log("User signed out after closing verification modal");
-
-                        // Clear any auth data from storage to prevent auto-login
-                        const apiKey = "AIzaSyDo2u1X6qkJkfc9VLgrhZTx4Y-TjKiOSi0";
-                        const storageKey = `firebase:authUser:${apiKey}:[DEFAULT]`;
-                        localStorage.removeItem(storageKey);
-                        sessionStorage.removeItem(storageKey);
-
-                        onClose();
-                      } catch (error) {
-                        console.error("Error signing out:", error);
-                        onClose();
-                      }
-                    }}
+                    onClick={goToSignIn}
                     className="w-full py-3 rounded-xl font-medium transition-all border border-gray-300 text-gray-700 hover:bg-gray-50"
                   >
-                    Close
+                    Go Now
                   </button>
                 </div>
               </motion.div>

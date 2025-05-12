@@ -142,6 +142,7 @@ function SignUp() {
           emailVerified: false, // Track email verification status
           createdAt: new Date().toISOString(),
           lastSignIn: new Date().toISOString(), // Add last sign-in date
+          additionalInfoCompleted: true, // Mark as completed to skip the additional info modal
         });
         console.log("User data saved to Firestore successfully");
         setSuccess("Account created successfully! Please verify your email.");
@@ -178,8 +179,9 @@ function SignUp() {
         console.error("Error signing out after registration:", error);
       }
 
-      // Show verification modal
+      // Show verification modal with auto-redirect
       setShowVerificationModal(true);
+      console.log("Showing verification modal with auto-redirect to sign-in page");
 
       // Reset form
       setFirstName("");
