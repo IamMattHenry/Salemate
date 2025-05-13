@@ -5,7 +5,7 @@ import { HomeRoutes } from "../../components/Home/HomeRoutes";
 function Contact() {
   return (
     <div>
-      <div className="min-w-auto md:w-10/12 flex mx-auto md:flex-row min-h-10/12 mb-50 justify-between px-12 items-center">
+      <div className="min-w-auto md:w-10/12 flex mx-auto md:flex-row min-h-10/12 mb-45 justify-between px-12 items-center">
         <div className="flex flex-col lg:flex-col w-[50%] md:w-[40%] items-start">
           <h1 className="font-lato font-semibold text-2xl md:text-6xl">
             Contact Us
@@ -22,9 +22,9 @@ function Contact() {
       </div>
       <div className="relative">
       <div className="flex flex-col items-center">
-        <HomeRoutes className="-mt-37"/>
+        <HomeRoutes className="-mt-30"/>
         <HomePanel>
-          <div className="w-full p-5">
+          <div className="w-full">
             {/* Added padding top/bottom */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
               {/* Address */}

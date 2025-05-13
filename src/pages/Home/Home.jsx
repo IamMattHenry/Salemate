@@ -272,7 +272,7 @@ function Home() {
             }}
             viewport={{ once: true }}
           >
-            <div className="bg-yellowsm rounded-3xl flex justify-center items-center w-full xl:w-1/2 h-[21rem]">
+            <div className="bg-yellowsm rounded-3xl flex justify-center items-center w-full xl:w-1/2 h-[18rem]">
               <img
                 src="/dashboard_2.png"
                 alt=""
@@ -316,7 +316,7 @@ function Home() {
                 successful deliveries every time.
               </h1>
             </div>
-            <div className="bg-yellowsm rounded-3xl flex justify-center items-center w-full xl:w-1/2 h-[21rem]">
+            <div className="bg-yellowsm rounded-3xl flex justify-center items-center w-full xl:w-1/2 h-[18rem]">
               <img
                 src="/orderhisto_2.png"
                 alt=""
@@ -337,7 +337,7 @@ function Home() {
             }}
             viewport={{ once: true }}
           >
-            <div className="bg-yellowsm rounded-3xl flex justify-center items-center w-full xl:w-1/2 h-[21rem]">
+            <div className="bg-yellowsm rounded-3xl flex justify-center items-center w-full xl:w-1/2 h-[18rem]">
               <img
                 src="/analytic_2.png"
                 alt=""
@@ -382,7 +382,7 @@ function Home() {
                 purchasing information.
               </h1>
             </div>
-            <div className="bg-yellowsm rounded-3xl flex justify-center items-center w-full xl:w-1/2 h-[21rem]">
+            <div className="bg-yellowsm rounded-3xl flex justify-center items-center w-full xl:w-1/2 h-[18rem]">
               <img
                 src="/customer_@.png"
                 alt=""
@@ -403,7 +403,7 @@ function Home() {
             }}
             viewport={{ once: true }}
           >
-            <div className="bg-yellowsm rounded-3xl flex justify-center items-center w-full xl:w-1/2 h-[21rem]">
+            <div className="bg-yellowsm rounded-3xl flex justify-center items-center w-full xl:w-1/2 h-[18rem]">
               <img
                 src="/inventory_2.png"
                 alt=""

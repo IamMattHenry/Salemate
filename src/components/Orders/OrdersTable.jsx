@@ -450,7 +450,7 @@ const OrdersTable = () => {
           <p className="mt-4 text-amber-600 font-medium">Loading orders...</p>
         </div>
       ) : (
-        <div className="overflow-auto h-9/12 rounded-xl border border-amber-100/50">
+        <div className="overflow-auto h-7/12 rounded-xl border border-amber-100/50">
           {/* Fixed header */}
           <div className="bg-gradient-to-r from-amber-50 to-amber-100 sticky top-0 z-10 font-lato">
             <div className="grid grid-cols-6 ">
